@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # Per-boot runtime initialisation for the Alice Innovation Library Cloud Agent
-# environment. Starts PostgreSQL, ensures the local role/database exist, then
-# applies migrations and seeds reference data. Every step is idempotent so the
-# script tolerates restarts and a snapshot that already contains data.
+# environment. Self-heals prerequisites (PostgreSQL, npm dependencies, .env) so
+# it works even when booting from a prebuilt image that skipped install, then
+# starts PostgreSQL, applies migrations, and seeds reference data. Every step is
+# idempotent and tolerates restarts and a database that already contains data.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+# shellcheck source=.cursor/common.sh
+source ./.cursor/common.sh
+
+ensure_postgres_installed
+ensure_node_modules
+ensure_env_file
 
 echo "[start] Starting PostgreSQL 16 cluster"
 sudo pg_ctlcluster 16 main start 2>/dev/null || true
