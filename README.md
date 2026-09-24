@@ -9,6 +9,7 @@ This repository does not contain the Alice sales funnel.
 - `apps/mcp` — Streamable HTTP MCP at `/mcp`, plus unauthenticated `/health`
 - `apps/ingestor` — adapter pipeline
 - `apps/admin` — skeleton; routes stay closed unless `ADMIN_ENABLED=true`
+- `apps/web` — internal Next.js research UI (session auth; uses the same `@alice/database` search as MCP)
 - `packages/database` — parameterised SQL via `pg`
 - `packages/shared` — URL canonicalisation, hashing, dedupe, RRF
 - `packages/source-registry` — loader for `config/sources.yaml`
@@ -54,6 +55,15 @@ The scheduled path, with no flags, ingests enabled sources that are due and then
 ```bash
 npm run ingest -- --due
 ```
+
+### Web UI
+
+```bash
+# set WEB_SESSION_SECRET and WEB_AUTH_PASSWORD (or reuse MCP_AUTH_TOKEN for both in dev)
+npm run web
+```
+
+Open `http://127.0.0.1:3000`, sign in, then search and browse. See `docs/frontend.md`.
 
 ### MCP server
 

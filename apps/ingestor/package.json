@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./embeddings": "./src/embeddings.ts"
+  },
   "dependencies": {
     "@alice/database": "*",
     "@alice/shared": "*",
