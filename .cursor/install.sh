@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 # Idempotent repository bootstrap for the Alice Innovation Library Cloud Agent
-# environment. Runs after the repository is checked out. System packages
-# (PostgreSQL 16 + pgvector) are provided by the base snapshot; this script only
-# prepares repository-level dependencies and local configuration.
+# environment. Runs after the repository is checked out. Installs the PostgreSQL
+# 16 + pgvector system packages the app requires (a no-op when already present),
+# then prepares repository-level dependencies and local configuration.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+
+if ! command -v pg_ctlcluster >/dev/null 2>&1; then
+  echo "[install] Installing PostgreSQL 16 + pgvector system packages"
+  sudo apt-get update -y
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    postgresql-16 postgresql-16-pgvector postgresql-client-16
+else
+  echo "[install] PostgreSQL already installed, skipping apt install"
+fi
 
 echo "[install] Installing npm dependencies"
 npm ci
