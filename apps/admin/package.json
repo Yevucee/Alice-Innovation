@@ -1,0 +1,11 @@
+{
+  "name": "@alice/admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@alice/database": "*",
+    "@alice/shared": "*",
+    "express": "^4.21.2"
+  }
+}

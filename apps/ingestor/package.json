@@ -1,0 +1,12 @@
+{
+  "name": "@alice/ingestor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@alice/database": "*",
+    "@alice/shared": "*",
+    "@alice/source-registry": "*",
+    "cheerio": "^1.0.0"
+  }
+}

@@ -1,0 +1,1813 @@
+sources:
+  - id: solar-impulse
+    name: "Solar Impulse Foundation / Solutions Explorer"
+    category: general-innovation
+    description: "PARTIAL: the public sitemap listed about 100 English solution URLs when checked, which may be less than the historic labelled catalogue. Sample then checkpointed backfill. No full HTML stored."
+    homepage: "https://impulse-foundation.com/"
+    collection_url: "https://impulse-foundation.com/solutions/solutions-explorer/portfolio"
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - SOLUTION
+      - TECHNOLOGY
+      - ORGANISATION
+    update_class: WEEKLY
+    adapter: solar-impulse
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: sitemap
+      sitemap: "https://impulse-foundation.com/sitemap.xml"
+      rss: null
+      notes: "https://solarimpulse.com/ redirects to impulse-foundation.com. English solution URLs are listed in sitemap.xml under /solutions/solutions-explorer/portfolio/solutions/. Item pages are server-rendered Angular with an ng-state JSON payload. robots.txt allows the catalogue."
+    limits:
+      requests_per_minute: 20
+      concurrency: 1
+    coverage:
+      historical_backfill: checkpointed
+      notes: "PARTIAL: the public sitemap listed about 100 English solution URLs when checked, which may be less than the historic labelled catalogue. Sample then checkpointed backfill. No full HTML stored."
+  - id: springwise
+    name: "Springwise"
+    category: general-innovation
+    description: "PARTIAL: titles and URLs from public listing cards only. Article bodies are not fetched when the origin returns 403. No collection URL is stored because the database path was not readable."
+    homepage: "https://springwise.com/"
+    collection_url: null
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - SOLUTION
+      - CASE_STUDY
+    update_class: WEEKLY
+    adapter: springwise
+    access:
+      class: PUBLIC
+      status: LISTING_ONLY
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage HTML (200) contains .tile-post cards for free-to-read innovations. robots.txt allows general crawlers with crawl-delay 10 and blocks several AI-training user agents; this library uses its own user agent. /feed/, /sitemaps.xml, /innovation-database/, and sampled article URLs returned 403 and are not used."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-attempted
+      notes: "PARTIAL: titles and URLs from public listing cards only. Article bodies are not fetched when the origin returns 403. No collection URL is stored because the database path was not readable."
+  - id: engineering-for-change
+    name: "Engineering for Change / Solutions Library"
+    category: general-innovation
+    description: "BLOCKED until a legitimate HTTP response is available. Not silently dropped."
+    homepage: "https://www.engineeringforchange.org/"
+    collection_url: null
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MANUAL
+    adapter: engineering-for-change
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "The published homepage answers this client with HTTP 403 and a Cloudflare bot check. robots.txt could not be read. No collection URL is stored because no solutions path returned a real document. The adapter parser is implemented and fixture-tested, and live fetch stops rather than bypassing the wall."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: blocked
+      notes: "BLOCKED until a legitimate HTTP response is available. Not silently dropped."
+  - id: mit-solve
+    name: "MIT Solve"
+    category: general-innovation
+    description: "PARTIAL: solution pages in the sitemap, not every article or challenge narrative. Evidence stage stays UNKNOWN; selection is recorded as PROGRAMME_SELECTED."
+    homepage: "https://solve.mit.edu/"
+    collection_url: null
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - SOLUTION
+      - PROJECT
+      - PERSON
+      - ORGANISATION
+    update_class: WEEKLY
+    adapter: mit-solve
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: sitemap
+      sitemap: "https://solve.mit.edu/sitemap.xml"
+      rss: null
+      notes: "robots.txt allows crawling. /solutions returned 404; solution records are /solutions/{id} URLs in sitemap.xml. Challenge index is https://solve.mit.edu/challenges and is not treated as the solution collection. Item HTML includes the title, one-line summary, team leader, and profile answers."
+    limits:
+      requests_per_minute: 20
+      concurrency: 1
+    coverage:
+      historical_backfill: checkpointed
+      notes: "PARTIAL: solution pages in the sitemap, not every article or challenge narrative. Evidence stage stays UNKNOWN; selection is recorded as PROGRAMME_SELECTED."
+  - id: wef-uplink
+    name: "World Economic Forum UpLink"
+    category: general-innovation
+    description: "PAUSED until an adapter exists. No collection URL invented."
+    homepage: "https://uplink.weforum.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - PROJECT
+      - ORGANISATION
+    update_class: WEEKLY
+    adapter: wef-uplink
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned HTTP 200. A guessed community path redirected to /home and is not stored as a collection URL. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. No collection URL invented."
+  - id: xprize
+    name: "XPRIZE"
+    category: general-innovation
+    description: "PAUSED. Competitions page verified; individual prize records are not ingested yet."
+    homepage: "https://www.xprize.org/"
+    collection_url: "https://www.xprize.org/competitions"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - PROGRAMME
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: xprize
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage 200. /prizes redirects to /competitions, which returned 200 and is the verified collection URL. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. Competitions page verified; individual prize records are not ingested yet."
+  - id: global-innovation-fund
+    name: "Global Innovation Fund"
+    category: general-innovation
+    description: "PAUSED. Portfolio URL was not verified."
+    homepage: "https://www.globalinnovation.fund/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: global-innovation-fund
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /portfolio/ returned 404 and is not stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. Portfolio URL was not verified."
+  - id: grand-challenges-canada
+    name: "Grand Challenges Canada"
+    category: general-innovation
+    description: "PAUSED. Homepage is the organisation site; collection URL omitted."
+    homepage: "https://www.grandchallenges.ca/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - SOLUTION
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: grand-challenges-canada
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Published homepage responded 403 to this client (bot protection), so robots and any collection path were not verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. Homepage is the organisation site; collection URL omitted."
+  - id: challenge-works
+    name: "Challenge Works"
+    category: general-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://challengeworks.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - PROGRAMME
+    update_class: MONTHLY
+    adapter: challenge-works
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. A guessed case-studies path returned 404 and is not stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: wipo-green
+    name: "WIPO GREEN"
+    category: general-innovation
+    description: "PAUSED. Database URL verified; records not ingested."
+    homepage: "https://www3.wipo.int/wipogreen/en/"
+    collection_url: "https://wipogreen.wipo.int/wipogreen-database/en"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+      - ORGANISATION
+    update_class: WEEKLY
+    adapter: wipo-green
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and the database URL both returned 200. The database root redirects into the database app. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. Database URL verified; records not ingested."
+  - id: undp-accelerator-labs
+    name: "UNDP Accelerator Labs"
+    category: general-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.undp.org/acceleratorlabs"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - METHOD
+      - CASE_STUDY
+    update_class: MONTHLY
+    adapter: undp-accelerator-labs
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "The published Accelerator Labs path returned 403 to this client. No collection URL stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: what-design-can-do
+    name: "What Design Can Do"
+    category: general-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.whatdesigncando.com/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - CASE_STUDY
+      - PROGRAMME
+    update_class: MONTHLY
+    adapter: what-design-can-do
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. No collection URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: fao-teca
+    name: "FAO TECA"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://teca.apps.fao.org/en/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - METHOD
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: WEEKLY
+    adapter: fao-teca
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "https://teca.apps.fao.org/ redirects to /en/ and returned 200. That app is the catalogue. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: access-agriculture
+    name: "Access Agriculture"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.accessagriculture.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - METHOD
+      - CASE_STUDY
+    update_class: WEEKLY
+    adapter: access-agriculture
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /videos returned 404 and is not stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: practical-action
+    name: "Practical Action / Practical Answers"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://practicalaction.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - METHOD
+      - SOLUTION
+      - CASE_STUDY
+    update_class: MONTHLY
+    adapter: practical-action
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "practicalaction.org and answers.practicalaction.org both returned 403. No collection URL stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: imagine-h2o
+    name: "Imagine H2O"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.imagineh2o.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: imagine-h2o
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /startups returned 202 and is not stored as a collection URL. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: efficiency-for-access
+    name: "Efficiency for Access"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://efficiencyforaccess.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - TECHNOLOGY
+      - RESEARCH
+    update_class: MONTHLY
+    adapter: efficiency-for-access
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 403 to this client. No collection URL stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: cgiar
+    name: "CGIAR"
+    category: agriculture-water-development
+    description: "PAUSED. CGIAR is a large research system; a future adapter must choose a public catalogue rather than crawl the whole site."
+    homepage: "https://www.cgiar.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - RESEARCH
+      - PROJECT
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: cgiar
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. No single innovations collection URL was verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. CGIAR is a large research system; a future adapter must choose a public catalogue rather than crawl the whole site."
+  - id: eit-food
+    name: "EIT Food"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.eitfood.eu/"
+    collection_url: "https://www.eitfood.eu/innovation"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - PROJECT
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: eit-food
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /innovation both returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: global-resilience-partnership
+    name: "Global Resilience Partnership"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.globalresiliencepartnership.org/"
+    collection_url: "https://www.globalresiliencepartnership.org/resources/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - CASE_STUDY
+      - RESEARCH
+    update_class: MONTHLY
+    adapter: global-resilience-partnership
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /resources/ returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: elrha
+    name: "Elrha Humanitarian Innovation"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.elrha.org/"
+    collection_url: "https://www.elrha.org/innovation"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: elrha
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /innovation returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: gsma-innovation-fund
+    name: "GSMA Innovation Fund"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - SOLUTION
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: gsma-innovation-fund
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "This is the GSMA Innovation Fund page on Mobile for Development. This client received 403. The same URL is the public fund page, so it is the homepage and no separate collection URL is stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: shell-foundation
+    name: "Shell Foundation"
+    category: agriculture-water-development
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://shellfoundation.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: shell-foundation
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /portfolio/ returned 404 and is not stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: project-drawdown
+    name: "Project Drawdown Solutions Library"
+    category: climate-energy-nature
+    description: "ACTIVE for the current Drawdown Explorer catalogue. Unrelated site articles and retired pages outside the explorer are out of scope. Evidence basis is INDEPENDENT_ASSESSMENT; evidence stage stays UNKNOWN."
+    homepage: "https://drawdown.org/"
+    collection_url: "https://drawdown.org/explorer"
+    enabled: true
+    status: ACTIVE
+    resource_types:
+      - SOLUTION
+      - RESEARCH
+    update_class: MONTHLY
+    adapter: project-drawdown
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: "https://drawdown.org/sitemap.xml"
+      rss: null
+      notes: "/solutions redirects to /explorer. Explorer HTML lists /explorer/{slug} solution links. Item pages expose h1.field--name-title, .field-summary, and a classification label. robots.txt allows the explorer. Assessment label is stored as metadata, not as a deployment stage."
+    limits:
+      requests_per_minute: 15
+      concurrency: 1
+    coverage:
+      historical_backfill: checkpointed
+      notes: "ACTIVE for the current Drawdown Explorer catalogue. Unrelated site articles and retired pages outside the explorer are out of scope. Evidence basis is INDEPENDENT_ASSESSMENT; evidence stage stays UNKNOWN."
+  - id: third-derivative
+    name: "Third Derivative"
+    category: climate-energy-nature
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.third-derivative.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: third-derivative
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200 with title Third Derivative. thirdderivative.com is a different firm and is not used. No portfolio URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: climate-kic
+    name: "Climate KIC"
+    category: climate-energy-nature
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.climate-kic.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - SOLUTION
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: climate-kic
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. No collection URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: earthshot-prize
+    name: "The Earthshot Prize"
+    category: climate-energy-nature
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://earthshotprize.org/"
+    collection_url: "https://earthshotprize.org/winners-finalists/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - PROJECT
+      - PERSON
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: earthshot-prize
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /winners-finalists/ returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: zayed-sustainability-prize
+    name: "Zayed Sustainability Prize"
+    category: climate-energy-nature
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://zayedsustainabilityprize.com/"
+    collection_url: "https://zayedsustainabilityprize.com/en/winners"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - PROJECT
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: zayed-sustainability-prize
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /en/winners returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: holcim-foundation
+    name: "Holcim Foundation Awards"
+    category: climate-energy-nature
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.holcimfoundation.org/"
+    collection_url: "https://www.holcimfoundation.org/awards"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - CASE_STUDY
+    update_class: MONTHLY
+    adapter: holcim-foundation
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /awards returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: biomimicry-institute
+    name: "Biomimicry Institute / Ray of Hope Accelerator"
+    category: climate-energy-nature
+    description: "PAUSED. Ray of Hope collection URL omitted because it was not verified."
+    homepage: "https://biomimicry.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: biomimicry-institute
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "biomimicry.org returned 403. rayofhopeprize.org did not resolve and is not stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. Ray of Hope collection URL omitted because it was not verified."
+  - id: africa-prize
+    name: "Africa Prize for Engineering Innovation"
+    category: africa-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://africaprize.raeng.org.uk/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - PROJECT
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: africa-prize
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "africaprize.raeng.org.uk returned 200. A shorter raeng.org.uk path returned 404 and is not used. No winners collection URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: afrilabs
+    name: "AfriLabs"
+    category: africa-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.afrilabs.com/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROGRAMME
+    update_class: MONTHLY
+    adapter: afrilabs
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. No member-directory URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: undp-timbuktoo
+    name: "UNDP timbuktoo"
+    category: africa-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://timbuktoo.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROGRAMME
+      - PROJECT
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: undp-timbuktoo
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "timbuktoo.org returned 200. www.undp.org/timbuktoo returned 403 and is not stored as the homepage. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: africa-climate-ventures
+    name: "Africa Climate Ventures"
+    category: africa-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://africaclimateventures.com/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: africa-climate-ventures
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200 after redirect from www. No portfolio URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: catalyst-fund
+    name: "Catalyst Fund"
+    category: africa-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.thecatalystfund.com/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: catalyst-fund
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "thecatalystfund.com returned 200 and describes the Africa climate pre-seed fund. bfaglobal.com/catalyst-fund/ redirects there. A different catalystfund.org host was not used. No portfolio URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: acumen
+    name: "Acumen"
+    category: africa-innovation
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://acumen.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: acumen
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 403 to this client. No portfolio URL stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: orange-social-venture-prize
+    name: "Orange Social Venture Prize Africa and Middle East"
+    category: africa-innovation
+    description: "PAUSED. May remain METADATA_ONLY later if winners are not published as a stable catalogue."
+    homepage: "https://poesam.orange.com/en"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - PERSON
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: orange-social-venture-prize
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "poesam.orange.com/en returned 200 and is the official application site named in the competition rules. It is an application portal, not a public winner archive. No winners collection URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. May remain METADATA_ONLY later if winners are not published as a stable catalogue."
+  - id: ashoka
+    name: "Ashoka Fellows"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.ashoka.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: ashoka
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 403. No fellows directory URL verified. Adapter not implemented. Person records, when added, must link to the work and must not collect private contact details."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: skoll
+    name: "Skoll Awardees"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://skoll.org/"
+    collection_url: "https://skoll.org/community/awardees/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: skoll
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /community/awardees/ returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: echoing-green
+    name: "Echoing Green Fellows"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://echoinggreen.org/"
+    collection_url: "https://echoinggreen.org/fellowship/issues/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: echoing-green
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /fellows/ redirects to /fellowship/issues/, which returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: cartier-womens-initiative
+    name: "Cartier Women's Initiative"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.cartierwomensinitiative.com/"
+    collection_url: "https://www.cartierwomensinitiative.com/fellows"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cartier-womens-initiative
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /fellows returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: rolex-awards
+    name: "Rolex Awards for Enterprise"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.rolex.org/rolex-awards"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - PROJECT
+    update_class: MONTHLY
+    adapter: rolex-awards
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "The Rolex Awards path returned 403 to this client. No laureate collection URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: elevate-prize
+    name: "Elevate Prize"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://elevateprize.org/"
+    collection_url: "https://elevateprize.org/winners/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - PROJECT
+    update_class: MONTHLY
+    adapter: elevate-prize
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /winners/ returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: global-good-fund
+    name: "Global Good Fund"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://globalgoodfund.org/"
+    collection_url: "https://globalgoodfund.org/fellowship-program/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PERSON
+      - ORGANISATION
+      - PROGRAMME
+    update_class: MONTHLY
+    adapter: global-good-fund
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /fellows/ redirects to /fellowship-program/, which returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: acumen-academy
+    name: "Acumen Academy"
+    category: people-innovators
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://acumenacademy.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROGRAMME
+      - METHOD
+      - PERSON
+    update_class: MONTHLY
+    adapter: acumen-academy
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. No course catalogue URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: audacious-project
+    name: "The Audacious Project"
+    category: major-backed-ideas
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.audaciousproject.org/"
+    collection_url: "https://www.audaciousproject.org/grantees"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - ORGANISATION
+      - PROGRAMME
+    update_class: MONTHLY
+    adapter: audacious-project
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /grantees returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: mulago
+    name: "Mulago Foundation"
+    category: major-backed-ideas
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.mulagofoundation.org/"
+    collection_url: "https://www.mulagofoundation.org/portfolio"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: mulago
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /our-portfolio redirects to /portfolio, which returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: draper-richards-kaplan
+    name: "Draper Richards Kaplan Foundation"
+    category: major-backed-ideas
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.drkfoundation.org/"
+    collection_url: "https://www.drkfoundation.org/portfolio/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: draper-richards-kaplan
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /portfolio/ returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: co-impact
+    name: "Co-Impact"
+    category: major-backed-ideas
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://co-impact.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - PROGRAMME
+      - PROJECT
+    update_class: MONTHLY
+    adapter: co-impact
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /our-portfolio/ returned 404 and is not stored. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: macarthur-100-and-change
+    name: "MacArthur 100&Change"
+    category: major-backed-ideas
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.macfound.org/programs/awards/100change/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - ORGANISATION
+      - PROGRAMME
+    update_class: MONTHLY
+    adapter: macarthur-100-and-change
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "/programs/100change/ redirects to /programs/awards/100change/, which returned 200. No separate winner archive URL verified beyond that page. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: hundred
+    name: "HundrED"
+    category: education-government-design
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://hundred.org/en"
+    collection_url: "https://hundred.org/en/innovations"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - METHOD
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hundred
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "hundred.org redirects to /en. /en/innovations returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: oecd-opsi
+    name: "OECD Observatory of Public Sector Innovation"
+    category: education-government-design
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://oecd-opsi.org/"
+    collection_url: "https://oecd-opsi.org/case_type/opsi/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - CASE_STUDY
+      - METHOD
+      - PROJECT
+    update_class: WEEKLY
+    adapter: oecd-opsi
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /innovations/ redirects to /case_type/opsi/, which returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: nesta
+    name: "Nesta"
+    category: education-government-design
+    description: "PAUSED. Nesta publishes broadly; a future adapter should prefer project and tool records over the whole news site."
+    homepage: "https://www.nesta.org.uk/"
+    collection_url: "https://www.nesta.org.uk/project/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - METHOD
+      - RESEARCH
+      - PROJECT
+      - TOOL
+    update_class: WEEKLY
+    adapter: nesta
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage and /project/ returned 200. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED. Nesta publishes broadly; a future adapter should prefer project and tool records over the whole news site."
+  - id: ideo-org
+    name: "IDEO.org"
+    category: education-government-design
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.ideo.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - METHOD
+      - CASE_STUDY
+      - ORGANISATION
+    update_class: MONTHLY
+    adapter: ideo-org
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 403. No work collection URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: ideo-design-kit
+    name: "IDEO Design Kit"
+    category: education-government-design
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.designkit.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - METHOD
+      - TOOL
+    update_class: MANUAL
+    adapter: ideo-design-kit
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 403. No methods index URL verified. Adapter not implemented. Update class MANUAL because the kit is a stable method set rather than a news feed."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: social-innovation-academy
+    name: "Social Innovation Academy"
+    category: education-government-design
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.socialinnovationacademy.eu/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - METHOD
+      - PROGRAMME
+    update_class: MONTHLY
+    adapter: social-innovation-academy
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "socialinnovationacademy.eu returned 200 with title Social Innovation Academy. A .org host also exists and was not used. No course collection URL verified. Adapter not implemented."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: apolitical
+    name: "Apolitical"
+    category: education-government-design
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://apolitical.co/en"
+    collection_url: "https://apolitical.co/en/articles"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - CASE_STUDY
+      - METHOD
+      - RESEARCH
+    update_class: WEEKLY
+    adapter: apolitical
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "apolitical.co redirects to /en. /solution-articles redirects to /en/articles, which returned 200. Adapter not implemented. Editorial source: do not treat it as independent technical assessment."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: solutions-story-tracker
+    name: "Solutions Story Tracker"
+    category: solutions-journalism
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://storytracker.solutionsjournalism.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - CASE_STUDY
+      - PROJECT
+    update_class: WEEKLY
+    adapter: solutions-story-tracker
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "storytracker.solutionsjournalism.org returned 200. The parent site solutionsjournalism.org also exists; the tracker host is the catalogue. No separate collection path verified beyond the tracker itself. Adapter not implemented. Editorial source."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: reasons-to-be-cheerful
+    name: "Reasons to be Cheerful"
+    category: solutions-journalism
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://reasonstobecheerful.world/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - CASE_STUDY
+    update_class: WEEKLY
+    adapter: reasons-to-be-cheerful
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: rss
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. An RSS URL was not confirmed in this pass, so rss is null rather than guessed. Adapter not implemented. Editorial source."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: atlas-of-the-future
+    name: "Atlas of the Future"
+    category: solutions-journalism
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://atlasofthefuture.org/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - SOLUTION
+      - PERSON
+    update_class: MONTHLY
+    adapter: atlas-of-the-future
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Homepage returned 200. /project/ returned 404 and is not stored. Adapter not implemented. Editorial source."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: fast-company-world-changing-ideas
+    name: "Fast Company World Changing Ideas"
+    category: solutions-journalism
+    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    homepage: "https://www.fastcompany.com/world-changing-ideas"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - CASE_STUDY
+      - SOLUTION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: fast-company-world-changing-ideas
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "The World Changing Ideas path returned 403 to this client. No alternate collection URL stored. Adapter not implemented. Editorial source; do not assign independent-assessment weight."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."

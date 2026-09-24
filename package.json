@@ -1,0 +1,33 @@
+{
+  "name": "alice-innovation-library",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Alice Innovation Library: provenance-first search across approved innovation sources, exposed over remote MCP.",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test tests/unit/*.test.ts tests/integration/*.test.ts",
+    "migrate": "tsx scripts/migrate.ts",
+    "seed": "tsx scripts/seed.ts",
+    "mcp": "tsx apps/mcp/src/index.ts",
+    "ingest": "tsx apps/ingestor/src/index.ts",
+    "admin": "tsx apps/admin/src/index.ts",
+    "start:mcp": "tsx apps/mcp/src/index.ts",
+    "start:ingestor": "tsx apps/ingestor/src/index.ts",
+    "start:admin": "tsx apps/admin/src/index.ts"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.11.11",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

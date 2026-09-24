@@ -1,0 +1,12 @@
+# alice-ingestor. Cron service in the same Railway project and repo.
+# In the Railway service settings, set the config file path to railway.ingestor.toml
+# or copy this start command and cron onto that service.
+# Suggested size: 1 vCPU and 1 GB RAM. The MCP service can stay smaller (0.5 vCPU, 512 MB).
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "npm run start:ingestor -- --due"
+cronSchedule = "0 4 * * *"
+restartPolicyType = "NEVER"
