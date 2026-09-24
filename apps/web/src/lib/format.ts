@@ -1,5 +1,20 @@
+const EVIDENCE_BASIS_LABELS: Record<string, string> = {
+  SELF_REPORTED: "Self-reported",
+  EDITORIALLY_CURATED: "Editorially curated",
+  PROGRAMME_SELECTED: "Programme selected",
+  FUNDER_SELECTED: "Funder selected",
+  INDEPENDENT_ASSESSMENT: "Independent assessment",
+  ACADEMIC_OR_RESEARCH: "Research-backed",
+  PRIMARY_DOCUMENTATION: "Primary documentation",
+  UNKNOWN: "Unknown",
+};
+
 export function formatEvidence(stage: string): string {
   return stage.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function formatEvidenceBasis(basis: string): string {
+  return EVIDENCE_BASIS_LABELS[basis] ?? formatEvidence(basis);
 }
 
 export function formatResourceType(type: string): string {

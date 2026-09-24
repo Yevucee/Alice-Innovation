@@ -37,7 +37,8 @@ export default async function DiscoverPage() {
   );
   const sourceStrip = sources.slice(0, 8);
 
-  const statsLine = `${stats.canonical_resources?.toLocaleString() ?? "0"} resources · 61 sources · ${stats.organisations?.toLocaleString() ?? "0"} organisations · ${stats.people?.toLocaleString() ?? "0"} people`;
+  const resourceCount = stats.canonical_resources ?? 0;
+  const statsLine = `${resourceCount.toLocaleString()} resources · 61 sources · ${stats.organisations?.toLocaleString() ?? "0"} organisations · ${stats.people?.toLocaleString() ?? "0"} people`;
 
   return (
     <div>
@@ -58,6 +59,13 @@ export default async function DiscoverPage() {
             ))}
           </div>
           <p className="mt-8 text-sm text-muted">{statsLine}</p>
+          {resourceCount === 0 ? (
+            <p className="mt-4 text-sm text-muted">
+              No resources indexed yet. Run{" "}
+              <code className="rounded bg-line/80 px-1.5 py-0.5 text-xs">npm run ingest -- --source project-drawdown --limit 10</code>{" "}
+              after migrate and seed.
+            </p>
+          ) : null}
         </div>
       </section>
 

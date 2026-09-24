@@ -63,7 +63,7 @@ npm run ingest -- --due
 npm run web
 ```
 
-Open `http://127.0.0.1:3000`, sign in, then search and browse. See `docs/frontend.md`.
+Open `http://127.0.0.1:3000`, sign in, then search and browse. See `docs/frontend.md`. Production: `docs/railway-checklist.md`.
 
 ### MCP server
 

@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { CompactResource } from "@alice/database";
+import { EmptySearchState } from "./empty-search-state";
 import { ResourceCard } from "./resource-card";
 import { SearchBar } from "./search-bar";
+import { SourceFilter } from "./source-filter";
 
 interface CategoryData {
   sectors: Array<{ slug: string; name: string }>;
@@ -34,6 +36,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
   const [rows, setRows] = useState<CompactResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileFilters, setMobileFilters] = useState(false);
+  const [sourceCatalogue, setSourceCatalogue] = useState<Array<{ id: string; name: string }>>([]);
 
   const state = useMemo(() => ({
     q: params.get("q") ?? "",
@@ -76,7 +79,25 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
 
   useEffect(() => {
     fetch("/api/categories").then((r) => r.json()).then(setCategories).catch(() => setCategories(null));
+    fetch("/api/sources")
+      .then((r) => r.json())
+      .then((json: { sources?: Array<{ id: string; name: string }> }) => setSourceCatalogue(json.sources ?? []))
+      .catch(() => setSourceCatalogue([]));
   }, []);
+
+  const labelFor = useCallback((key: string, value: string): string => {
+    if (!categories) return value;
+    if (key === "sector") return categories.sectors.find((s) => s.slug === value)?.name ?? value;
+    if (key === "problem") return categories.problems.find((p) => p.slug === value)?.name ?? value;
+    if (key === "tech") return categories.technologies.find((t) => t.slug === value)?.name ?? value;
+    if (key === "type") return categories.resource_types.find((t) => t.code === value)?.label ?? value;
+    if (key === "country") {
+      const geo = categories.geographies.find((g) => g.country_code.toLowerCase() === value);
+      return geo?.country_name ?? value;
+    }
+    if (key === "source") return sourceCatalogue.find((s) => s.id === value)?.name ?? value;
+    return value.replace(/_/g, " ");
+  }, [categories, sourceCatalogue]);
 
   useEffect(() => {
     setLoading(true);
@@ -105,12 +126,13 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
   }, [filterKey, state.offset]);
 
   const activeFilters = [
-    ...state.type.map((v) => ({ key: "type", value: v, label: v })),
-    ...state.sector.map((v) => ({ key: "sector", value: v, label: v })),
-    ...state.problem.map((v) => ({ key: "problem", value: v, label: v })),
-    ...state.country.map((v) => ({ key: "country", value: v, label: v })),
-    ...state.stage.map((v) => ({ key: "stage", value: v, label: v })),
-    ...state.source.map((v) => ({ key: "source", value: v, label: v })),
+    ...state.type.map((v) => ({ key: "type", value: v, label: labelFor("type", v) })),
+    ...state.sector.map((v) => ({ key: "sector", value: v, label: labelFor("sector", v) })),
+    ...state.problem.map((v) => ({ key: "problem", value: v, label: labelFor("problem", v) })),
+    ...state.tech.map((v) => ({ key: "tech", value: v, label: labelFor("tech", v) })),
+    ...state.country.map((v) => ({ key: "country", value: v, label: labelFor("country", v) })),
+    ...state.stage.map((v) => ({ key: "stage", value: v, label: labelFor("stage", v) })),
+    ...state.source.map((v) => ({ key: "source", value: v, label: labelFor("source", v) })),
   ];
 
   function toggle(key: string, value: string, list: string[]) {
@@ -130,10 +152,17 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
         selected={state.problem} onToggle={(v) => toggle("problem", v, state.problem)} />
       <FilterGroup title="Sector" options={categories.sectors.slice(0, 14).map((s) => ({ value: s.slug, label: s.name }))}
         selected={state.sector} onToggle={(v) => toggle("sector", v, state.sector)} />
+      <FilterGroup title="Technology" options={categories.technologies.slice(0, 14).map((t) => ({ value: t.slug, label: t.name }))}
+        selected={state.tech} onToggle={(v) => toggle("tech", v, state.tech)} />
       <FilterGroup title="Location" options={categories.geographies.slice(0, 16).map((g) => ({ value: g.country_code.toLowerCase(), label: g.country_name }))}
         selected={state.country} onToggle={(v) => toggle("country", v, state.country)} />
-      <FilterGroup title="Stage" options={["DEPLOYED", "PILOT", "PROTOTYPE", "SCALED"].map((v) => ({ value: v, label: v.replace(/_/g, " ") }))}
+      <FilterGroup title="Stage" options={["DEPLOYED", "PILOT", "PROTOTYPE", "SCALED", "IDEA"].map((v) => ({ value: v, label: v.replace(/_/g, " ") }))}
         selected={state.stage} onToggle={(v) => toggle("stage", v, state.stage)} />
+      <SourceFilter
+        sources={sourceCatalogue}
+        selected={state.source}
+        onToggle={(v) => toggle("source", v, state.source)}
+      />
     </div>
   ) : (
     <p className="text-sm text-muted">Loading filters…</p>
@@ -186,7 +215,13 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
               type="button"
               className="rounded-full border border-line px-2.5 py-0.5 hover:border-ink/30"
               onClick={() => {
-                const listKey = f.key === "type" ? state.type : f.key === "sector" ? state.sector : f.key === "problem" ? state.problem : f.key === "country" ? state.country : f.key === "stage" ? state.stage : state.source;
+                const listKey = f.key === "type" ? state.type
+                  : f.key === "sector" ? state.sector
+                    : f.key === "problem" ? state.problem
+                      : f.key === "tech" ? state.tech
+                        : f.key === "country" ? state.country
+                          : f.key === "stage" ? state.stage
+                            : state.source;
                 toggle(f.key, f.value, listKey);
               }}
             >
@@ -208,10 +243,22 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
             </div>
           ) : null}
           {!loading && meta && rows.length === 0 ? (
-            <div className="rounded-md border border-line bg-white p-6 text-sm text-muted">
-              <p className="font-medium text-ink">No resources matched all of these filters.</p>
-              <p className="mt-2">Try removing a filter or broadening your search terms.</p>
-            </div>
+            <EmptySearchState
+              query={state.q}
+              activeFilters={activeFilters}
+              libraryTotal={libraryTotal}
+              onRemoveFilter={(key, value) => {
+                const list = key === "type" ? state.type
+                  : key === "sector" ? state.sector
+                    : key === "problem" ? state.problem
+                      : key === "tech" ? state.tech
+                        : key === "country" ? state.country
+                          : key === "stage" ? state.stage
+                            : state.source;
+                toggle(key, value, list);
+              }}
+              onClearAll={clearAll}
+            />
           ) : null}
           {!loading && rows.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">

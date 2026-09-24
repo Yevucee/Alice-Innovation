@@ -421,6 +421,7 @@ export async function getResource(db: Queryable, resourceId: string): Promise<Re
   );
   const interpretation = await db.query(
     `SELECT problem_statement, how_it_works, why_it_is_interesting, intended_users,
+            implementation_requirements, payload,
             generated_by, model, generated_at, classification_version
      FROM resource_interpretations
      WHERE resource_id = $1

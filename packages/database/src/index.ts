@@ -19,6 +19,8 @@ export {
   resourcesFromAfrica,
   getPerson,
   getOrganisation,
+  diverseApproachesForResource,
+  listRecentIngestionRuns,
 } from "./browse.js";
 export {
   libraryStats,

@@ -76,6 +76,33 @@ export async function getPerson(db: Queryable, personId: string): Promise<Record
   return { ...row.rows[0], resources: resources.rows };
 }
 
+export async function diverseApproachesForResource(
+  db: Queryable,
+  resourceId: string,
+  queryText: string,
+  limit: number,
+): Promise<CompactResource[]> {
+  const found = await searchLibrary(
+    db,
+    { query: queryText, diverse: true, limit: limit + 2, offset: 0 },
+    null,
+  );
+  return found.results.filter((row) => row.resource_id !== resourceId).slice(0, limit);
+}
+
+export async function listRecentIngestionRuns(db: Queryable, limit: number): Promise<unknown[]> {
+  const rows = await db.query(
+    `SELECT ir.id::text AS run_id, ir.status, ir.started_at, ir.completed_at,
+            ir.items_new, ir.items_updated, ir.items_failed, s.slug AS source_id, s.name AS source_name
+     FROM ingestion_runs ir
+     LEFT JOIN sources s ON s.id = ir.source_id
+     ORDER BY ir.started_at DESC
+     LIMIT $1`,
+    [limit],
+  );
+  return rows.rows;
+}
+
 export async function getOrganisation(db: Queryable, organisationId: string): Promise<Record<string, unknown> | null> {
   const row = await db.query(
     `SELECT id::text, name, organisation_type, country, website, description
