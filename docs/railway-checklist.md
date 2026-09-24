@@ -1,6 +1,8 @@
 # Railway deploy checklist
 
-Use one Railway **project** with four services: **Postgres (pgvector)**, **MCP**, **ingestor**, **web**. Same GitHub repo `Yevucee/Alice-Innovation`, branch `main` after merge.
+Use one Railway **project** with four services: **Postgres (pgvector)**, **MCP**, **ingestor**, **web**. Same GitHub repo `Yevucee/Alice-Innovation`, branch `main`.
+
+**Note:** Railway may no longer read `railway*.toml` from the repo. Mirror the settings below in each service’s **Settings** UI (build, start, health, cron).
 
 ## 0. Prerequisites
 
@@ -15,7 +17,7 @@ Use one Railway **project** with four services: **Postgres (pgvector)**, **MCP**
 
 ## 2. MCP service
 
-- [ ] Add service from repo; config file: **`railway.toml`**
+- [ ] Add service from repo (dashboard: start `npm run start:mcp`, health `/health`; see `railway.toml` for reference)
 - [ ] Start: `npm run start:mcp`
 - [ ] Health: `/health`
 - [ ] Public domain (for remote MCP clients)
@@ -59,8 +61,8 @@ npm run ingest -- --source project-drawdown --limit 20
 
 ## 4. Web service
 
-- [ ] Third app service; config: **`railway.web.toml`**
-- [ ] Build: `npm ci && npm run web:build`
+- [ ] Third app service (see `railway.web.toml` for reference)
+- [ ] Build: `npm run web:build` only
 - [ ] Start: `npm run start:web`
 - [ ] Health: `/login`
 - [ ] Domain restricted (team VPN / allowlist recommended)

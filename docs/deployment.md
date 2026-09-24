@@ -6,9 +6,13 @@ Deploy from GitHub to Railway. Do not put secrets in the repo.
 
 Create the Railway Postgres service from the **pgvector** template, not plain Postgres. The first migration runs `CREATE EXTENSION vector`. Copy `DATABASE_URL` into the MCP and ingestor services.
 
+## Railway dashboard (current)
+
+Railway may **ignore** repo `railway*.toml` files. Configure each service in the **Railway dashboard** (build command, start command, health check, cron, restart policy). The toml files in this repo are reference only.
+
 ## MCP service
 
-Root config file: `railway.toml`.
+Reference config: `railway.toml`.
 
 - Start command: `npm run start:mcp`
 - Health check: `/health`
@@ -47,9 +51,9 @@ Use the same database URL and embedding variables. Do not set a public domain on
 
 ## Web service
 
-Config file: `railway.web.toml`.
+Reference config: `railway.web.toml`.
 
-- Build: `npm ci && npm run web:build`
+- Build: `npm run web:build` (Railway runs `npm ci` / install before build — do not duplicate `npm ci` in the build command)
 - Start: `npm run start:web`
 - Health check: `/login` (200 without auth)
 - Suggested size: 0.5 vCPU, 512 MB RAM
