@@ -129,7 +129,7 @@ export async function searchLibrary(
     const browse = await db.query<IdRow>(
       `SELECT r.id::text, NULL::text AS source_id
        FROM resources r
-       WHERE r.active = true AND ${FILTER_SQL}
+       WHERE r.active = true AND ($1::text = '' OR $1::text IS NOT NULL) AND ${FILTER_SQL}
        ORDER BY ${sortSql}
        LIMIT ${candidateLimit}`,
       params,
@@ -217,7 +217,7 @@ export async function countFilteredResources(db: Queryable, filters: SearchFilte
   const query = filters.query.trim();
   const textClause = query
     ? `r.search_vector @@ websearch_to_tsquery('english', $1)`
-    : "true";
+    : "($1::text = '' OR $1::text IS NOT NULL)";
   const row = await db.query<{ count: string }>(
     `SELECT count(*)::text AS count
      FROM resources r

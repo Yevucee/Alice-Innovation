@@ -30,7 +30,8 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
   const params = useSearchParams();
   const router = useRouter();
   const [categories, setCategories] = useState<CategoryData | null>(null);
-  const [data, setData] = useState<SearchResponse | null>(null);
+  const [meta, setMeta] = useState<SearchResponse | null>(null);
+  const [rows, setRows] = useState<CompactResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileFilters, setMobileFilters] = useState(false);
 
@@ -47,6 +48,22 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
     sort: params.get("sort") ?? "relevance",
     offset: Number(params.get("offset") ?? "0"),
   }), [params]);
+
+  const filterKey = useMemo(
+    () => JSON.stringify({
+      q: state.q,
+      type: state.type,
+      problem: state.problem,
+      sector: state.sector,
+      tech: state.tech,
+      country: state.country,
+      stage: state.stage,
+      source: state.source,
+      mode: state.mode,
+      sort: state.sort,
+    }),
+    [state.q, state.type, state.problem, state.sector, state.tech, state.country, state.stage, state.source, state.mode, state.sort],
+  );
 
   const updateParams = useCallback((patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params.toString());
@@ -79,9 +96,13 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
     };
     fetch("/api/search", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
       .then((r) => r.json())
-      .then((json) => setData(json as SearchResponse))
+      .then((json) => {
+        const payload = json as SearchResponse;
+        setMeta(payload);
+        setRows((previous) => (state.offset === 0 ? payload.results : [...previous, ...payload.results]));
+      })
       .finally(() => setLoading(false));
-  }, [state]);
+  }, [filterKey, state.offset]);
 
   const activeFilters = [
     ...state.type.map((v) => ({ key: "type", value: v, label: v })),
@@ -130,7 +151,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
 
       <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
         <span className="text-muted">
-          {data ? `${data.filtered_total.toLocaleString()} of ${libraryTotal.toLocaleString()} resources` : "—"}
+          {meta ? `${meta.filtered_total.toLocaleString()} of ${libraryTotal.toLocaleString()} resources` : "—"}
         </span>
         <div className="flex items-center gap-2">
           <span className="text-muted">Results:</span>
@@ -186,20 +207,20 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
               ))}
             </div>
           ) : null}
-          {!loading && data && data.results.length === 0 ? (
+          {!loading && meta && rows.length === 0 ? (
             <div className="rounded-md border border-line bg-white p-6 text-sm text-muted">
               <p className="font-medium text-ink">No resources matched all of these filters.</p>
               <p className="mt-2">Try removing a filter or broadening your search terms.</p>
             </div>
           ) : null}
-          {!loading && data && data.results.length > 0 ? (
+          {!loading && rows.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              {data.results.map((resource) => (
+              {rows.map((resource) => (
                 <ResourceCard key={resource.resource_id} resource={resource} />
               ))}
             </div>
           ) : null}
-          {!loading && data && data.filtered_total > state.offset + 20 ? (
+          {!loading && meta && meta.filtered_total > rows.length ? (
             <div className="mt-8 flex justify-center">
               <button
                 type="button"

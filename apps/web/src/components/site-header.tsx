@@ -46,6 +46,16 @@ export function SiteHeader({ statsLine }: { statsLine?: string }) {
             <span className="sm:hidden">Search</span>
           </button>
           <Link href="/admin" className="text-xs text-muted hover:text-ink">Admin</Link>
+          <button
+            type="button"
+            className="text-xs text-muted hover:text-ink"
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              window.location.href = "/login";
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </header>

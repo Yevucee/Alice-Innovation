@@ -33,7 +33,9 @@ npm run ingest -- --source project-drawdown --limit 5
 npm run web
 ```
 
-Default web port: `3000` (`WEB_PORT`).
+Default web port: `3000` (`WEB_PORT`). Cloud Agent environments use `.cursor/environment.json` (ports 3000 and 8080); sign-in password is in `.env` as `WEB_AUTH_PASSWORD`.
+
+Production: `railway.web.toml` and `docs/deployment.md`.
 
 ## Deferred (spec stages 6–7)
 

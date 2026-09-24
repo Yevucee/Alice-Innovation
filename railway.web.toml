@@ -1,0 +1,14 @@
+# alice-web. Internal research UI (Next.js). Third Railway service in the same project.
+# Point this service at railway.web.toml in Railway settings.
+# Suggested size: 0.5 vCPU, 512 MB RAM. Use a private or team-only domain.
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm ci && npm run web:build"
+
+[deploy]
+startCommand = "npm run start:web"
+healthcheckPath = "/login"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

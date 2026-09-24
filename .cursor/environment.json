@@ -1,0 +1,17 @@
+{
+  "name": "Alice Innovation Library",
+  "user": "ubuntu",
+  "install": "./.cursor/install.sh",
+  "start": "./.cursor/start.sh",
+  "terminals": [
+    {
+      "name": "web",
+      "command": "npm run web"
+    },
+    {
+      "name": "mcp",
+      "command": "npm run mcp"
+    }
+  ],
+  "ports": [3000, 8080]
+}

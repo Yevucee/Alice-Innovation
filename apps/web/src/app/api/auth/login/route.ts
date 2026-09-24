@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { createSessionToken, sessionCookieHeader, webAuthPassword } from "@/lib/auth";
 import { ensureEnv } from "@/lib/db";
 
+ensureEnv();
+
 export async function POST(request: Request) {
   ensureEnv();
   const expected = webAuthPassword();
