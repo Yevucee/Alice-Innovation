@@ -14,8 +14,8 @@ npm run ingest -- --source project-drawdown --limit 30
 echo "=== mit-solve (limit 40) ==="
 npm run ingest -- --source mit-solve --limit 40
 
-echo "=== solar-impulse (limit 25) ==="
-npm run ingest -- --source solar-impulse --limit 25
+echo "=== solar-impulse (limit 120) ==="
+npm run ingest -- --source solar-impulse --limit 120
 
 echo "=== springwise (limit 25) ==="
 npm run ingest -- --source springwise --limit 25

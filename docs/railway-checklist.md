@@ -63,17 +63,18 @@ Search cards and resource pages read `source_items.image_url` (filled by the ing
 
 After any deploy that changes image extraction (or the first time you enable thumbnails):
 
-1. Open a **shell on `alice-mcp`** (same `DATABASE_URL` and `EMBEDDING_*` as production).
-2. Run the one-off backfill (re-fetches a batch per source; safe to repeat):
+1. Run from **`alice-mcp` Railway shell** (private `DATABASE_URL` + `EMBEDDING_*`), **or** from a Cursor Cloud Agent / laptop with `RAILWAY_API_TOKEN` and the Railway CLI:
+
+```bash
+# Cloud Agent / local (TCP proxy to pgvector + MCP env vars)
+bash scripts/run-with-production-env.sh npm run ingest:production-backfill-images
+```
+
+Inside Railway **alice-mcp** shell only:
 
 ```bash
 bash scripts/ingest-production-backfill-images.sh
-```
-
-Or the npm alias:
-
-```bash
-npm run ingest:production-backfill-images
+# or: npm run ingest:production-backfill-images
 ```
 
 3. Check coverage:
