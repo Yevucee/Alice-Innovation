@@ -90,13 +90,22 @@ export async function upsertDraft(
       const row = existing.rows[0];
       const incomingImage = draft.imageUrl?.trim() || null;
       const priorImage = row.image_url?.trim() || null;
-      const imageChanged = Boolean(incomingImage && incomingImage !== priorImage);
+      const incomingUsable = Boolean(incomingImage && !incomingImage.startsWith("data:"));
+      const priorUsable = Boolean(priorImage && !priorImage.startsWith("data:"));
+      const imageChanged = incomingUsable
+        ? incomingImage !== priorImage
+        : priorUsable && Boolean(incomingImage?.startsWith("data:"));
       await client.query(
         `UPDATE source_items
          SET last_seen_at = now(), last_fetched_at = now(), miss_count = 0, active = true,
              ingestion_run_id = $2, http_etag = COALESCE($3, http_etag),
              http_last_modified = COALESCE($4, http_last_modified),
-             image_url = COALESCE(NULLIF(btrim($5::text), ''), image_url),
+             image_url = CASE
+               WHEN $5::text IS NOT NULL AND btrim($5::text) <> '' AND left(btrim($5::text), 5) <> 'data:'
+                 THEN btrim($5::text)
+               WHEN image_url LIKE 'data:%' THEN NULL
+               ELSE image_url
+             END,
              updated_at = now()
          WHERE id = $1`,
         [row.id, runId, draft.etag, draft.lastModified, incomingImage],

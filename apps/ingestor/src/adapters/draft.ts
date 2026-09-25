@@ -2,13 +2,34 @@ import { load } from "cheerio";
 import { asEvidenceBasis, asEvidenceStage, asResourceType, canonicaliseUrl, truncate, type NormalisedDraft, type ResourceType } from "@alice/shared";
 import { countryCodeFor } from "@alice/taxonomy";
 
+export function isUsableImageUrl(value: string | null | undefined): boolean {
+  if (!value?.trim()) return false;
+  const trimmed = value.trim();
+  if (trimmed.startsWith("data:")) return false;
+  return true;
+}
+
 export function absoluteImageUrl(pageUrl: string, imageUrl: string | undefined | null): string | null {
-  if (!imageUrl?.trim()) return null;
+  if (!isUsableImageUrl(imageUrl)) return null;
   try {
-    return new URL(imageUrl.trim(), pageUrl).toString();
+    return new URL(imageUrl!.trim(), pageUrl).toString();
   } catch {
     return null;
   }
+}
+
+export function imageFromUnknown(pageUrl: string, value: unknown): string | null {
+  if (typeof value === "string") return absoluteImageUrl(pageUrl, value);
+  const record = asRecord(value);
+  if (!record) return null;
+  for (const key of ["url", "src", "path", "href", "default", "large", "medium"]) {
+    const nested = record[key];
+    if (typeof nested === "string") {
+      const resolved = absoluteImageUrl(pageUrl, nested);
+      if (resolved) return resolved;
+    }
+  }
+  return null;
 }
 
 export function ogImageFromPage(html: string, pageUrl: string): string | null {
@@ -16,7 +37,10 @@ export function ogImageFromPage(html: string, pageUrl: string): string | null {
   const candidate = $("meta[property='og:image']").attr("content")
     || $("meta[name='twitter:image']").attr("content")
     || $("meta[property='twitter:image']").attr("content");
-  return absoluteImageUrl(pageUrl, candidate);
+  const fromMeta = absoluteImageUrl(pageUrl, candidate);
+  if (fromMeta) return fromMeta;
+  const articleImg = $("article img[src], main img[src], .entry-content img[src]").first().attr("src");
+  return absoluteImageUrl(pageUrl, articleImg);
 }
 
 export function buildDraft(input: {
