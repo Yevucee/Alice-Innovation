@@ -85,6 +85,12 @@ npm run check:image-coverage
 
 4. In the web app, open **Search** and confirm cards show photos instead of letter placeholders.
 
+**Solar Impulse / large catalogues:** prefer DB-driven backfill (re-fetches stored `canonical_url`s, uses `og:image`, no sitemap walk):
+
+```bash
+bash scripts/run-with-production-env.sh npm run backfill:images-from-db -- --source solar-impulse --limit 150
+```
+
 **Ongoing:** the ingestor cron (`0 4 * * *` UTC) gradually refreshes due sources. For a full catalogue pass, use `npm run ingest -- --source <slug> --full` in a shell (respect rate limits; monitor logs).
 
 Smaller batch ingest (initial library seed without the image-focused limits) remains:
