@@ -18,6 +18,8 @@
     "seed": "tsx scripts/seed.ts",
     "mcp": "tsx apps/mcp/src/index.ts",
     "ingest": "tsx apps/ingestor/src/index.ts",
+    "check:image-coverage": "tsx scripts/check-image-coverage.ts",
+    "ingest:production-backfill-images": "bash scripts/ingest-production-backfill-images.sh",
     "admin": "tsx apps/admin/src/index.ts",
     "web": "npm run dev -w @alice/web",
     "web:build": "npm run build -w @alice/web",

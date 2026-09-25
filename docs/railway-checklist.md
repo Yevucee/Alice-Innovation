@@ -57,6 +57,41 @@ Optional first run (shell):
 npm run ingest -- --source project-drawdown --limit 20
 ```
 
+### Card thumbnails (`image_url`)
+
+Search cards and resource pages read `source_items.image_url` (filled by the ingestor from `og:image` and source-specific HTML). **Deploying new image-parsing code does not backfill existing rows** until those URLs are fetched again.
+
+After any deploy that changes image extraction (or the first time you enable thumbnails):
+
+1. Open a **shell on `alice-mcp`** (same `DATABASE_URL` and `EMBEDDING_*` as production).
+2. Run the one-off backfill (re-fetches a batch per source; safe to repeat):
+
+```bash
+bash scripts/ingest-production-backfill-images.sh
+```
+
+Or the npm alias:
+
+```bash
+npm run ingest:production-backfill-images
+```
+
+3. Check coverage:
+
+```bash
+npm run check:image-coverage
+```
+
+4. In the web app, open **Search** and confirm cards show photos instead of letter placeholders.
+
+**Ongoing:** the ingestor cron (`0 4 * * *` UTC) gradually refreshes due sources. For a full catalogue pass, use `npm run ingest -- --source <slug> --full` in a shell (respect rate limits; monitor logs).
+
+Smaller batch ingest (initial library seed without the image-focused limits) remains:
+
+```bash
+bash scripts/ingest-production-step1.sh
+```
+
 ## 4. Web service
 
 - [ ] Third app service; config: **`railway.web.toml`**
@@ -90,7 +125,9 @@ EMBEDDING_DIMENSIONS=1536
 
 - [ ] MCP: `search_library` / `get_library_stats` with bearer token
 - [ ] Web: search + open a resource + sources page
+- [ ] Web: search cards show thumbnails where sources expose images (run image backfill once after deploy if needed)
 - [ ] Ingestor: one cron run or manual `npm run ingest -- --due` in shell
+- [ ] Images: `npm run check:image-coverage` on MCP shell shows non-zero `with_image` for ingested sources
 
 ## 7. Secrets hygiene
 
