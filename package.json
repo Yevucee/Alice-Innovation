@@ -21,6 +21,8 @@
     "check:image-coverage": "tsx scripts/check-image-coverage.ts",
     "ingest:production-backfill-images": "bash scripts/ingest-production-backfill-images.sh",
     "ingest:production-backfill-images:remote": "bash scripts/run-with-production-env.sh npm run ingest:production-backfill-images",
+    "backfill:images-from-db": "tsx scripts/backfill-images-from-db.ts",
+    "backfill:images-from-db:remote": "bash scripts/run-with-production-env.sh npm run backfill:images-from-db",
     "admin": "tsx apps/admin/src/index.ts",
     "web": "npm run dev -w @alice/web",
     "web:build": "npm run build -w @alice/web",
