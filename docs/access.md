@@ -17,4 +17,4 @@ Engineering for Change remains **BLOCKED** (Cloudflare bot wall). Legitimate opt
 2. Run a one-off ingest from a network that receives HTTP 200, then rely on normal upsert semantics (same adapter, no wall-skipping code).
 3. Keep the source disabled until a partner channel exists; the parser and fixtures stay ready.
 
-WIPO GREEN and UpLink are **PAUSED** in the registry: their catalogues are mostly SPA/API-driven. XPRIZE is enabled as a first additional open HTML catalogue (`ingest:production-step4:remote`).
+**WIPO GREEN** uses the public search API documented at `/wipogreen-database/v3/api-docs` (no browser bypass). **Challenge Works** uses the public explore-prizes HTML catalogue. **UpLink** remains **PAUSED** (SPA; API discovery still needed). Run widened ingests with `npm run ingest:production-step4:remote`.

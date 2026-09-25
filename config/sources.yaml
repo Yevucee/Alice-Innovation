@@ -240,11 +240,11 @@ sources:
   - id: challenge-works
     name: "Challenge Works"
     category: general-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: challenge prize programme pages from the public explore-prizes catalogue. Winners and entrant solutions are not ingested."
     homepage: "https://challengeworks.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://challengeworks.org/about-challenge-prizes/explore-prizes/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - PROGRAMME
@@ -259,21 +259,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. A guessed case-studies path returned 404 and is not stored. Adapter not implemented."
+      notes: "Explore-prizes listing (200) links /challenge-prizes/{slug}/ programme pages. WordPress REST is redirected and is not used."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: challenge prize programme pages from the public explore-prizes catalogue. Winners and entrant solutions are not ingested."
   - id: wipo-green
     name: "WIPO GREEN"
     category: general-innovation
-    description: "PAUSED. Database URL verified; records not ingested."
+    description: "PARTIAL: technology records from the public WIPO GREEN search API. Large backfills are checkpointed with --limit."
     homepage: "https://www3.wipo.int/wipogreen/en/"
     collection_url: "https://wipogreen.wipo.int/wipogreen-database/en"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - TECHNOLOGY
       - SOLUTION
@@ -289,13 +289,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and the database URL both returned 200. The database root redirects into the database app. Adapter not implemented."
+      notes: "Public OpenAPI at /wipogreen-database/v3/api-docs. Discovery uses POST /api/v1/search with type BASIC. Article detail uses GET /api/v1/articles/{id}/summary."
     limits:
-      requests_per_minute: 10
+      requests_per_minute: 6
       concurrency: 1
     coverage:
-      historical_backfill: not-started
-      notes: "PAUSED. Database URL verified; records not ingested."
+      historical_backfill: checkpointed
+      notes: "PARTIAL: technology records from the public WIPO GREEN search API. Large backfills are checkpointed with --limit."
   - id: undp-accelerator-labs
     name: "UNDP Accelerator Labs"
     category: general-innovation
