@@ -4,9 +4,9 @@ Use one Railway **project** with four services: **Postgres (pgvector)**, **MCP**
 
 ## 0. Prerequisites
 
-- [ ] GitHub repo connected to Railway
-- [ ] `RAILWAY_TOKEN` or `railway login` on your machine for CLI deploys
-- [ ] Hosted **embeddings** endpoint (OpenAI or compatible). Do not use `127.0.0.1` on Railway.
+- [x] GitHub repo connected to Railway
+- [x] `RAILWAY_API_TOKEN` / CLI for deploys and remote ops (`scripts/run-with-production-env.sh`)
+- [x] Hosted **embeddings** endpoint (OpenAI or compatible). Do not use `127.0.0.1` on Railway.
 
 ## 1. Database
 
@@ -42,7 +42,14 @@ npm run migrate
 npm run seed
 ```
 
-- [ ] `curl https://<mcp-host>/health` → `{"status":"ok"}`
+- [x] `curl https://<mcp-host>/health` → `{"status":"ok"}`
+
+Post-deploy:
+
+```bash
+npm run smoke:production:remote
+npm run migrate   # on MCP shell or via run-with-production-env
+```
 
 ## 3. Ingestor service
 
@@ -142,11 +149,12 @@ EMBEDDING_DIMENSIONS=1536
 
 ## 6. Smoke tests
 
-- [ ] MCP: `search_library` / `get_library_stats` with bearer token
-- [ ] Web: search + open a resource + sources page
-- [ ] Web: search cards show thumbnails where sources expose images (run image backfill once after deploy if needed)
-- [ ] Ingestor: one cron run or manual `npm run ingest -- --due` in shell
-- [ ] Images: `npm run check:image-coverage` on MCP shell shows non-zero `with_image` for ingested sources
+- [x] Automated: `npm run smoke:production:remote` (health, auth, `tools/list`, `get_library_stats`, DB stats)
+- [ ] Manual web: sign in, search, open a resource, sources page
+- [x] Images: `npm run check:image-coverage` (run solar loop until solar source is satisfied)
+- [x] Ingestor: cron `0 4 * * *` UTC on `alice-ingestor`; manual `npm run ingest -- --due` when testing
+
+See `docs/access.md` for web access restrictions.
 
 ## 7. Secrets hygiene
 

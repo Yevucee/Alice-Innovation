@@ -30,6 +30,15 @@ New resources are `AUTO_INGESTED`. Search does not require review. Possible dupl
 
 Leave the classifier off. Skip embeddings until a key is configured if you only need keyword search. Sample with `--limit` before `--full`. Request rates are in `config/sources.yaml`.
 
+## Production smoke test
+
+From a machine with Railway env (or Cloud Agent):
+
+```bash
+npm run smoke:production:remote
+npm run ops:cleanup-stale-runs:remote   # optional; closes RUNNING runs older than 2h
+```
+
 ## Tests before a source change
 
 ```bash
