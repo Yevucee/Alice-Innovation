@@ -11,7 +11,7 @@ Status in this delivery:
 | `engineering-for-change` | BLOCKED | yes | MANUAL |
 | `mit-solve` | PARTIAL | yes | WEEKLY |
 | `wef-uplink` | PAUSED | no | WEEKLY |
-| `xprize` | PAUSED | no | MONTHLY |
+| `xprize` | PARTIAL | yes | MONTHLY |
 | `global-innovation-fund` | PAUSED | no | MONTHLY |
 | `grand-challenges-canada` | PAUSED | no | MONTHLY |
 | `challenge-works` | PAUSED | no | MONTHLY |

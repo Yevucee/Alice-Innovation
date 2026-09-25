@@ -24,7 +24,9 @@ test("the registry contains all 61 sources with homepages and no invented blanks
   assert.equal(byId["springwise"].status, "PARTIAL");
   assert.equal(byId["engineering-for-change"].status, "BLOCKED");
   assert.equal(byId["engineering-for-change"].collection_url, null);
+  assert.equal(byId["xprize"].status, "PARTIAL");
+  assert.equal(byId["xprize"].enabled, true);
   const paused = sources.filter((source) => source.status === "PAUSED");
-  assert.equal(paused.length, 56);
+  assert.equal(paused.length, 55);
   assert.ok(paused.every((source) => source.enabled === false));
 });
