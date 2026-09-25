@@ -14,8 +14,8 @@ Status in this delivery:
 | `xprize` | PARTIAL | yes | MONTHLY |
 | `global-innovation-fund` | PAUSED | no | MONTHLY |
 | `grand-challenges-canada` | PAUSED | no | MONTHLY |
-| `challenge-works` | PAUSED | no | MONTHLY |
-| `wipo-green` | PAUSED | no | WEEKLY |
+| `challenge-works` | PARTIAL | yes | MONTHLY |
+| `wipo-green` | PARTIAL | yes | WEEKLY |
 | `undp-accelerator-labs` | PAUSED | no | MONTHLY |
 | `what-design-can-do` | PAUSED | no | MONTHLY |
 | `fao-teca` | PAUSED | no | WEEKLY |

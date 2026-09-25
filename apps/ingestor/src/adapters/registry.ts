@@ -5,6 +5,8 @@ import { projectDrawdownAdapter } from "./project-drawdown.js";
 import { solarImpulseAdapter } from "./solar-impulse.js";
 import { springwiseAdapter } from "./springwise.js";
 import { xprizeAdapter } from "./xprize.js";
+import { challengeWorksAdapter } from "./challenge-works.js";
+import { wipoGreenAdapter } from "./wipo-green.js";
 
 const ADAPTERS: SourceAdapter[] = [
   solarImpulseAdapter,
@@ -13,6 +15,8 @@ const ADAPTERS: SourceAdapter[] = [
   springwiseAdapter,
   projectDrawdownAdapter,
   xprizeAdapter,
+  challengeWorksAdapter,
+  wipoGreenAdapter,
 ];
 
 export function getAdapter(id: string): SourceAdapter | undefined {

@@ -7,6 +7,8 @@ import { parseMitSolve } from "../../apps/ingestor/src/adapters/mit-solve.ts";
 import { parseSolarImpulse } from "../../apps/ingestor/src/adapters/solar-impulse.ts";
 import { parseSpringwise, parseSpringwiseRss } from "../../apps/ingestor/src/adapters/springwise.ts";
 import { parseXprize } from "../../apps/ingestor/src/adapters/xprize.ts";
+import { parseChallengeWorks } from "../../apps/ingestor/src/adapters/challenge-works.ts";
+import { parseWipoGreen } from "../../apps/ingestor/src/adapters/wipo-green.ts";
 import { CLASSIFIER_SYSTEM_PROMPT } from "../../apps/ingestor/src/classifier.ts";
 import type { FetchedPage } from "../../apps/ingestor/src/adapters/types.ts";
 
@@ -78,6 +80,29 @@ test("xprize parser reads Open Graph metadata", () => {
   assert.match(draft.sourceSummary, /fresh water/i);
   assert.equal(draft.externalId, "sample-water");
   assert.equal(draft.evidenceBasis, "PROGRAMME_SELECTED");
+});
+
+test("challenge works parser reads programme Open Graph metadata", () => {
+  const draft = parseChallengeWorks(page("challenge-works-item.html", "https://challengeworks.org/challenge-prizes/sample-water-prize/"));
+  assert.equal(draft.title, "Sample Water Prize");
+  assert.match(draft.sourceSummary, /sample challenge/i);
+  assert.equal(draft.externalId, "sample-water-prize");
+});
+
+test("wipo green parser reads search API JSON", () => {
+  const html = readFileSync(new URL("../fixtures/wipo-green-item.json", import.meta.url), "utf8");
+  const draft = parseWipoGreen({
+    url: "https://wipogreen.wipo.int/wipogreen-database/en/articles/4242",
+    finalUrl: "https://wipogreen.wipo.int/wipogreen-database/en/articles/4242",
+    status: 200,
+    html,
+    etag: null,
+    lastModified: null,
+    listingOnly: false,
+  });
+  assert.equal(draft.title, "Sample solar dryer");
+  assert.equal(draft.organisationName, "Sample Green Co");
+  assert.equal(draft.externalId, "4242");
 });
 
 test("engineering for change parser reads a provisional article fixture", () => {

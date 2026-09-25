@@ -27,6 +27,8 @@ test("the registry contains all 61 sources with homepages and no invented blanks
   assert.equal(byId["xprize"].status, "PARTIAL");
   assert.equal(byId["xprize"].enabled, true);
   const paused = sources.filter((source) => source.status === "PAUSED");
-  assert.equal(paused.length, 55);
+  assert.equal(byId["challenge-works"].enabled, true);
+  assert.equal(byId["wipo-green"].enabled, true);
+  assert.equal(paused.length, 53);
   assert.ok(paused.every((source) => source.enabled === false));
 });
