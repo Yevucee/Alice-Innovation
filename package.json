@@ -23,6 +23,8 @@
     "ingest:production-backfill-images:remote": "bash scripts/run-with-production-env.sh npm run ingest:production-backfill-images",
     "backfill:images-from-db": "tsx scripts/backfill-images-from-db.ts",
     "backfill:images-from-db:remote": "bash scripts/run-with-production-env.sh npm run backfill:images-from-db",
+    "backfill:solar-images-all:remote": "bash scripts/run-with-production-env.sh bash scripts/backfill-solar-images-all.sh",
+    "ingest:production-step2:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-step2-catalogue.sh",
     "admin": "tsx apps/admin/src/index.ts",
     "web": "npm run dev -w @alice/web",
     "web:build": "npm run build -w @alice/web",
