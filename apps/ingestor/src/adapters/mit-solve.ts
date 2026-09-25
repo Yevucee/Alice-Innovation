@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import { buildDraft, sitemapLocs } from "./draft.js";
+import { buildDraft, ogImageFromPage, sitemapLocs } from "./draft.js";
 import { defaultFetch, type FetchedPage, type SourceAdapter } from "./types.js";
 import type { NormalisedDraft } from "@alice/shared";
 
@@ -41,6 +41,7 @@ export function parseMitSolve(page: FetchedPage): NormalisedDraft {
     organisationName: organisation,
     personName: person || null,
     countryName: headquarters,
+    imageUrl: ogImageFromPage(page.html, page.finalUrl || page.url),
     evidenceBasis: "PROGRAMME_SELECTED",
     evidenceStage: "UNKNOWN",
     rawMetadata: { headquarters, listing_only: page.listingOnly },

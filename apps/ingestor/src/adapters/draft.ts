@@ -1,5 +1,23 @@
+import { load } from "cheerio";
 import { asEvidenceBasis, asEvidenceStage, asResourceType, canonicaliseUrl, truncate, type NormalisedDraft, type ResourceType } from "@alice/shared";
 import { countryCodeFor } from "@alice/taxonomy";
+
+export function absoluteImageUrl(pageUrl: string, imageUrl: string | undefined | null): string | null {
+  if (!imageUrl?.trim()) return null;
+  try {
+    return new URL(imageUrl.trim(), pageUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
+export function ogImageFromPage(html: string, pageUrl: string): string | null {
+  const $ = load(html);
+  const candidate = $("meta[property='og:image']").attr("content")
+    || $("meta[name='twitter:image']").attr("content")
+    || $("meta[property='twitter:image']").attr("content");
+  return absoluteImageUrl(pageUrl, candidate);
+}
 
 export function buildDraft(input: {
   title: string;

@@ -78,7 +78,16 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
   }, [params, router]);
 
   useEffect(() => {
-    fetch("/api/categories").then((r) => r.json()).then(setCategories).catch(() => setCategories(null));
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((json: CategoryData) => {
+        if (Array.isArray(json?.resource_types) && Array.isArray(json?.geographies)) {
+          setCategories(json);
+        } else {
+          setCategories(null);
+        }
+      })
+      .catch(() => setCategories(null));
     fetch("/api/sources")
       .then((r) => r.json())
       .then((json: { sources?: Array<{ id: string; name: string }> }) => setSourceCatalogue(json.sources ?? []))
@@ -92,7 +101,9 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
     if (key === "tech") return categories.technologies.find((t) => t.slug === value)?.name ?? value;
     if (key === "type") return categories.resource_types.find((t) => t.code === value)?.label ?? value;
     if (key === "country") {
-      const geo = categories.geographies.find((g) => g.country_code.toLowerCase() === value);
+      const geo = categories.geographies.find(
+        (g) => g.country_code && g.country_code.toLowerCase() === value,
+      );
       return geo?.country_name ?? value;
     }
     if (key === "source") return sourceCatalogue.find((s) => s.id === value)?.name ?? value;
@@ -116,14 +127,23 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
       offset: state.offset,
     };
     fetch("/api/search", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
-      .then((r) => r.json())
-      .then((json) => {
-        const payload = json as SearchResponse;
+      .then(async (r) => {
+        const json = await r.json() as SearchResponse & { error?: string };
+        if (!r.ok || !Array.isArray(json.results)) {
+          throw new Error(json.error ?? "search_failed");
+        }
+        return json;
+      })
+      .then((payload) => {
         setMeta(payload);
         setRows((previous) => (state.offset === 0 ? payload.results : [...previous, ...payload.results]));
       })
+      .catch(() => {
+        setMeta({ results: [], filtered_total: 0, library_total: libraryTotal, vector: "unavailable" });
+        setRows([]);
+      })
       .finally(() => setLoading(false));
-  }, [filterKey, state.offset]);
+  }, [filterKey, state.offset, libraryTotal]);
 
   const activeFilters = [
     ...state.type.map((v) => ({ key: "type", value: v, label: labelFor("type", v) })),
@@ -154,7 +174,10 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
         selected={state.sector} onToggle={(v) => toggle("sector", v, state.sector)} />
       <FilterGroup title="Technology" options={categories.technologies.slice(0, 14).map((t) => ({ value: t.slug, label: t.name }))}
         selected={state.tech} onToggle={(v) => toggle("tech", v, state.tech)} />
-      <FilterGroup title="Location" options={categories.geographies.slice(0, 16).map((g) => ({ value: g.country_code.toLowerCase(), label: g.country_name }))}
+      <FilterGroup title="Location" options={categories.geographies
+        .filter((g) => g.country_code)
+        .slice(0, 16)
+        .map((g) => ({ value: g.country_code.toLowerCase(), label: g.country_name }))}
         selected={state.country} onToggle={(v) => toggle("country", v, state.country)} />
       <FilterGroup title="Stage" options={["DEPLOYED", "PILOT", "PROTOTYPE", "SCALED", "IDEA"].map((v) => ({ value: v, label: v.replace(/_/g, " ") }))}
         selected={state.stage} onToggle={(v) => toggle("stage", v, state.stage)} />
@@ -180,7 +203,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
 
       <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
         <span className="text-muted">
-          {meta ? `${meta.filtered_total.toLocaleString()} of ${libraryTotal.toLocaleString()} resources` : "—"}
+          {meta ? `${(meta.filtered_total ?? 0).toLocaleString()} of ${libraryTotal.toLocaleString()} resources` : "—"}
         </span>
         <div className="flex items-center gap-2">
           <span className="text-muted">Results:</span>

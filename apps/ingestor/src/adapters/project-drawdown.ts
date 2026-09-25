@@ -1,6 +1,6 @@
 import { load } from "cheerio";
 import { htmlToText, type NormalisedDraft } from "@alice/shared";
-import { buildDraft } from "./draft.js";
+import { buildDraft, ogImageFromPage } from "./draft.js";
 import { defaultFetch, type FetchedPage, type SourceAdapter } from "./types.js";
 
 const SKIP = new Set(["primer", "faqs", "acknowledgments", "explorer"]);
@@ -23,6 +23,7 @@ export function parseDrawdown(page: FetchedPage): NormalisedDraft {
     evidenceBasis: "INDEPENDENT_ASSESSMENT",
     evidenceStage: "UNKNOWN",
     tags: classification ? [classification] : [],
+    imageUrl: ogImageFromPage(page.html, page.finalUrl || page.url),
     rawMetadata: { classification: classification || null, listing_only: page.listingOnly },
     etag: page.etag,
     lastModified: page.lastModified,

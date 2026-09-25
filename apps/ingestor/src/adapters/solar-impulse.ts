@@ -1,4 +1,4 @@
-import { buildDraft, evidenceFromTrl, findObject, sitemapLocs, stringField } from "./draft.js";
+import { absoluteImageUrl, buildDraft, evidenceFromTrl, findObject, sitemapLocs, stringField } from "./draft.js";
 import { defaultFetch, type FetchedPage, type SourceAdapter } from "./types.js";
 import type { NormalisedDraft } from "@alice/shared";
 
@@ -24,6 +24,14 @@ export function parseSolarImpulse(page: FetchedPage): NormalisedDraft {
   const maturity = typeof solution.maturity === "string" ? solution.maturity : null;
   const summary = typeof solution.one_sentence_description === "string" ? solution.one_sentence_description : "";
   const supporting = typeof solution.supporting === "string" ? solution.supporting : summary;
+  const imageCandidate = typeof solution.image === "string"
+    ? solution.image
+    : typeof solution.picture === "string"
+      ? solution.picture
+      : typeof solution.logo === "string"
+        ? solution.logo
+        : null;
+  const imageUrl = absoluteImageUrl(page.finalUrl || page.url, imageCandidate);
   return buildDraft({
     title: String(solution.short_name),
     url: page.finalUrl || page.url,
@@ -37,6 +45,7 @@ export function parseSolarImpulse(page: FetchedPage): NormalisedDraft {
     evidenceStage: evidenceFromTrl(maturity),
     evidenceBasis: solution.is_labeled === true ? "INDEPENDENT_ASSESSMENT" : "UNKNOWN",
     maturityStage: maturity ?? "UNKNOWN",
+    imageUrl,
     rawMetadata: {
       slug: solution.slug ?? null,
       labeled: solution.is_labeled === true,

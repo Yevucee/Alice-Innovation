@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import { buildDraft } from "./draft.js";
+import { absoluteImageUrl, buildDraft, ogImageFromPage } from "./draft.js";
 import { defaultFetch, type FetchedPage, type SourceAdapter } from "./types.js";
 import type { NormalisedDraft } from "@alice/shared";
 
@@ -11,6 +11,8 @@ export function parseSpringwise(page: FetchedPage): NormalisedDraft {
     const href = link.attr("href") || page.url;
     const externalId = $(".tile-post").attr("data-id") || href;
     if (!title) throw new Error(`Springwise listing has no title: ${page.url}`);
+    const tileImg = $(".tile-post img").first().attr("src") || $(".tile-post img").first().attr("data-src");
+    const imageUrl = absoluteImageUrl(page.url, tileImg) || ogImageFromPage(page.html, page.url);
     return buildDraft({
       title,
       url: href,
@@ -18,6 +20,7 @@ export function parseSpringwise(page: FetchedPage): NormalisedDraft {
       summary: title,
       text: "",
       resourceType: "SOLUTION",
+      imageUrl,
       evidenceBasis: "EDITORIALLY_CURATED",
       rawMetadata: { listing_only: true },
       etag: page.etag,
@@ -36,6 +39,7 @@ export function parseSpringwise(page: FetchedPage): NormalisedDraft {
     summary,
     text: summary,
     resourceType: "SOLUTION",
+    imageUrl: ogImageFromPage(page.html, page.finalUrl || page.url),
     evidenceBasis: "EDITORIALLY_CURATED",
     rawMetadata: { listing_only: false },
     etag: page.etag,

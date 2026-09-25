@@ -61,7 +61,7 @@ export async function browseCategories(db: Queryable): Promise<Record<string, un
     db.query(`SELECT slug, name, parent_id::text FROM problems ORDER BY name`),
     db.query(`SELECT slug, name, parent_id::text FROM technologies ORDER BY name`),
     db.query(`SELECT code, label FROM resource_types ORDER BY code`),
-    db.query(`SELECT DISTINCT country_name, country_code FROM locations ORDER BY country_name LIMIT 200`),
+    db.query(`SELECT DISTINCT country_name, country_code FROM locations WHERE country_code IS NOT NULL ORDER BY country_name LIMIT 200`),
   ]);
   return {
     sectors: sectors.rows,
