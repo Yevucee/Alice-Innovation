@@ -5,7 +5,8 @@ import { parseDrawdown } from "../../apps/ingestor/src/adapters/project-drawdown
 import { parseEngineeringForChange } from "../../apps/ingestor/src/adapters/engineering-for-change.ts";
 import { parseMitSolve } from "../../apps/ingestor/src/adapters/mit-solve.ts";
 import { parseSolarImpulse } from "../../apps/ingestor/src/adapters/solar-impulse.ts";
-import { parseSpringwise } from "../../apps/ingestor/src/adapters/springwise.ts";
+import { parseSpringwise, parseSpringwiseRss } from "../../apps/ingestor/src/adapters/springwise.ts";
+import { parseXprize } from "../../apps/ingestor/src/adapters/xprize.ts";
 import { CLASSIFIER_SYSTEM_PROMPT } from "../../apps/ingestor/src/classifier.ts";
 import type { FetchedPage } from "../../apps/ingestor/src/adapters/types.ts";
 
@@ -62,6 +63,21 @@ test("springwise parser uses the listing card when the article is blocked", () =
   assert.equal(draft.externalId, "118844");
   assert.equal(draft.evidenceBasis, "EDITORIALLY_CURATED");
   assert.equal(draft.rawMetadata.listing_only, true);
+});
+
+test("springwise RSS discovery maps items to listing refs", () => {
+  const xml = `<?xml version="1.0"?><rss><channel><item><title><![CDATA[RSS sample]]></title><link>https://springwise.com/clean-energy/sample-rss-item/</link></item></channel></rss>`;
+  const refs = parseSpringwiseRss(xml);
+  assert.equal(refs.length, 1);
+  assert.equal(refs[0].url, "https://springwise.com/clean-energy/sample-rss-item/");
+});
+
+test("xprize parser reads Open Graph metadata", () => {
+  const draft = parseXprize(page("xprize-item.html", "https://www.xprize.org/competitions/sample-water"));
+  assert.equal(draft.title, "Sample Water Prize");
+  assert.match(draft.sourceSummary, /fresh water/i);
+  assert.equal(draft.externalId, "sample-water");
+  assert.equal(draft.evidenceBasis, "PROGRAMME_SELECTED");
 });
 
 test("engineering for change parser reads a provisional article fixture", () => {

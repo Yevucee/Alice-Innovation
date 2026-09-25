@@ -50,14 +50,14 @@ sources:
     discovery:
       preferred_method: html
       sitemap: null
-      rss: null
-      notes: "Homepage HTML (200) contains .tile-post cards for free-to-read innovations. robots.txt allows general crawlers with crawl-delay 10 and blocks several AI-training user agents; this library uses its own user agent. /feed/, /sitemaps.xml, /innovation-database/, and sampled article URLs returned 403 and are not used."
+      rss: "https://springwise.com/feed/"
+      notes: "Homepage and top-level /category/ pages (200) expose .tile-post listing cards. The public RSS feed at /feed/ is used when it returns 200. Article bodies are still fetched only when the origin allows; otherwise listing card metadata is stored. Sitemaps are often blocked by Cloudflare and are not used."
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-attempted
-      notes: "PARTIAL: titles and URLs from public listing cards only. Article bodies are not fetched when the origin returns 403. No collection URL is stored because the database path was not readable."
+      notes: "PARTIAL: titles and URLs from homepage, category listings, and RSS when available. Article bodies are not fetched when the origin returns 403."
   - id: engineering-for-change
     name: "Engineering for Change / Solutions Library"
     category: general-innovation
@@ -151,11 +151,11 @@ sources:
   - id: xprize
     name: "XPRIZE"
     category: general-innovation
-    description: "PAUSED. Competitions page verified; individual prize records are not ingested yet."
+    description: "PARTIAL: active grand-challenge competition pages from the public competitions index. Past winners and team profiles are not ingested yet."
     homepage: "https://www.xprize.org/"
     collection_url: "https://www.xprize.org/competitions"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - PROGRAMME
@@ -177,7 +177,7 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED. Competitions page verified; individual prize records are not ingested yet."
+      notes: "PARTIAL: active grand-challenge competition pages from the public competitions index. Past winners and team profiles are not ingested yet."
   - id: global-innovation-fund
     name: "Global Innovation Fund"
     category: general-innovation

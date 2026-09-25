@@ -26,6 +26,7 @@
     "backfill:solar-images-all:remote": "bash scripts/run-with-production-env.sh bash scripts/backfill-solar-images-all.sh",
     "ingest:production-step2:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-step2-catalogue.sh",
     "ingest:production-step3:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-step3-catalogue.sh",
+    "ingest:production-step4:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-step4-sources.sh",
     "ops:cleanup-stale-runs": "tsx scripts/ops-cleanup-stale-ingestion-runs.ts",
     "ops:cleanup-stale-runs:remote": "bash scripts/run-with-production-env.sh npm run ops:cleanup-stale-runs",
     "smoke:production": "tsx scripts/production-smoke-test.ts",

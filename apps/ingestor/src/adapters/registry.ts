@@ -4,6 +4,7 @@ import { mitSolveAdapter } from "./mit-solve.js";
 import { projectDrawdownAdapter } from "./project-drawdown.js";
 import { solarImpulseAdapter } from "./solar-impulse.js";
 import { springwiseAdapter } from "./springwise.js";
+import { xprizeAdapter } from "./xprize.js";
 
 const ADAPTERS: SourceAdapter[] = [
   solarImpulseAdapter,
@@ -11,6 +12,7 @@ const ADAPTERS: SourceAdapter[] = [
   mitSolveAdapter,
   springwiseAdapter,
   projectDrawdownAdapter,
+  xprizeAdapter,
 ];
 
 export function getAdapter(id: string): SourceAdapter | undefined {
