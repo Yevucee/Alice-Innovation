@@ -1,4 +1,4 @@
-import { buildDraft, evidenceFromTrl, findObject, imageFromUnknown, sitemapLocs, stringField } from "./draft.js";
+import { buildDraft, evidenceFromTrl, findObject, imageFromUnknown, ogImageFromPage, sitemapLocs, stringField } from "./draft.js";
 import { defaultFetch, type FetchedPage, type SourceAdapter } from "./types.js";
 import type { NormalisedDraft } from "@alice/shared";
 
@@ -28,7 +28,8 @@ export function parseSolarImpulse(page: FetchedPage): NormalisedDraft {
   const imageUrl = [solution.image, solution.picture, solution.logo, solution.photo, solution.thumbnail]
     .map((candidate) => imageFromUnknown(pageUrl, candidate))
     .find((url): url is string => Boolean(url))
-    ?? imageFromUnknown(pageUrl, company?.logo ?? company?.image);
+    ?? imageFromUnknown(pageUrl, company?.logo ?? company?.image)
+    ?? ogImageFromPage(page.html, pageUrl);
   return buildDraft({
     title: String(solution.short_name),
     url: page.finalUrl || page.url,
