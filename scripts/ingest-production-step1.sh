@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Run on Railway alice-mcp Console (shared production DB + OpenRouter embeddings).
+# For card thumbnails after image ingest shipped, use scripts/ingest-production-backfill-images.sh instead.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

@@ -77,8 +77,9 @@ export async function upsertDraft(
       id: string;
       resource_id: string | null;
       content_hash: string;
+      image_url: string | null;
     }>(
-      `SELECT id::text, resource_id::text, content_hash
+      `SELECT id::text, resource_id::text, content_hash, image_url
        FROM source_items
        WHERE source_id = $1 AND (external_id = $2 OR canonical_url = $3)
        LIMIT 1`,
@@ -86,19 +87,26 @@ export async function upsertDraft(
     );
 
     if (existing.rows[0] && existing.rows[0].content_hash === hash && existing.rows[0].resource_id) {
+      const row = existing.rows[0];
+      const incomingImage = draft.imageUrl?.trim() || null;
+      const priorImage = row.image_url?.trim() || null;
+      const imageChanged = Boolean(incomingImage && incomingImage !== priorImage);
       await client.query(
         `UPDATE source_items
          SET last_seen_at = now(), last_fetched_at = now(), miss_count = 0, active = true,
              ingestion_run_id = $2, http_etag = COALESCE($3, http_etag),
-             http_last_modified = COALESCE($4, http_last_modified), updated_at = now()
+             http_last_modified = COALESCE($4, http_last_modified),
+             image_url = COALESCE(NULLIF(btrim($5::text), ''), image_url),
+             updated_at = now()
          WHERE id = $1`,
-        [existing.rows[0].id, runId, draft.etag, draft.lastModified],
+        [row.id, runId, draft.etag, draft.lastModified, incomingImage],
       );
       await client.query("COMMIT");
+      const resourceId = row.resource_id as string;
       return {
-        outcome: "unchanged",
-        resourceId: existing.rows[0].resource_id,
-        sourceItemId: existing.rows[0].id,
+        outcome: imageChanged ? "updated" : "unchanged",
+        resourceId,
+        sourceItemId: row.id,
         contentHash: hash,
       };
     }

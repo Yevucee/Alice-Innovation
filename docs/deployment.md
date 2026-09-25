@@ -45,6 +45,17 @@ Same repo, second service, config `railway.ingestor.toml`.
 
 Use the same database URL and embedding variables. Do not set a public domain on the ingestor.
 
+### Card images (one-off backfill)
+
+Thumbnails come from `source_items.image_url` during ingest. After deploying image-parsing changes, re-fetch items from the **alice-mcp** Railway shell (private DB + embeddings):
+
+```bash
+npm run ingest:production-backfill-images
+npm run check:image-coverage
+```
+
+See `docs/railway-checklist.md` for limits per source and smoke checks.
+
 ## Web service
 
 Config file: `railway.web.toml`.
