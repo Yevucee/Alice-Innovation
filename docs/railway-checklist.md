@@ -99,6 +99,18 @@ Smaller batch ingest (initial library seed without the image-focused limits) rem
 bash scripts/ingest-production-step1.sh
 ```
 
+**Step 2 — grow catalogues** (more MIT Solve / Springwise / Drawdown rows; run after step 1):
+
+```bash
+bash scripts/run-with-production-env.sh bash scripts/ingest-production-step2-catalogue.sh
+```
+
+**Solar images to completion** (loops 100 URLs at a time until done):
+
+```bash
+npm run backfill:solar-images-all:remote
+```
+
 ## 4. Web service
 
 - [ ] Third app service; config: **`railway.web.toml`**
