@@ -106,7 +106,10 @@ export default async function DiscoverPage() {
           ))}
         </div>
         <Link href="/sources" className="mt-4 inline-block text-sm text-accent hover:underline">
-          View all 61 sources →
+          Indexed sources →
+        </Link>
+        <Link href="/sources/other-resources" className="mt-2 block text-sm text-accent hover:underline">
+          Other resources (browse only, not auto-indexed) →
         </Link>
       </Section>
     </div>

@@ -1,6 +1,8 @@
 # Sources
 
-All 61 approved sources are in `config/sources.yaml`. Collection URLs are included only when an HTTP request returned the page. Homepages that answered 403 are the published sites; the client did not bypass bot checks. `terms_checked` is false everywhere: robots were read for the first five where the file was reachable, and a full terms review is still required before raising rates.
+All 61 approved sources are in `config/sources.yaml`.
+
+In the web app, **Indexed sources** (`/sources`) lists catalogues the ingestor runs. **Other resources** (`/sources/other-resources`) lists the rest: blocked bot walls, paused adapters, and manual-only sites — with links to official homepages, not scraped into search. Collection URLs are included only when an HTTP request returned the page. Homepages that answered 403 are the published sites; the client did not bypass bot checks. `terms_checked` is false everywhere: robots were read for the first five where the file was reachable, and a full terms review is still required before raising rates.
 
 Status in this delivery:
 
