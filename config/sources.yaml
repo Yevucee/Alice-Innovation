@@ -1212,13 +1212,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /fellows returned 200. Adapter not implemented."
+      notes: "Homepage and /fellows returned 200 (Nuxt SSR shell). Fellow profile URLs are not present in HTML or sitemap.xml; no public Contentful/WP REST route verified. Adapter not implemented."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PAUSED until a verified public catalogue API or sitemap exists. Not silently dropped."
   - id: rolex-awards
     name: "Rolex Awards for Enterprise"
     category: people-innovators
@@ -1488,7 +1488,7 @@ sources:
   - id: hundred
     name: "HundrED"
     category: education-government-design
-    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
+    description: "PARTIAL: innovation records from the public innovations sitemap (~4k URLs). HTML grid alone is JS-heavy."
     homepage: "https://hundred.org/en"
     collection_url: "https://hundred.org/en/innovations"
     enabled: true
@@ -1505,22 +1505,22 @@ sources:
       robots_checked: false
       terms_checked: false
     discovery:
-      preferred_method: html
-      sitemap: null
+      preferred_method: sitemap
+      sitemap: "https://hundred.org/sitemaps/innovations.xml"
       rss: null
-      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
+      notes: "Public sitemap index lists sitemaps/innovations.xml with /en/innovations/{slug} URLs. Listing HTML exposes only a small server-rendered sample."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
-      historical_backfill: not-started
-      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
+      historical_backfill: checkpointed
+      notes: "PARTIAL: innovations sitemap discovery; use --limit for staged backfill."
   - id: oecd-opsi
     name: "OECD Observatory of Public Sector Innovation"
     category: education-government-design
-    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
+    description: "PARTIAL: innovation case studies from the public WordPress REST case collection."
     homepage: "https://oecd-opsi.org/"
-    collection_url: "https://oecd-opsi.org/case_type/opsi/"
+    collection_url: "https://oecd-opsi.org/innovations/"
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1538,13 +1538,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
+      notes: "GET /wp-json/wp/v2/case returns innovation permalinks under /innovations/{slug}/. The innovations index HTML is JS-paginated and is not used for discovery."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
-      historical_backfill: not-started
-      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
+      historical_backfill: checkpointed
+      notes: "PARTIAL: WP REST case catalogue; use --limit for staged backfill."
   - id: nesta
     name: "Nesta"
     category: education-government-design

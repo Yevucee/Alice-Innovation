@@ -240,7 +240,7 @@ async function discoverFromHtml(ctx: AdapterContext, config: HtmlCatalogueConfig
 export function createHtmlCatalogueAdapter(config: HtmlCatalogueConfig): SourceAdapter {
   return {
     id: config.id,
-    fullCatalogue: Boolean(config.wordpressRest),
+    fullCatalogue: Boolean(config.wordpressRest || config.sitemap),
     async discover(ctx) {
       if (config.wordpressRest) {
         return discoverWordPressRest(ctx, config.wordpressRest);
