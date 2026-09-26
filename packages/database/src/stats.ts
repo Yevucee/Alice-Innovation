@@ -22,18 +22,53 @@ export async function libraryStats(db: Queryable): Promise<Record<string, number
 
 export async function browseSources(
   db: Queryable,
-  filters: { category?: string; status?: string; updateFrequency?: string },
+  filters: {
+    category?: string;
+    status?: string;
+    updateFrequency?: string;
+    /** When true, only sources the ingestor may run (enabled in the registry). */
+    ingestableOnly?: boolean;
+    /** When true, catalogue entries not auto-indexed (disabled or blocked/paused). */
+    referenceOnly?: boolean;
+  },
 ): Promise<unknown[]> {
   const rows = await db.query(
     `SELECT slug AS source_id, name, category, status, update_frequency, access_class,
             official_homepage, collection_url, enabled, item_count, coverage_notes,
+            description, discovery_notes,
             last_successful_run, last_attempted_run
      FROM sources
      WHERE ($1::text IS NULL OR category = $1)
        AND ($2::text IS NULL OR status = $2)
        AND ($3::text IS NULL OR update_frequency = $3)
-     ORDER BY category, name`,
-    [filters.category ?? null, filters.status ?? null, filters.updateFrequency ?? null],
+       AND (
+         $4::boolean IS NOT TRUE
+         OR enabled = true
+       )
+       AND (
+         $5::boolean IS NOT TRUE
+         OR (
+           enabled = false
+           OR status IN ('BLOCKED', 'PAUSED', 'MANUAL', 'BROKEN', 'METADATA_ONLY')
+         )
+       )
+     ORDER BY
+       CASE status
+         WHEN 'BLOCKED' THEN 0
+         WHEN 'BROKEN' THEN 1
+         WHEN 'PAUSED' THEN 2
+         WHEN 'MANUAL' THEN 3
+         ELSE 4
+       END,
+       category,
+       name`,
+    [
+      filters.category ?? null,
+      filters.status ?? null,
+      filters.updateFrequency ?? null,
+      filters.ingestableOnly === true,
+      filters.referenceOnly === true,
+    ],
   );
   return rows.rows;
 }
