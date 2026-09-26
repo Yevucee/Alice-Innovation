@@ -46,7 +46,7 @@ Status in this delivery:
 | `acumen` | PAUSED | no | MONTHLY |
 | `orange-social-venture-prize` | PAUSED | no | MONTHLY |
 | `ashoka` | PAUSED | no | MONTHLY |
-| `skoll` | PARTIAL | yes | MONTHLY |
+| `skoll` | BLOCKED | no | MONTHLY |
 | `echoing-green` | PARTIAL | yes | MONTHLY |
 | `cartier-womens-initiative` | PAUSED | no | MONTHLY |
 | `rolex-awards` | PAUSED | no | MONTHLY |

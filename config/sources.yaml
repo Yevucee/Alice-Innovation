@@ -1132,11 +1132,11 @@ sources:
   - id: skoll
     name: "Skoll Awardees"
     category: people-innovators
-    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
+    description: "BLOCKED for ingest: skoll.org robots.txt disallows all paths (Disallow: /). Adapter uses public WP REST grantees when policy allows."
     homepage: "https://skoll.org/"
     collection_url: "https://skoll.org/community/awardees/"
-    enabled: true
-    status: PARTIAL
+    enabled: false
+    status: BLOCKED
     resource_types:
       - PERSON
       - ORGANISATION
@@ -1146,19 +1146,19 @@ sources:
     access:
       class: PUBLIC
       status: OPEN
-      robots_checked: false
+      robots_checked: true
       terms_checked: false
     discovery:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
+      notes: "robots.txt returns User-agent: * / Disallow: / for this client. WP REST /wp-json/wp/v2/grantees is reachable but blocked by the same robots rule. Ingest is disabled until Skoll publishes a permissive robots policy or a partnership feed."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
+      notes: "BLOCKED by robots.txt. Not silently dropped."
   - id: echoing-green
     name: "Echoing Green Fellows"
     category: people-innovators
