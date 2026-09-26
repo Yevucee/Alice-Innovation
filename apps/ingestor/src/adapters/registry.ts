@@ -7,6 +7,7 @@ import { springwiseAdapter } from "./springwise.js";
 import { xprizeAdapter } from "./xprize.js";
 import { challengeWorksAdapter } from "./challenge-works.js";
 import { wipoGreenAdapter } from "./wipo-green.js";
+import { catalogueAdapters } from "./catalogue-adapters.js";
 
 const ADAPTERS: SourceAdapter[] = [
   solarImpulseAdapter,
@@ -17,6 +18,7 @@ const ADAPTERS: SourceAdapter[] = [
   xprizeAdapter,
   challengeWorksAdapter,
   wipoGreenAdapter,
+  ...catalogueAdapters,
 ];
 
 export function getAdapter(id: string): SourceAdapter | undefined {
