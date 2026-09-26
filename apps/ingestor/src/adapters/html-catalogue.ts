@@ -26,6 +26,16 @@ export interface HtmlCatalogueConfig {
   /** Extract URLs from raw HTML (e.g. embedded in scripts) */
   htmlUrlPattern?: RegExp;
   wordpressRest?: WordPressRestDiscovery;
+  /** Parse <loc> URLs from a sitemap (and optional sitemap index child maps). */
+  sitemap?: {
+    url: string;
+    /** When set, pathname must match this in addition to pathPattern */
+    locPathPattern?: RegExp;
+    /** Follow child sitemap URLs from a sitemap index (e.g. Yoast page-sitemap.xml). */
+    followSitemapIndex?: boolean;
+  };
+  /** Cap listing-page follow-up fetches (pagination / year indexes). */
+  maxListingPages?: number;
   resourceType: ResourceType;
   evidenceBasis: string;
   titleSuffixStrip?: RegExp;
@@ -144,6 +154,49 @@ async function discoverWordPressRest(
   return refs;
 }
 
+async function discoverFromSitemap(ctx: AdapterContext, config: HtmlCatalogueConfig): Promise<DiscoveredRef[]> {
+  const spec = config.sitemap!;
+  const refs = new Map<string, string>();
+  const sitemapQueue = [spec.url];
+  const seenSitemaps = new Set<string>();
+
+  while (sitemapQueue.length > 0) {
+    const sitemapUrl = sitemapQueue.shift()!;
+    if (seenSitemaps.has(sitemapUrl)) continue;
+    seenSitemaps.add(sitemapUrl);
+
+    const page = await ctx.fetchText(sitemapUrl);
+    const body = page.body;
+    if (spec.followSitemapIndex && body.includes("<sitemapindex")) {
+      for (const match of body.matchAll(/<loc>([^<]+)<\/loc>/gi)) {
+        const child = match[1]?.trim();
+        if (child && !seenSitemaps.has(child)) sitemapQueue.push(child);
+      }
+      continue;
+    }
+
+    for (const match of body.matchAll(/<loc>([^<]+)<\/loc>/gi)) {
+      const loc = match[1]?.trim();
+      if (!loc) continue;
+      try {
+        const url = new URL(loc);
+        if (!hostnameMatches(config.siteOrigin, url)) continue;
+        if (!config.pathPattern.test(url.pathname)) continue;
+        if (config.excludePathPattern?.test(url.pathname)) continue;
+        if (spec.locPathPattern && !spec.locPathPattern.test(url.pathname)) continue;
+        url.hash = "";
+        url.search = "";
+        const canonical = url.toString().replace(/\/$/, "");
+        refs.set(canonical, slugFromPath(url.pathname));
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  return [...refs.entries()].map(([url, externalId]) => ({ url, externalId }));
+}
+
 async function discoverFromHtml(ctx: AdapterContext, config: HtmlCatalogueConfig): Promise<DiscoveredRef[]> {
   const listingUrls = new Set<string>();
   const collection = ctx.source.collection_url;
@@ -153,8 +206,9 @@ async function discoverFromHtml(ctx: AdapterContext, config: HtmlCatalogueConfig
   const refs = new Map<string, string>();
   const queue = [...listingUrls];
   const visited = new Set<string>();
+  const maxListingPages = config.maxListingPages ?? 40;
 
-  while (queue.length > 0) {
+  while (queue.length > 0 && visited.size < maxListingPages) {
     const listingUrl = queue.shift()!;
     if (visited.has(listingUrl)) continue;
     visited.add(listingUrl);
@@ -191,7 +245,16 @@ export function createHtmlCatalogueAdapter(config: HtmlCatalogueConfig): SourceA
       if (config.wordpressRest) {
         return discoverWordPressRest(ctx, config.wordpressRest);
       }
-      return discoverFromHtml(ctx, config);
+      const refs = new Map<string, string>();
+      for (const ref of await discoverFromHtml(ctx, config)) {
+        refs.set(ref.url, ref.externalId ?? ref.url);
+      }
+      if (config.sitemap) {
+        for (const ref of await discoverFromSitemap(ctx, config)) {
+          refs.set(ref.url, ref.externalId ?? ref.url);
+        }
+      }
+      return [...refs.entries()].map(([url, externalId]) => ({ url, externalId }));
     },
     fetch: defaultFetch,
     parse: (page) => parseHtmlCataloguePage(page, config),

@@ -27,7 +27,7 @@ Status in this delivery:
 | `efficiency-for-access` | PAUSED | no | MONTHLY |
 | `cgiar` | PAUSED | no | MONTHLY |
 | `eit-food` | PARTIAL | yes | MONTHLY |
-| `global-resilience-partnership` | PAUSED | no | MONTHLY |
+| `global-resilience-partnership` | PARTIAL | yes | MONTHLY |
 | `elrha` | PARTIAL | yes | MONTHLY |
 | `gsma-innovation-fund` | PAUSED | no | MONTHLY |
 | `shell-foundation` | PAUSED | no | MONTHLY |
@@ -35,7 +35,7 @@ Status in this delivery:
 | `third-derivative` | PAUSED | no | MONTHLY |
 | `climate-kic` | PAUSED | no | MONTHLY |
 | `earthshot-prize` | PARTIAL | yes | MONTHLY |
-| `zayed-sustainability-prize` | PAUSED | no | MONTHLY |
+| `zayed-sustainability-prize` | PARTIAL | yes | MONTHLY |
 | `holcim-foundation` | PARTIAL | yes | MONTHLY |
 | `biomimicry-institute` | PAUSED | no | MONTHLY |
 | `africa-prize` | PAUSED | no | MONTHLY |
@@ -51,7 +51,7 @@ Status in this delivery:
 | `cartier-womens-initiative` | PAUSED | no | MONTHLY |
 | `rolex-awards` | PAUSED | no | MONTHLY |
 | `elevate-prize` | PARTIAL | yes | MONTHLY |
-| `global-good-fund` | PAUSED | no | MONTHLY |
+| `global-good-fund` | PARTIAL | yes | MONTHLY |
 | `acumen-academy` | PAUSED | no | MONTHLY |
 | `audacious-project` | PARTIAL | yes | MONTHLY |
 | `mulago` | PARTIAL | yes | MONTHLY |

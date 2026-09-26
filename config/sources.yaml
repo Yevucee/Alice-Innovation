@@ -568,11 +568,11 @@ sources:
   - id: global-resilience-partnership
     name: "Global Resilience Partnership"
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.globalresiliencepartnership.org/"
     collection_url: "https://www.globalresiliencepartnership.org/resources/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - CASE_STUDY
@@ -588,13 +588,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /resources/ returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: elrha
     name: "Elrha Humanitarian Innovation"
     category: agriculture-water-development
@@ -807,11 +807,11 @@ sources:
   - id: zayed-sustainability-prize
     name: "Zayed Sustainability Prize"
     category: climate-energy-nature
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://zayedsustainabilityprize.com/"
     collection_url: "https://zayedsustainabilityprize.com/en/winners"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - PROJECT
@@ -827,13 +827,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /en/winners returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: holcim-foundation
     name: "Holcim Foundation Awards"
     category: climate-energy-nature
@@ -1280,11 +1280,11 @@ sources:
   - id: global-good-fund
     name: "Global Good Fund"
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://globalgoodfund.org/"
     collection_url: "https://globalgoodfund.org/fellowship-program/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PERSON
       - ORGANISATION
@@ -1300,13 +1300,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /fellows/ redirects to /fellowship-program/, which returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: acumen-academy
     name: "Acumen Academy"
     category: people-innovators

@@ -111,4 +111,32 @@ export const catalogueAdapters: SourceAdapter[] = [
     resourceType: "CASE_STUDY",
     evidenceBasis: "EDITORIALLY_CURATED",
   }),
+  createHtmlCatalogueAdapter({
+    id: "global-resilience-partnership",
+    siteOrigin: "https://www.globalresiliencepartnership.org",
+    pathPattern: /^\/resource\/[^/]+\/?$/i,
+    followListingPathPattern: /^\/resources\/page\/\d+\/?$/i,
+    maxListingPages: 30,
+    resourceType: "RESEARCH",
+    evidenceBasis: "INDEPENDENT_ASSESSMENT",
+  }),
+  createHtmlCatalogueAdapter({
+    id: "zayed-sustainability-prize",
+    siteOrigin: "https://zayedsustainabilityprize.com",
+    pathPattern: /^\/en\/impacts\/impacts-stories\/[^/]+\/?$/i,
+    sitemap: { url: "https://zayedsustainabilityprize.com/sitemap.xml" },
+    resourceType: "PROJECT",
+    evidenceBasis: "PROGRAMME_SELECTED",
+  }),
+  createHtmlCatalogueAdapter({
+    id: "global-good-fund",
+    siteOrigin: "https://globalgoodfund.org",
+    pathPattern: /^\/entrepreneurs\/\d{4}-fellows\/?$/i,
+    sitemap: {
+      url: "https://globalgoodfund.org/page-sitemap.xml",
+      locPathPattern: /\/entrepreneurs\/\d{4}-fellows\/?$/i,
+    },
+    resourceType: "PROGRAMME",
+    evidenceBasis: "PROGRAMME_SELECTED",
+  }),
 ];
