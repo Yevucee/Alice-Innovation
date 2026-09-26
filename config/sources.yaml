@@ -538,11 +538,11 @@ sources:
   - id: eit-food
     name: "EIT Food"
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.eitfood.eu/"
     collection_url: "https://www.eitfood.eu/innovation"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - PROJECT
@@ -558,21 +558,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /innovation both returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: global-resilience-partnership
     name: "Global Resilience Partnership"
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.globalresiliencepartnership.org/"
     collection_url: "https://www.globalresiliencepartnership.org/resources/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - CASE_STUDY
@@ -588,21 +588,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /resources/ returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: elrha
     name: "Elrha Humanitarian Innovation"
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.elrha.org/"
     collection_url: "https://www.elrha.org/innovation"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - RESEARCH
@@ -618,13 +618,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /innovation returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: gsma-innovation-fund
     name: "GSMA Innovation Fund"
     category: agriculture-water-development
@@ -776,11 +776,11 @@ sources:
   - id: earthshot-prize
     name: "The Earthshot Prize"
     category: climate-energy-nature
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://earthshotprize.org/"
     collection_url: "https://earthshotprize.org/winners-finalists/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - PROJECT
@@ -797,21 +797,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /winners-finalists/ returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: zayed-sustainability-prize
     name: "Zayed Sustainability Prize"
     category: climate-energy-nature
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://zayedsustainabilityprize.com/"
     collection_url: "https://zayedsustainabilityprize.com/en/winners"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - PROJECT
@@ -827,21 +827,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /en/winners returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: holcim-foundation
     name: "Holcim Foundation Awards"
     category: climate-energy-nature
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.holcimfoundation.org/"
     collection_url: "https://www.holcimfoundation.org/awards"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - CASE_STUDY
@@ -856,13 +856,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /awards returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: biomimicry-institute
     name: "Biomimicry Institute / Ray of Hope Accelerator"
     category: climate-energy-nature
@@ -1132,11 +1132,11 @@ sources:
   - id: skoll
     name: "Skoll Awardees"
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "BLOCKED for ingest: skoll.org robots.txt disallows all paths (Disallow: /). Adapter uses public WP REST grantees when policy allows."
     homepage: "https://skoll.org/"
     collection_url: "https://skoll.org/community/awardees/"
     enabled: false
-    status: PAUSED
+    status: BLOCKED
     resource_types:
       - PERSON
       - ORGANISATION
@@ -1146,27 +1146,27 @@ sources:
     access:
       class: PUBLIC
       status: OPEN
-      robots_checked: false
+      robots_checked: true
       terms_checked: false
     discovery:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /community/awardees/ returned 200. Adapter not implemented."
+      notes: "robots.txt returns User-agent: * / Disallow: / for this client. WP REST /wp-json/wp/v2/grantees is reachable but blocked by the same robots rule. Ingest is disabled until Skoll publishes a permissive robots policy or a partnership feed."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "BLOCKED by robots.txt. Not silently dropped."
   - id: echoing-green
     name: "Echoing Green Fellows"
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://echoinggreen.org/"
     collection_url: "https://echoinggreen.org/fellowship/issues/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PERSON
       - ORGANISATION
@@ -1182,13 +1182,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /fellows/ redirects to /fellowship/issues/, which returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: cartier-womens-initiative
     name: "Cartier Women's Initiative"
     category: people-innovators
@@ -1251,11 +1251,11 @@ sources:
   - id: elevate-prize
     name: "Elevate Prize"
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://elevateprize.org/"
     collection_url: "https://elevateprize.org/winners/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PERSON
       - PROJECT
@@ -1270,21 +1270,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /winners/ returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: global-good-fund
     name: "Global Good Fund"
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://globalgoodfund.org/"
     collection_url: "https://globalgoodfund.org/fellowship-program/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PERSON
       - ORGANISATION
@@ -1300,13 +1300,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /fellows/ redirects to /fellowship-program/, which returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: acumen-academy
     name: "Acumen Academy"
     category: people-innovators
@@ -1340,11 +1340,11 @@ sources:
   - id: audacious-project
     name: "The Audacious Project"
     category: major-backed-ideas
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.audaciousproject.org/"
     collection_url: "https://www.audaciousproject.org/grantees"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - ORGANISATION
@@ -1360,21 +1360,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /grantees returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: mulago
     name: "Mulago Foundation"
     category: major-backed-ideas
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.mulagofoundation.org/"
     collection_url: "https://www.mulagofoundation.org/portfolio"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - PROJECT
@@ -1389,21 +1389,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /our-portfolio redirects to /portfolio, which returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: draper-richards-kaplan
     name: "Draper Richards Kaplan Foundation"
     category: major-backed-ideas
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.drkfoundation.org/"
     collection_url: "https://www.drkfoundation.org/portfolio/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - PROJECT
@@ -1418,13 +1418,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /portfolio/ returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: co-impact
     name: "Co-Impact"
     category: major-backed-ideas
@@ -1488,11 +1488,11 @@ sources:
   - id: hundred
     name: "HundrED"
     category: education-government-design
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://hundred.org/en"
     collection_url: "https://hundred.org/en/innovations"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - METHOD
@@ -1508,21 +1508,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "hundred.org redirects to /en. /en/innovations returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: oecd-opsi
     name: "OECD Observatory of Public Sector Innovation"
     category: education-government-design
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://oecd-opsi.org/"
     collection_url: "https://oecd-opsi.org/case_type/opsi/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - CASE_STUDY
       - METHOD
@@ -1538,21 +1538,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /innovations/ redirects to /case_type/opsi/, which returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: nesta
     name: "Nesta"
     category: education-government-design
-    description: "PAUSED. Nesta publishes broadly; a future adapter should prefer project and tool records over the whole news site."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://www.nesta.org.uk/"
     collection_url: "https://www.nesta.org.uk/project/"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - METHOD
       - RESEARCH
@@ -1569,13 +1569,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /project/ returned 200. Adapter not implemented."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED. Nesta publishes broadly; a future adapter should prefer project and tool records over the whole news site."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: ideo-org
     name: "IDEO.org"
     category: education-government-design
@@ -1667,11 +1667,11 @@ sources:
   - id: apolitical
     name: "Apolitical"
     category: education-government-design
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
     homepage: "https://apolitical.co/en"
     collection_url: "https://apolitical.co/en/articles"
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - CASE_STUDY
       - METHOD
@@ -1687,13 +1687,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "apolitical.co redirects to /en. /solution-articles redirects to /en/articles, which returned 200. Adapter not implemented. Editorial source: do not treat it as independent technical assessment."
+      notes: "HTML catalogue adapter: link discovery from the verified collection URL (and WordPress REST where configured)."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: solutions-story-tracker
     name: "Solutions Story Tracker"
     category: solutions-journalism
