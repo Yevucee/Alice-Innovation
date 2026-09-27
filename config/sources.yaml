@@ -210,11 +210,11 @@ sources:
   - id: grand-challenges-canada
     name: "Grand Challenges Canada"
     category: general-innovation
-    description: "PAUSED. Homepage is the organisation site; collection URL omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://www.grandchallenges.ca/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://www.grandchallenges.ca/what-we-do/our-portfolio/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - SOLUTION
@@ -329,11 +329,11 @@ sources:
   - id: what-design-can-do
     name: "What Design Can Do"
     category: general-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://www.whatdesigncando.com/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://www.whatdesigncando.com/projects/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - CASE_STUDY
@@ -418,11 +418,11 @@ sources:
   - id: practical-action
     name: "Practical Action / Practical Answers"
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://practicalaction.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://practicalaction.org/our-work/projects/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - METHOD
       - SOLUTION
@@ -658,11 +658,11 @@ sources:
   - id: shell-foundation
     name: "Shell Foundation"
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://shellfoundation.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://shellfoundation.org/our-portfolio/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - PROJECT
@@ -716,11 +716,11 @@ sources:
   - id: third-derivative
     name: "Third Derivative"
     category: climate-energy-nature
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://www.third-derivative.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://www.third-derivative.org/portfolio"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -746,11 +746,11 @@ sources:
   - id: climate-kic
     name: "Climate KIC"
     category: climate-energy-nature
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://www.climate-kic.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://www.climate-kic.org/programmes/our-portfolio/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - SOLUTION
@@ -866,11 +866,11 @@ sources:
   - id: biomimicry-institute
     name: "Biomimicry Institute / Ray of Hope Accelerator"
     category: climate-energy-nature
-    description: "PAUSED. Ray of Hope collection URL omitted because it was not verified."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://biomimicry.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://biomimicry.org/innovation/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - ORGANISATION
@@ -1579,11 +1579,11 @@ sources:
   - id: ideo-org
     name: "IDEO.org"
     category: education-government-design
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://www.ideo.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://www.ideo.org/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - METHOD
       - CASE_STUDY
@@ -1609,11 +1609,11 @@ sources:
   - id: ideo-design-kit
     name: "IDEO Design Kit"
     category: education-government-design
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://www.designkit.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://www.designkit.org/case-studies.html"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - METHOD
       - TOOL
@@ -1754,11 +1754,11 @@ sources:
   - id: atlas-of-the-future
     name: "Atlas of the Future"
     category: solutions-journalism
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+    description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: "https://atlasofthefuture.org/"
-    collection_url: null
-    enabled: false
-    status: PAUSED
+    collection_url: "https://atlasofthefuture.org/project/"
+    enabled: true
+    status: PARTIAL
     resource_types:
       - PROJECT
       - SOLUTION

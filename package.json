@@ -32,6 +32,7 @@
     "ingest:production-step7:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-step7-depth.sh",
     "ingest:production-backfill-catalogues:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-backfill-catalogues.sh",
     "ingest:production-ops-queue:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-ops-queue.sh",
+    "ingest:production-step8:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-step8-remaining.sh",
     "ops:cleanup-stale-runs": "tsx scripts/ops-cleanup-stale-ingestion-runs.ts",
     "ops:cleanup-stale-runs:remote": "bash scripts/run-with-production-env.sh npm run ops:cleanup-stale-runs",
     "smoke:production": "tsx scripts/production-smoke-test.ts",

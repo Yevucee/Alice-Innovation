@@ -8,8 +8,9 @@ import { xprizeAdapter } from "./xprize.js";
 import { challengeWorksAdapter } from "./challenge-works.js";
 import { wipoGreenAdapter } from "./wipo-green.js";
 import { catalogueAdapters } from "./catalogue-adapters.js";
+import { buildPlaceholderAdapters, remainingCatalogueAdapters } from "./placeholder-adapters.js";
 
-const ADAPTERS: SourceAdapter[] = [
+const CORE_ADAPTERS: SourceAdapter[] = [
   solarImpulseAdapter,
   engineeringForChangeAdapter,
   mitSolveAdapter,
@@ -19,6 +20,12 @@ const ADAPTERS: SourceAdapter[] = [
   challengeWorksAdapter,
   wipoGreenAdapter,
   ...catalogueAdapters,
+  ...remainingCatalogueAdapters,
+];
+
+const ADAPTERS: SourceAdapter[] = [
+  ...CORE_ADAPTERS,
+  ...buildPlaceholderAdapters(new Set(CORE_ADAPTERS.map((adapter) => adapter.id))),
 ];
 
 export function getAdapter(id: string): SourceAdapter | undefined {

@@ -15,14 +15,14 @@ Status in this delivery:
 | `wef-uplink` | PAUSED | no | WEEKLY |
 | `xprize` | PARTIAL | yes | MONTHLY |
 | `global-innovation-fund` | PAUSED | no | MONTHLY |
-| `grand-challenges-canada` | PAUSED | no | MONTHLY |
+| `grand-challenges-canada` | PARTIAL | yes | MONTHLY |
 | `challenge-works` | PARTIAL | yes | MONTHLY |
 | `wipo-green` | PARTIAL | yes | WEEKLY |
 | `undp-accelerator-labs` | PAUSED | no | MONTHLY |
-| `what-design-can-do` | PAUSED | no | MONTHLY |
+| `what-design-can-do` | PARTIAL | yes | MONTHLY |
 | `fao-teca` | PAUSED | no | WEEKLY |
 | `access-agriculture` | PAUSED | no | WEEKLY |
-| `practical-action` | PAUSED | no | MONTHLY |
+| `practical-action` | PARTIAL | yes | MONTHLY |
 | `imagine-h2o` | PAUSED | no | MONTHLY |
 | `efficiency-for-access` | PAUSED | no | MONTHLY |
 | `cgiar` | PAUSED | no | MONTHLY |
@@ -30,14 +30,14 @@ Status in this delivery:
 | `global-resilience-partnership` | PARTIAL | yes | MONTHLY |
 | `elrha` | PARTIAL | yes | MONTHLY |
 | `gsma-innovation-fund` | PAUSED | no | MONTHLY |
-| `shell-foundation` | PAUSED | no | MONTHLY |
+| `shell-foundation` | PARTIAL | yes | MONTHLY |
 | `project-drawdown` | ACTIVE | yes | MONTHLY |
-| `third-derivative` | PAUSED | no | MONTHLY |
-| `climate-kic` | PAUSED | no | MONTHLY |
+| `third-derivative` | PARTIAL | yes | MONTHLY |
+| `climate-kic` | PARTIAL | yes | MONTHLY |
 | `earthshot-prize` | PARTIAL | yes | MONTHLY |
 | `zayed-sustainability-prize` | PARTIAL | yes | MONTHLY |
 | `holcim-foundation` | PARTIAL | yes | MONTHLY |
-| `biomimicry-institute` | PAUSED | no | MONTHLY |
+| `biomimicry-institute` | PARTIAL | yes | MONTHLY |
 | `africa-prize` | PAUSED | no | MONTHLY |
 | `afrilabs` | PAUSED | no | MONTHLY |
 | `undp-timbuktoo` | PAUSED | no | MONTHLY |
@@ -61,13 +61,13 @@ Status in this delivery:
 | `hundred` | PARTIAL | yes | MONTHLY |
 | `oecd-opsi` | PARTIAL | yes | WEEKLY |
 | `nesta` | PARTIAL | yes | WEEKLY |
-| `ideo-org` | PAUSED | no | MONTHLY |
-| `ideo-design-kit` | PAUSED | no | MANUAL |
+| `ideo-org` | PARTIAL | yes | MONTHLY |
+| `ideo-design-kit` | PARTIAL | yes | MANUAL |
 | `social-innovation-academy` | PAUSED | no | MONTHLY |
 | `apolitical` | PARTIAL | yes | WEEKLY |
 | `solutions-story-tracker` | PAUSED | no | WEEKLY |
 | `reasons-to-be-cheerful` | PAUSED | no | WEEKLY |
-| `atlas-of-the-future` | PAUSED | no | MONTHLY |
+| `atlas-of-the-future` | PARTIAL | yes | MONTHLY |
 | `fast-company-world-changing-ideas` | PAUSED | no | MONTHLY |
 
 ## First five
