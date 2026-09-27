@@ -9,6 +9,8 @@ export interface WordPressRestDiscovery {
   /** REST collection name, e.g. grantees or portfolios */
   postType: string;
   perPage?: number;
+  /** When set, append `categories=` to the REST query (WordPress posts). */
+  categories?: number;
 }
 
 export interface HtmlCatalogueConfig {
@@ -36,6 +38,8 @@ export interface HtmlCatalogueConfig {
   };
   /** Cap listing-page follow-up fetches (pagination / year indexes). */
   maxListingPages?: number;
+  /** Follow `?page=n` on the collection URL (1-based page index). */
+  paginationQueryParam?: { param: string; startPage?: number; maxPages?: number };
   resourceType: ResourceType;
   evidenceBasis: string;
   titleSuffixStrip?: RegExp;
@@ -130,7 +134,8 @@ async function discoverWordPressRest(
   const refs: DiscoveredRef[] = [];
   let page = 1;
   while (true) {
-    const url = `${config.origin.replace(/\/$/, "")}/wp-json/wp/v2/${config.postType}?per_page=${perPage}&page=${page}`;
+    const categoryQuery = config.categories !== undefined ? `&categories=${config.categories}` : "";
+    const url = `${config.origin.replace(/\/$/, "")}/wp-json/wp/v2/${config.postType}?per_page=${perPage}&page=${page}${categoryQuery}`;
     const result = await ctx.fetchText(url);
     let items: Array<{ link?: string; slug?: string; id?: number }>;
     try {
@@ -202,6 +207,16 @@ async function discoverFromHtml(ctx: AdapterContext, config: HtmlCatalogueConfig
   const collection = ctx.source.collection_url;
   if (collection) listingUrls.add(collection);
   for (const extra of config.extraListingUrls ?? []) listingUrls.add(extra);
+
+  if (config.paginationQueryParam && collection) {
+    const { param, startPage = 1, maxPages = 150 } = config.paginationQueryParam;
+    const base = new URL(collection);
+    for (let page = startPage; page < startPage + maxPages; page += 1) {
+      const paginated = new URL(base);
+      paginated.searchParams.set(param, String(page));
+      listingUrls.add(paginated.toString());
+    }
+  }
 
   const refs = new Map<string, string>();
   const queue = [...listingUrls];

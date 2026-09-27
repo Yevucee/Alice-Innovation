@@ -1811,3 +1811,652 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+  - id: startgate-um6p
+    name: "StartGate / UM6P startup directory"
+    category: africa-innovation
+    description: "PAUSED pending enablement after robots preflight. Paginated public startup directory (listing and detail URLs when present in HTML)."
+    homepage: "https://www.startgate.ma/"
+    collection_url: "https://www.startgate.ma/startups"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+      - PROGRAMME
+    update_class: WEEKLY
+    adapter: startgate-um6p
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /startups returned HTTP 200 with paginated ?page= links and /startups/{slug} hrefs in HTML (Sep 2026). www.startgate.ma/robots.txt returned 200. Approximately 2,880+ startups reported on-site. Evidence: listed as incubated or accelerated through the StartGate ecosystem."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled after robots/terms review. Adapter uses html-catalogue with query pagination."
+  - id: digital-africa
+    name: "Digital Africa portfolio"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Francophone and pan-African portfolio with stable detail pages."
+    homepage: "https://digital-africa.co/"
+    collection_url: "https://digital-africa.co/portfolio"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+      - PERSON
+    update_class: WEEKLY
+    adapter: digital-africa
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: "https://digital-africa.co/sitemap.xml"
+      rss: null
+      notes: "Preflight: /portfolio HTTP 200; robots.txt allows crawling (empty Disallow). Detail paths /portfolio/{slug} and /en/portfolio/{slug}. PROGRAMME_SELECTED."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. Adapter uses html-catalogue plus sitemap."
+  - id: ghana-climate-innovation-centre
+    name: "Ghana Climate Innovation Centre ventures"
+    category: africa-innovation
+    description: "PAUSED pending enablement. GCIC alumni venture directory with detail pages."
+    homepage: "https://ghanacic.ashesi.edu.gh/"
+    collection_url: "https://ghanacic.ashesi.edu.gh/alumni-ventures/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - ORGANISATION
+      - TECHNOLOGY
+      - PROJECT
+      - PERSON
+    update_class: WEEKLY
+    adapter: ghana-climate-innovation-centre
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /alumni-ventures/ HTTP 200; /ventures/{slug}/ detail links in HTML. robots.txt HTTP 200. Site reports 383+ supported businesses overall."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+  - id: ventures-platform
+    name: "Ventures Platform portfolio"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Pan-African investor portfolio with Webflow company records."
+    homepage: "https://www.venturesplatform.com/"
+    collection_url: "https://www.venturesplatform.com/portfolio"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+      - PERSON
+    update_class: MONTHLY
+    adapter: ventures-platform
+    access:
+      class: PUBLIC
+      status: LISTING_ONLY
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /portfolio HTTP 200 with inline /portfolio-companies/{slug} paths in HTML. robots.txt HTTP 200. Rich card metadata on listing."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+  - id: founders-factory-africa
+    name: "Founders Factory Africa portfolio"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Pan-African portfolio with problem/solution detail pages."
+    homepage: "https://www.foundersfactory.africa/"
+    collection_url: "https://www.foundersfactory.africa/portfolio"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+      - PERSON
+    update_class: WEEKLY
+    adapter: founders-factory-africa
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: "http://www.foundersfactory.africa/sitemap.xml"
+      rss: null
+      notes: "Preflight: portfolio and /portfolio/{slug} HTTP 200. robots.txt Disallow empty (allow). Sitemap lists portfolio slugs."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+  - id: baobab-network
+    name: "Baobab Network portfolio"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Listing-only portfolio cards on a single public page."
+    homepage: "https://thebaobabnetwork.com/"
+    collection_url: "https://thebaobabnetwork.com/portfolio/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PERSON
+    update_class: MONTHLY
+    adapter: baobab-network
+    access:
+      class: PUBLIC
+      status: LISTING_ONLY
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /portfolio/ HTTP 200 with portfolio-rollup cards in HTML (~65 companies publicised). robots.txt HTTP 200."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+  - id: injini-african-edtech-map
+    name: "Injini African EdTech Product Map"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Curated EdTech directory; static HTML may not include full CMS list without client-side fetch."
+    homepage: "https://www.injini.africa/"
+    collection_url: "https://www.injini.africa/african-edtech-map"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: injini-african-edtech-map
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /african-edtech-map HTTP 200. robots.txt HTTP 200. UI is Webflow/CMS-driven; adapter ingests only fields present in server HTML. EDITORIALLY_CURATED."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until CMS/API discovery is confirmed. Do not bypass client-only data."
+  - id: ihub-future-of-learning
+    name: "iHub Future of Learning startup directory"
+    category: africa-innovation
+    description: "PAUSED pending enablement. East African EdTech accelerator startup profiles."
+    homepage: "https://futureoflearning.ihub.co.ke/"
+    collection_url: "https://futureoflearning.ihub.co.ke/startup-directory/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PERSON
+    update_class: MONTHLY
+    adapter: ihub-future-of-learning
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /startup-directory/ HTTP 200 with /startup-directory/{slug}/ detail URLs and paginated /page/N/ indexes. robots.txt HTTP 200. PROGRAMME_SELECTED."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled."
+  - id: oceanhub-africa
+    name: "OceanHub Africa startup portfolio"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Blue-economy startup archive via public WordPress REST (category startup-portfolio)."
+    homepage: "https://oceanhub.africa/"
+    collection_url: "https://oceanhub.africa/category/startup-portfolio/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - TECHNOLOGY
+      - ORGANISATION
+      - PROJECT
+      - CASE_STUDY
+    update_class: WEEKLY
+    adapter: oceanhub-africa
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: category archive HTTP 200. wp-json posts with categories=152 returns venture slugs at site root (e.g. /vua-solutions-limited/). robots.txt HTTP 200. Follow REST links only; do not crawl arbitrary root paths from other indexes."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+  - id: norrsken-accelerator
+    name: "Norrsken Accelerator portfolio"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Global impact accelerator list with problem/solution fields; retain geography for Africa-weighted search."
+    homepage: "https://accelerator.norrsken.org/"
+    collection_url: "https://accelerator.norrsken.org/portfolio"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - ORGANISATION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: norrsken-accelerator
+    access:
+      class: PUBLIC
+      status: LISTING_ONLY
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /portfolio HTTP 200 with accordion items (name, sector, country, problem, solution) in HTML. robots.txt HTTP 200. Not Africa-only; filter at query time."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+  - id: norrsken-100
+    name: "Norrsken 100"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Annual curated impact startup list (global, includes African companies)."
+    homepage: "https://www.norrsken.org/"
+    collection_url: "https://www.norrsken.org/100"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - ORGANISATION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: norrsken-100
+    access:
+      class: PUBLIC
+      status: LISTING_ONLY
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /100 HTTP 200 with company names embedded in Webflow HTML. robots.txt HTTP 200. EDITORIALLY_CURATED."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled."
+  - id: seedstars-africa
+    name: "Seedstars portfolio (Africa filter)"
+    category: africa-innovation
+    description: "PAUSED pending enablement. PARTIAL: public /funds/portfolio/ exposes Africa-tagged content cards, not a full structured company API."
+    homepage: "https://www.seedstars.com/"
+    collection_url: "https://www.seedstars.com/funds/portfolio/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: seedstars-africa
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /funds/portfolio/ HTTP 200. robots.txt HTTP 200. Adapter keeps carousel cards whose area-category matches Africa/Sub-Saharan Africa only."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED with geography filter."
+  - id: startupbootcamp-afritech
+    name: "Startupbootcamp AfriTech (SBC AfriTech)"
+    category: africa-innovation
+    description: "PAUSED pending enablement. Portfolio at sbcafritech.com when /startup/{uuid} links are present in server HTML."
+    homepage: "https://sbcafritech.com/"
+    collection_url: "https://sbcafritech.com/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: startupbootcamp-afritech
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: sbcafritech.com homepage HTTP 200. Legacy startupbootcamp.com/afritech paths returned 404. Adapter discovers /startup/{uuid} hrefs when rendered in HTML."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until catalogue completeness is verified."
+  - id: cchub-syndicate
+    name: "CcHUB Syndicate portfolio"
+    category: africa-innovation
+    description: "PAUSED pending enablement. West Africa syndicate portfolio HTML page."
+    homepage: "https://syndicate.cchub.africa/"
+    collection_url: "https://syndicate.cchub.africa/portfolio.html"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: cchub-syndicate
+    access:
+      class: PUBLIC
+      status: LISTING_ONLY
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: portfolio.html HTTP 200 with Bootstrap cards (e.g. Lifebank). robots.txt returned 404 on syndicate host; main site policy not merged automatically."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+  - id: gitex-africa-supernova
+    name: "GITEX Africa Supernova Challenge"
+    category: africa-innovation
+    description: "PAUSED. Annual cohort page; origin returned HTTP 403 to this ingest client during preflight."
+    homepage: "https://gitexafrica.com/"
+    collection_url: "https://gitexafrica.com/africa-supernova-challenge"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: WEEKLY
+    adapter: gitex-africa-supernova
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /africa-supernova-challenge returned HTTP 403 (Sep 2026). robots.txt HTTP 200. Adapter registered for when access is available; stores cohort metadata as listing fragments."
+    limits:
+      requests_per_minute: 6
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until legitimate HTTP 200 responses are available without bypassing bot checks."
+  - id: africa-tech-festival-startup-hub
+    name: "Africa Tech Festival Startup Hub"
+    category: africa-innovation
+    description: "PAUSED pending enablement. PARTIAL exhibitor profiles; startup pods not yet isolated from corporate exhibitors."
+    homepage: "https://africatechfestival.com/"
+    collection_url: "https://africatechfestival.com/startups-atf/"
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: africa-tech-festival-startup-hub
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /startups-atf/ HTTP 200. robots.txt HTTP 200. Adapter collects *-exhibitor-* profile URLs pending Startup Pod filtering."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until Startup Pod vs sponsor filtering is tightened."
+  - id: future-africa
+    name: "Future Africa"
+    category: africa-innovation
+    description: "BLOCKED: terms expressly prohibit crawling, scraping, and automated extraction."
+    homepage: "https://future.africa/"
+    collection_url: null
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MANUAL
+    adapter: future-africa
+    access:
+      class: PUBLIC
+      status: BLOCKED_TERMS
+      robots_checked: false
+      terms_checked: true
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Terms of Use prohibit crawling, data mining, data scraping and automated extraction. Do not ingest."
+    limits:
+      requests_per_minute: 0
+      concurrency: 0
+    coverage:
+      historical_backfill: blocked
+      notes: "BLOCKED_TERMS. Registered so the source is not rediscovered."
+  - id: vc4a
+    name: "VC4A venture database"
+    category: africa-innovation
+    description: "BLOCKED: terms prohibit automated downloading via spiders, robots, crawlers and data-mining tools."
+    homepage: "https://vc4a.com/"
+    collection_url: null
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MANUAL
+    adapter: vc4a
+    access:
+      class: PUBLIC
+      status: BLOCKED_TERMS
+      robots_checked: false
+      terms_checked: true
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Terms prohibit automated data download except narrow exceptions (e.g. permitted RSS). Ordinary crawling is out of scope."
+    limits:
+      requests_per_minute: 0
+      concurrency: 0
+    coverage:
+      historical_backfill: blocked
+      notes: "BLOCKED_TERMS."
+  - id: africa-business-heroes
+    name: "Africa's Business Heroes"
+    category: africa-innovation
+    description: "BLOCKED unless written permission: terms prohibit storing content in a retrieval system."
+    homepage: "https://africabusinessheroes.org/"
+    collection_url: null
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - PERSON
+      - ORGANISATION
+      - SOLUTION
+    update_class: MANUAL
+    adapter: africa-business-heroes
+    access:
+      class: PUBLIC
+      status: BLOCKED_TERMS
+      robots_checked: false
+      terms_checked: true
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Terms prohibit reproduction or storage in a retrieval system without consent. Alice is a retrieval system."
+    limits:
+      requests_per_minute: 0
+      concurrency: 0
+    coverage:
+      historical_backfill: blocked
+      notes: "BLOCKED_TERMS unless ABH grants permission."
+  - id: saviu
+    name: "Saviu Ventures portfolio"
+    category: africa-innovation
+    description: "PAUSED for permission review. Terms restrict reproduction; do not ingest until clarified."
+    homepage: "https://www.saviu.vc/"
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MANUAL
+    adapter: saviu
+    access:
+      class: PUBLIC
+      status: PERMISSION_REVIEW
+      robots_checked: false
+      terms_checked: true
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Strong Francophone African VC portfolio but terms restrict reproduction. Ask/clarify permission before any ingest."
+    limits:
+      requests_per_minute: 0
+      concurrency: 0
+    coverage:
+      historical_backfill: not-started
+      notes: "PERMISSION_REVIEW. Adapter not enabled."
+  - id: villgro-africa
+    name: "Villgro Africa health portfolio"
+    category: africa-innovation
+    description: "BLOCKED: public portfolio encounters bot verification; do not bypass."
+    homepage: "https://villgroafrica.org/"
+    collection_url: null
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MANUAL
+    adapter: villgro-africa
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Portfolio hits bot-verification wall. Do not use Playwright or other bypass techniques."
+    limits:
+      requests_per_minute: 0
+      concurrency: 0
+    coverage:
+      historical_backfill: blocked
+      notes: "BLOCKED bot wall."

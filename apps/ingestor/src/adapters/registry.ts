@@ -8,6 +8,7 @@ import { xprizeAdapter } from "./xprize.js";
 import { challengeWorksAdapter } from "./challenge-works.js";
 import { wipoGreenAdapter } from "./wipo-green.js";
 import { catalogueAdapters } from "./catalogue-adapters.js";
+import { africaAdapters } from "./africa-adapters.js";
 import { buildPlaceholderAdapters, remainingCatalogueAdapters } from "./placeholder-adapters.js";
 
 const CORE_ADAPTERS: SourceAdapter[] = [
@@ -20,6 +21,7 @@ const CORE_ADAPTERS: SourceAdapter[] = [
   challengeWorksAdapter,
   wipoGreenAdapter,
   ...catalogueAdapters,
+  ...africaAdapters,
   ...remainingCatalogueAdapters,
 ];
 
