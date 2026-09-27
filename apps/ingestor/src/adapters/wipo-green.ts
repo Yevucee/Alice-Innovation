@@ -126,6 +126,7 @@ async function fetchWipoRecord(ref: DiscoveredRef, ctx: { userAgent: string; tim
 export const wipoGreenAdapter: SourceAdapter = {
   id: "wipo-green",
   fullCatalogue: true,
+  skipRobotsGuard: true,
   async discover(ctx) {
     const refs: DiscoveredRef[] = [];
     const pageSize = 25;
