@@ -17,7 +17,7 @@ function statusExplanation(status: string): string {
     case "BLOCKED":
       return "The public site blocks automated access (for example a bot wall). We do not bypass it.";
     case "PAUSED":
-      return "Listed in the catalogue; an adapter is not built or not enabled yet.";
+      return "Listed in the catalogue; adapter is registered but not enabled until a collection URL and access path are verified.";
     case "MANUAL":
       return "Updates are manual or need a partner export, not a scheduled crawl.";
     case "BROKEN":
@@ -71,7 +71,8 @@ export default async function OtherResourcesPage() {
         <section className="mt-12">
           <h2 className="text-lg font-medium">On the roadmap</h2>
           <p className="mt-1 text-sm text-muted">
-            Verified homepages; adapters not implemented or not enabled yet.
+            Verified homepages. Each can be moved to indexed search once a collection URL, robots
+            policy, and ingest adapter are verified in the source registry.
           </p>
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {paused.map((source) => (
