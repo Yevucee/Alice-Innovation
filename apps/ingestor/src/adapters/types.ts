@@ -29,6 +29,8 @@ export interface SourceAdapter {
   id: string;
   /** True when discover() returns the catalogue, not a partial homepage sample. */
   fullCatalogue: boolean;
+  /** When true, skip robots.txt on the YAML collection URL (API-only adapters). */
+  skipRobotsGuard?: boolean;
   discover(ctx: AdapterContext): Promise<DiscoveredRef[]>;
   fetch(ref: DiscoveredRef, ctx: AdapterContext): Promise<FetchedPage>;
   parse(page: FetchedPage): NormalisedDraft;

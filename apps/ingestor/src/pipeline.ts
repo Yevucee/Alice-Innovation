@@ -111,8 +111,10 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
           if (!adapter) {
             throw new Error(`No adapter implementation for ${source.adapter}`);
           }
-          const target = source.collection_url || source.discovery.sitemap || source.homepage;
-          await guardRobots(source, userAgent, timeoutMs, target);
+          if (!adapter.skipRobotsGuard) {
+            const target = source.collection_url || source.discovery.sitemap || source.homepage;
+            await guardRobots(source, userAgent, timeoutMs, target);
+          }
           let lastRequest = 0;
           const minInterval = Math.ceil(60000 / Math.max(1, source.limits.requests_per_minute));
           const pacedFetch = async (url: string) => {

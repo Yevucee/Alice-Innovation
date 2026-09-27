@@ -271,7 +271,7 @@ sources:
     category: general-innovation
     description: "PARTIAL: technology records from the public WIPO GREEN search API. Large backfills are checkpointed with --limit."
     homepage: "https://www3.wipo.int/wipogreen/en/"
-    collection_url: "https://wipogreen.wipo.int/wipogreen-database/en"
+    collection_url: null
     enabled: true
     status: PARTIAL
     resource_types:
@@ -289,7 +289,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Public OpenAPI at /wipogreen-database/v3/api-docs. Discovery uses POST /api/v1/search with type BASIC. Article detail uses GET /api/v1/articles/{id}/summary."
+      notes: "Public OpenAPI at /wipogreen-database/v3/api-docs. Discovery uses POST /api/v1/search with type BASIC. Article detail uses GET /api/v1/articles/{id}/summary. HTML catalogue URLs are blocked by robots.txt; ingest uses the JSON API only (skipRobotsGuard)."
     limits:
       requests_per_minute: 6
       concurrency: 1
