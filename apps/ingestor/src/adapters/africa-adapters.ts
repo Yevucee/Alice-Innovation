@@ -256,19 +256,26 @@ async function discoverAfricaTechFestival(ctx: AdapterContext): Promise<Discover
   if (!collection) return [];
   const page = await ctx.fetchText(collection);
   const $ = load(page.body);
-  const refs = new Map<string, DiscoveredRef>();
+  const candidateUrls = new Set<string>();
   $("a[href]").each((_, element) => {
     const href = $(element).attr("href") ?? "";
     if (!href.includes("exhibitor-")) return;
     try {
-      const url = new URL(href, collection).toString().replace(/\/$/, "");
-      const slug = slugify(new URL(url).pathname.split("/").pop() ?? url);
-      refs.set(url, { url, externalId: slug });
+      candidateUrls.add(new URL(href, collection).toString().replace(/\/$/, ""));
     } catch {
       /* ignore */
     }
   });
-  return [...refs.values()];
+
+  const refs: DiscoveredRef[] = [];
+  for (const url of candidateUrls) {
+    if (ctx.limit !== null && refs.length >= ctx.limit) break;
+    const profile = await ctx.fetchText(url);
+    if (!/startup\s+pod/i.test(profile.body)) continue;
+    const slug = slugify(new URL(url).pathname.split("/").pop() ?? url);
+    refs.push({ url, externalId: slug });
+  }
+  return refs;
 }
 
 const htmlAfricaCatalogues: SourceAdapter[] = [
@@ -384,24 +391,22 @@ const gitexSupernovaAdapter: SourceAdapter = {
 
 const injiniAdapter: SourceAdapter = {
   id: "injini-african-edtech-map",
-  fullCatalogue: false,
+  fullCatalogue: true,
   async discover(ctx) {
     const collection = ctx.source.collection_url;
     if (!collection) return [];
     const page = await ctx.fetchText(collection);
-    if (!page.body.includes("fs-list-element")) {
-      return [];
-    }
     const $ = load(page.body);
     const refs: DiscoveredRef[] = [];
-    $("[fs-list-field='Product-Name'], [fs-list-field='name']").each((_, element) => {
+    $("[fs-list-field='Product-Name'].mobilecmsitem").each((_, element) => {
       const title = $(element).text().trim();
       if (!title || title === "unknown") return;
+      const block = $(element).closest(".company-information-div");
       const slug = slugify(title);
       refs.push({
         url: `${collection.replace(/\/$/, "")}#${slug}`,
         externalId: slug,
-        listingHtml: $.html($(element).closest('[role="listitem"], .w-dyn-item').first()),
+        listingHtml: block.length ? $.html(block) : $.html($(element).parent()),
       });
     });
     return refs;
@@ -409,8 +414,10 @@ const injiniAdapter: SourceAdapter = {
   fetch: listingFetch,
   parse(page) {
     const $ = load(page.html);
-    const title = $("[fs-list-field='Product-Name'], [fs-list-field='name'], h1").first().text().trim();
-    const summary = $("[fs-list-field='Country'], #modal-data-description").first().text().trim() || title;
+    const title = $("[fs-list-field='Product-Name'].mobilecmsitem, [fs-list-field='Product-Name']").first().text().trim();
+    const country = $("[fs-list-field='Country']").first().text().trim();
+    const description = $("[fs-list-field='Description'], #modal-data-description").first().text().trim();
+    const summary = [country, description].filter(Boolean).join(" — ") || title;
     if (!title) throw new Error(`injini-african-edtech-map item has no title: ${page.url}`);
     return buildDraft({
       title,
@@ -421,7 +428,7 @@ const injiniAdapter: SourceAdapter = {
       resourceType: "SOLUTION",
       evidenceBasis: "EDITORIALLY_CURATED",
       evidenceStage: "UNKNOWN",
-      rawMetadata: { listing_only: true },
+      rawMetadata: { listing_only: true, country: country || null },
       etag: page.etag,
       lastModified: page.lastModified,
     });
@@ -476,7 +483,7 @@ const africaTechFestivalAdapter: SourceAdapter = {
       resourceType: "ORGANISATION",
       evidenceBasis: "PROGRAMME_SELECTED",
       evidenceStage: "UNKNOWN",
-      rawMetadata: { partial_catalogue: true, exhibitor_profile: true },
+      rawMetadata: { partial_catalogue: true, exhibitor_profile: true, startup_pod: true },
       etag: page.etag,
       lastModified: page.lastModified,
     });

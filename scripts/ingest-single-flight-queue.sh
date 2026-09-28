@@ -22,5 +22,9 @@ ingest_one "global-resilience-partnership full" --source global-resilience-partn
 ingest_one "oecd-opsi full" --source oecd-opsi --full
 ingest_one "hundred full" --source hundred --full
 
+if [[ -f scripts/ingest-production-africa-queue.sh ]]; then
+  bash scripts/ingest-production-africa-queue.sh
+fi
+
 echo ""
 echo "########## single-flight queue complete ##########"

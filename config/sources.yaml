@@ -1,10 +1,10 @@
 sources:
   - id: solar-impulse
-    name: "Solar Impulse Foundation / Solutions Explorer"
+    name: Solar Impulse Foundation / Solutions Explorer
     category: general-innovation
     description: "PARTIAL: the public sitemap listed about 100 English solution URLs when checked, which may be less than the historic labelled catalogue. Sample then checkpointed backfill. No full HTML stored."
-    homepage: "https://impulse-foundation.com/"
-    collection_url: "https://impulse-foundation.com/solutions/solutions-explorer/portfolio"
+    homepage: https://impulse-foundation.com/
+    collection_url: https://impulse-foundation.com/solutions/solutions-explorer/portfolio
     enabled: true
     status: PARTIAL
     resource_types:
@@ -20,9 +20,9 @@ sources:
       terms_checked: false
     discovery:
       preferred_method: sitemap
-      sitemap: "https://impulse-foundation.com/sitemap.xml"
+      sitemap: https://impulse-foundation.com/sitemap.xml
       rss: null
-      notes: "https://solarimpulse.com/ redirects to impulse-foundation.com. English solution URLs are listed in sitemap.xml under /solutions/solutions-explorer/portfolio/solutions/. Item pages are server-rendered Angular with an ng-state JSON payload. robots.txt allows the catalogue."
+      notes: https://solarimpulse.com/ redirects to impulse-foundation.com. English solution URLs are listed in sitemap.xml under /solutions/solutions-explorer/portfolio/solutions/. Item pages are server-rendered Angular with an ng-state JSON payload. robots.txt allows the catalogue.
     limits:
       requests_per_minute: 20
       concurrency: 1
@@ -30,10 +30,10 @@ sources:
       historical_backfill: checkpointed
       notes: "PARTIAL: the public sitemap listed about 100 English solution URLs when checked, which may be less than the historic labelled catalogue. Sample then checkpointed backfill. No full HTML stored."
   - id: springwise
-    name: "Springwise"
+    name: Springwise
     category: general-innovation
     description: "PARTIAL: titles and URLs from public listing cards only. Article bodies are not fetched when the origin returns 403. No collection URL is stored because the database path was not readable."
-    homepage: "https://springwise.com/"
+    homepage: https://springwise.com/
     collection_url: null
     enabled: true
     status: PARTIAL
@@ -50,8 +50,8 @@ sources:
     discovery:
       preferred_method: html
       sitemap: null
-      rss: "https://springwise.com/feed/"
-      notes: "Homepage and top-level /category/ pages (200) expose .tile-post listing cards. The public RSS feed at /feed/ is used when it returns 200. Article bodies are still fetched only when the origin allows; otherwise listing card metadata is stored. Sitemaps are often blocked by Cloudflare and are not used."
+      rss: https://springwise.com/feed/
+      notes: Homepage and top-level /category/ pages (200) expose .tile-post listing cards. The public RSS feed at /feed/ is used when it returns 200. Article bodies are still fetched only when the origin allows; otherwise listing card metadata is stored. Sitemaps are often blocked by Cloudflare and are not used.
     limits:
       requests_per_minute: 6
       concurrency: 1
@@ -59,10 +59,10 @@ sources:
       historical_backfill: not-attempted
       notes: "PARTIAL: titles and URLs from homepage, category listings, and RSS when available. Article bodies are not fetched when the origin returns 403."
   - id: engineering-for-change
-    name: "Engineering for Change / Solutions Library"
+    name: Engineering for Change / Solutions Library
     category: general-innovation
-    description: "BLOCKED until a legitimate HTTP response is available. Not silently dropped."
-    homepage: "https://www.engineeringforchange.org/"
+    description: BLOCKED until a legitimate HTTP response is available. Not silently dropped.
+    homepage: https://www.engineeringforchange.org/
     collection_url: null
     enabled: false
     status: BLOCKED
@@ -80,18 +80,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "The published homepage answers this client with HTTP 403 and a Cloudflare bot check. robots.txt could not be read. No collection URL is stored because no solutions path returned a real document. The adapter parser is implemented and fixture-tested, and live fetch stops rather than bypassing the wall."
+      notes: The published homepage answers this client with HTTP 403 and a Cloudflare bot check. robots.txt could not be read. No collection URL is stored because no solutions path returned a real document. The adapter parser is implemented and fixture-tested, and live fetch stops rather than bypassing the wall.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: blocked
-      notes: "BLOCKED until a legitimate HTTP response is available. Not silently dropped."
+      notes: BLOCKED until a legitimate HTTP response is available. Not silently dropped.
   - id: mit-solve
-    name: "MIT Solve"
+    name: MIT Solve
     category: general-innovation
     description: "PARTIAL: solution pages in the sitemap, not every article or challenge narrative. Evidence stage stays UNKNOWN; selection is recorded as PROGRAMME_SELECTED."
-    homepage: "https://solve.mit.edu/"
+    homepage: https://solve.mit.edu/
     collection_url: null
     enabled: true
     status: PARTIAL
@@ -109,9 +109,9 @@ sources:
       terms_checked: false
     discovery:
       preferred_method: sitemap
-      sitemap: "https://solve.mit.edu/sitemap.xml"
+      sitemap: https://solve.mit.edu/sitemap.xml
       rss: null
-      notes: "robots.txt allows crawling. /solutions returned 404; solution records are /solutions/{id} URLs in sitemap.xml. Challenge index is https://solve.mit.edu/challenges and is not treated as the solution collection. Item HTML includes the title, one-line summary, team leader, and profile answers."
+      notes: robots.txt allows crawling. /solutions returned 404; solution records are /solutions/{id} URLs in sitemap.xml. Challenge index is https://solve.mit.edu/challenges and is not treated as the solution collection. Item HTML includes the title, one-line summary, team leader, and profile answers.
     limits:
       requests_per_minute: 20
       concurrency: 1
@@ -119,10 +119,10 @@ sources:
       historical_backfill: checkpointed
       notes: "PARTIAL: solution pages in the sitemap, not every article or challenge narrative. Evidence stage stays UNKNOWN; selection is recorded as PROGRAMME_SELECTED."
   - id: wef-uplink
-    name: "World Economic Forum UpLink"
+    name: World Economic Forum UpLink
     category: general-innovation
-    description: "PAUSED until an adapter exists. No collection URL invented."
-    homepage: "https://uplink.weforum.org/"
+    description: PAUSED until an adapter exists. No collection URL invented.
+    homepage: https://uplink.weforum.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -141,19 +141,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned HTTP 200. A guessed community path redirected to /home and is not stored as a collection URL. Adapter not implemented."
+      notes: Homepage returned HTTP 200. A guessed community path redirected to /home and is not stored as a collection URL. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. No collection URL invented."
+      notes: PAUSED until an adapter exists. No collection URL invented.
   - id: xprize
-    name: "XPRIZE"
+    name: XPRIZE
     category: general-innovation
     description: "PARTIAL: active grand-challenge competition pages from the public competitions index. Past winners and team profiles are not ingested yet."
-    homepage: "https://www.xprize.org/"
-    collection_url: "https://www.xprize.org/competitions"
+    homepage: https://www.xprize.org/
+    collection_url: https://www.xprize.org/competitions
     enabled: true
     status: PARTIAL
     resource_types:
@@ -171,7 +171,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage 200. /prizes redirects to /competitions, which returned 200 and is the verified collection URL. Adapter not implemented."
+      notes: Homepage 200. /prizes redirects to /competitions, which returned 200 and is the verified collection URL. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -179,10 +179,10 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: active grand-challenge competition pages from the public competitions index. Past winners and team profiles are not ingested yet."
   - id: global-innovation-fund
-    name: "Global Innovation Fund"
+    name: Global Innovation Fund
     category: general-innovation
-    description: "PAUSED. Portfolio URL was not verified."
-    homepage: "https://www.globalinnovation.fund/"
+    description: PAUSED. Portfolio URL was not verified.
+    homepage: https://www.globalinnovation.fund/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -200,19 +200,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /portfolio/ returned 404 and is not stored. Adapter not implemented."
+      notes: Homepage returned 200. /portfolio/ returned 404 and is not stored. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED. Portfolio URL was not verified."
+      notes: PAUSED. Portfolio URL was not verified.
   - id: grand-challenges-canada
-    name: "Grand Challenges Canada"
+    name: Grand Challenges Canada
     category: general-innovation
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://www.grandchallenges.ca/"
-    collection_url: "https://www.grandchallenges.ca/what-we-do/our-portfolio/"
+    homepage: https://www.grandchallenges.ca/
+    collection_url: https://www.grandchallenges.ca/what-we-do/our-portfolio/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -230,19 +230,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Published homepage responded 403 to this client (bot protection), so robots and any collection path were not verified. Adapter not implemented."
+      notes: Published homepage responded 403 to this client (bot protection), so robots and any collection path were not verified. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED. Homepage is the organisation site; collection URL omitted."
+      notes: PAUSED. Homepage is the organisation site; collection URL omitted.
   - id: challenge-works
-    name: "Challenge Works"
+    name: Challenge Works
     category: general-innovation
     description: "PARTIAL: challenge prize programme pages from the public explore-prizes catalogue. Winners and entrant solutions are not ingested."
-    homepage: "https://challengeworks.org/"
-    collection_url: "https://challengeworks.org/about-challenge-prizes/explore-prizes/"
+    homepage: https://challengeworks.org/
+    collection_url: https://challengeworks.org/about-challenge-prizes/explore-prizes/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -259,7 +259,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Explore-prizes listing (200) links /challenge-prizes/{slug}/ programme pages. WordPress REST is redirected and is not used."
+      notes: Explore-prizes listing (200) links /challenge-prizes/{slug}/ programme pages. WordPress REST is redirected and is not used.
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -267,10 +267,10 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: challenge prize programme pages from the public explore-prizes catalogue. Winners and entrant solutions are not ingested."
   - id: wipo-green
-    name: "WIPO GREEN"
+    name: WIPO GREEN
     category: general-innovation
     description: "PARTIAL: technology records from the public WIPO GREEN search API. Large backfills are checkpointed with --limit."
-    homepage: "https://www3.wipo.int/wipogreen/en/"
+    homepage: https://www3.wipo.int/wipogreen/en/
     collection_url: null
     enabled: true
     status: PARTIAL
@@ -289,7 +289,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Public OpenAPI at /wipogreen-database/v3/api-docs. Discovery uses POST /api/v1/search with type BASIC. Article detail uses GET /api/v1/articles/{id}/summary. HTML catalogue URLs are blocked by robots.txt; ingest uses the JSON API only (skipRobotsGuard)."
+      notes: Public OpenAPI at /wipogreen-database/v3/api-docs. Discovery uses POST /api/v1/search with type BASIC. Article detail uses GET /api/v1/articles/{id}/summary. HTML catalogue URLs are blocked by robots.txt; ingest uses the JSON API only (skipRobotsGuard).
     limits:
       requests_per_minute: 6
       concurrency: 1
@@ -297,10 +297,10 @@ sources:
       historical_backfill: checkpointed
       notes: "PARTIAL: technology records from the public WIPO GREEN search API. Large backfills are checkpointed with --limit."
   - id: undp-accelerator-labs
-    name: "UNDP Accelerator Labs"
+    name: UNDP Accelerator Labs
     category: general-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.undp.org/acceleratorlabs"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.undp.org/acceleratorlabs
     collection_url: null
     enabled: false
     status: PAUSED
@@ -319,19 +319,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "The published Accelerator Labs path returned 403 to this client. No collection URL stored. Adapter not implemented."
+      notes: The published Accelerator Labs path returned 403 to this client. No collection URL stored. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: what-design-can-do
-    name: "What Design Can Do"
+    name: What Design Can Do
     category: general-innovation
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://www.whatdesigncando.com/"
-    collection_url: "https://www.whatdesigncando.com/projects/"
+    homepage: https://www.whatdesigncando.com/
+    collection_url: https://www.whatdesigncando.com/projects/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -349,18 +349,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. No collection URL verified. Adapter not implemented."
+      notes: Homepage returned 200. No collection URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: fao-teca
-    name: "FAO TECA"
+    name: FAO TECA
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://teca.apps.fao.org/en/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://teca.apps.fao.org/en/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -379,18 +379,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "https://teca.apps.fao.org/ redirects to /en/ and returned 200. That app is the catalogue. Adapter not implemented."
+      notes: https://teca.apps.fao.org/ redirects to /en/ and returned 200. That app is the catalogue. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: access-agriculture
-    name: "Access Agriculture"
+    name: Access Agriculture
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.accessagriculture.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.accessagriculture.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -408,19 +408,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /videos returned 404 and is not stored. Adapter not implemented."
+      notes: Homepage returned 200. /videos returned 404 and is not stored. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: practical-action
-    name: "Practical Action / Practical Answers"
+    name: Practical Action / Practical Answers
     category: agriculture-water-development
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://practicalaction.org/"
-    collection_url: "https://practicalaction.org/our-work/projects/"
+    homepage: https://practicalaction.org/
+    collection_url: https://practicalaction.org/our-work/projects/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -438,18 +438,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "practicalaction.org and answers.practicalaction.org both returned 403. No collection URL stored. Adapter not implemented."
+      notes: practicalaction.org and answers.practicalaction.org both returned 403. No collection URL stored. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: imagine-h2o
-    name: "Imagine H2O"
+    name: Imagine H2O
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.imagineh2o.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.imagineh2o.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -468,18 +468,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /startups returned 202 and is not stored as a collection URL. Adapter not implemented."
+      notes: Homepage returned 200. /startups returned 202 and is not stored as a collection URL. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: efficiency-for-access
-    name: "Efficiency for Access"
+    name: Efficiency for Access
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://efficiencyforaccess.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://efficiencyforaccess.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -498,18 +498,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 403 to this client. No collection URL stored. Adapter not implemented."
+      notes: Homepage returned 403 to this client. No collection URL stored. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: cgiar
-    name: "CGIAR"
+    name: CGIAR
     category: agriculture-water-development
-    description: "PAUSED. CGIAR is a large research system; a future adapter must choose a public catalogue rather than crawl the whole site."
-    homepage: "https://www.cgiar.org/"
+    description: PAUSED. CGIAR is a large research system; a future adapter must choose a public catalogue rather than crawl the whole site.
+    homepage: https://www.cgiar.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -528,19 +528,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. No single innovations collection URL was verified. Adapter not implemented."
+      notes: Homepage returned 200. No single innovations collection URL was verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED. CGIAR is a large research system; a future adapter must choose a public catalogue rather than crawl the whole site."
+      notes: PAUSED. CGIAR is a large research system; a future adapter must choose a public catalogue rather than crawl the whole site.
   - id: eit-food
-    name: "EIT Food"
+    name: EIT Food
     category: agriculture-water-development
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.eitfood.eu/"
-    collection_url: "https://www.eitfood.eu/innovation"
+    homepage: https://www.eitfood.eu/
+    collection_url: https://www.eitfood.eu/innovation
     enabled: true
     status: PARTIAL
     resource_types:
@@ -566,11 +566,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: global-resilience-partnership
-    name: "Global Resilience Partnership"
+    name: Global Resilience Partnership
     category: agriculture-water-development
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.globalresiliencepartnership.org/"
-    collection_url: "https://www.globalresiliencepartnership.org/resources/"
+    homepage: https://www.globalresiliencepartnership.org/
+    collection_url: https://www.globalresiliencepartnership.org/resources/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -588,7 +588,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
+      notes: HTML catalogue adapter (listing HTML and/or sitemap discovery).
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -596,11 +596,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: elrha
-    name: "Elrha Humanitarian Innovation"
+    name: Elrha Humanitarian Innovation
     category: agriculture-water-development
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.elrha.org/"
-    collection_url: "https://www.elrha.org/innovation"
+    homepage: https://www.elrha.org/
+    collection_url: https://www.elrha.org/innovation
     enabled: true
     status: PARTIAL
     resource_types:
@@ -626,10 +626,10 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: gsma-innovation-fund
-    name: "GSMA Innovation Fund"
+    name: GSMA Innovation Fund
     category: agriculture-water-development
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.gsma.com/solutions-and-impact/connectivity-for-good/mobile-for-development/gsma-innovation-fund/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -648,19 +648,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "This is the GSMA Innovation Fund page on Mobile for Development. This client received 403. The same URL is the public fund page, so it is the homepage and no separate collection URL is stored. Adapter not implemented."
+      notes: This is the GSMA Innovation Fund page on Mobile for Development. This client received 403. The same URL is the public fund page, so it is the homepage and no separate collection URL is stored. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: shell-foundation
-    name: "Shell Foundation"
+    name: Shell Foundation
     category: agriculture-water-development
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://shellfoundation.org/"
-    collection_url: "https://shellfoundation.org/our-portfolio/"
+    homepage: https://shellfoundation.org/
+    collection_url: https://shellfoundation.org/our-portfolio/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -677,19 +677,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /portfolio/ returned 404 and is not stored. Adapter not implemented."
+      notes: Homepage returned 200. /portfolio/ returned 404 and is not stored. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: project-drawdown
-    name: "Project Drawdown Solutions Library"
+    name: Project Drawdown Solutions Library
     category: climate-energy-nature
-    description: "ACTIVE for the current Drawdown Explorer catalogue. Unrelated site articles and retired pages outside the explorer are out of scope. Evidence basis is INDEPENDENT_ASSESSMENT; evidence stage stays UNKNOWN."
-    homepage: "https://drawdown.org/"
-    collection_url: "https://drawdown.org/explorer"
+    description: ACTIVE for the current Drawdown Explorer catalogue. Unrelated site articles and retired pages outside the explorer are out of scope. Evidence basis is INDEPENDENT_ASSESSMENT; evidence stage stays UNKNOWN.
+    homepage: https://drawdown.org/
+    collection_url: https://drawdown.org/explorer
     enabled: true
     status: ACTIVE
     resource_types:
@@ -704,21 +704,21 @@ sources:
       terms_checked: false
     discovery:
       preferred_method: html
-      sitemap: "https://drawdown.org/sitemap.xml"
+      sitemap: https://drawdown.org/sitemap.xml
       rss: null
-      notes: "/solutions redirects to /explorer. Explorer HTML lists /explorer/{slug} solution links. Item pages expose h1.field--name-title, .field-summary, and a classification label. robots.txt allows the explorer. Assessment label is stored as metadata, not as a deployment stage."
+      notes: /solutions redirects to /explorer. Explorer HTML lists /explorer/{slug} solution links. Item pages expose h1.field--name-title, .field-summary, and a classification label. robots.txt allows the explorer. Assessment label is stored as metadata, not as a deployment stage.
     limits:
       requests_per_minute: 15
       concurrency: 1
     coverage:
       historical_backfill: checkpointed
-      notes: "ACTIVE for the current Drawdown Explorer catalogue. Unrelated site articles and retired pages outside the explorer are out of scope. Evidence basis is INDEPENDENT_ASSESSMENT; evidence stage stays UNKNOWN."
+      notes: ACTIVE for the current Drawdown Explorer catalogue. Unrelated site articles and retired pages outside the explorer are out of scope. Evidence basis is INDEPENDENT_ASSESSMENT; evidence stage stays UNKNOWN.
   - id: third-derivative
-    name: "Third Derivative"
+    name: Third Derivative
     category: climate-energy-nature
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://www.third-derivative.org/"
-    collection_url: "https://www.third-derivative.org/portfolio"
+    homepage: https://www.third-derivative.org/
+    collection_url: https://www.third-derivative.org/portfolio
     enabled: true
     status: PARTIAL
     resource_types:
@@ -736,19 +736,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200 with title Third Derivative. thirdderivative.com is a different firm and is not used. No portfolio URL verified. Adapter not implemented."
+      notes: Homepage returned 200 with title Third Derivative. thirdderivative.com is a different firm and is not used. No portfolio URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: climate-kic
-    name: "Climate KIC"
+    name: Climate KIC
     category: climate-energy-nature
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://www.climate-kic.org/"
-    collection_url: "https://www.climate-kic.org/programmes/our-portfolio/"
+    homepage: https://www.climate-kic.org/
+    collection_url: https://www.climate-kic.org/programmes/our-portfolio/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -766,19 +766,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. No collection URL verified. Adapter not implemented."
+      notes: Homepage returned 200. No collection URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: earthshot-prize
-    name: "The Earthshot Prize"
+    name: The Earthshot Prize
     category: climate-energy-nature
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://earthshotprize.org/"
-    collection_url: "https://earthshotprize.org/winners-finalists/"
+    homepage: https://earthshotprize.org/
+    collection_url: https://earthshotprize.org/winners-finalists/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -805,11 +805,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: zayed-sustainability-prize
-    name: "Zayed Sustainability Prize"
+    name: Zayed Sustainability Prize
     category: climate-energy-nature
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://zayedsustainabilityprize.com/"
-    collection_url: "https://zayedsustainabilityprize.com/en/winners"
+    homepage: https://zayedsustainabilityprize.com/
+    collection_url: https://zayedsustainabilityprize.com/en/winners
     enabled: true
     status: PARTIAL
     resource_types:
@@ -827,7 +827,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
+      notes: HTML catalogue adapter (listing HTML and/or sitemap discovery).
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -835,11 +835,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: holcim-foundation
-    name: "Holcim Foundation Awards"
+    name: Holcim Foundation Awards
     category: climate-energy-nature
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.holcimfoundation.org/"
-    collection_url: "https://www.holcimfoundation.org/awards"
+    homepage: https://www.holcimfoundation.org/
+    collection_url: https://www.holcimfoundation.org/awards
     enabled: true
     status: PARTIAL
     resource_types:
@@ -864,11 +864,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: biomimicry-institute
-    name: "Biomimicry Institute / Ray of Hope Accelerator"
+    name: Biomimicry Institute / Ray of Hope Accelerator
     category: climate-energy-nature
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://biomimicry.org/"
-    collection_url: "https://biomimicry.org/innovation/"
+    homepage: https://biomimicry.org/
+    collection_url: https://biomimicry.org/innovation/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -886,18 +886,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "biomimicry.org returned 403. rayofhopeprize.org did not resolve and is not stored. Adapter not implemented."
+      notes: biomimicry.org returned 403. rayofhopeprize.org did not resolve and is not stored. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED. Ray of Hope collection URL omitted because it was not verified."
+      notes: PAUSED. Ray of Hope collection URL omitted because it was not verified.
   - id: africa-prize
-    name: "Africa Prize for Engineering Innovation"
+    name: Africa Prize for Engineering Innovation
     category: africa-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://africaprize.raeng.org.uk/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://africaprize.raeng.org.uk/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -916,18 +916,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "africaprize.raeng.org.uk returned 200. A shorter raeng.org.uk path returned 404 and is not used. No winners collection URL verified. Adapter not implemented."
+      notes: africaprize.raeng.org.uk returned 200. A shorter raeng.org.uk path returned 404 and is not used. No winners collection URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: afrilabs
-    name: "AfriLabs"
+    name: AfriLabs
     category: africa-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.afrilabs.com/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.afrilabs.com/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -945,18 +945,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. No member-directory URL verified. Adapter not implemented."
+      notes: Homepage returned 200. No member-directory URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: undp-timbuktoo
-    name: "UNDP timbuktoo"
+    name: UNDP timbuktoo
     category: africa-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://timbuktoo.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://timbuktoo.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -975,18 +975,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "timbuktoo.org returned 200. www.undp.org/timbuktoo returned 403 and is not stored as the homepage. Adapter not implemented."
+      notes: timbuktoo.org returned 200. www.undp.org/timbuktoo returned 403 and is not stored as the homepage. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: africa-climate-ventures
-    name: "Africa Climate Ventures"
+    name: Africa Climate Ventures
     category: africa-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://africaclimateventures.com/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://africaclimateventures.com/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1004,18 +1004,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200 after redirect from www. No portfolio URL verified. Adapter not implemented."
+      notes: Homepage returned 200 after redirect from www. No portfolio URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: catalyst-fund
-    name: "Catalyst Fund"
+    name: Catalyst Fund
     category: africa-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.thecatalystfund.com/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.thecatalystfund.com/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1033,18 +1033,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "thecatalystfund.com returned 200 and describes the Africa climate pre-seed fund. bfaglobal.com/catalyst-fund/ redirects there. A different catalystfund.org host was not used. No portfolio URL verified. Adapter not implemented."
+      notes: thecatalystfund.com returned 200 and describes the Africa climate pre-seed fund. bfaglobal.com/catalyst-fund/ redirects there. A different catalystfund.org host was not used. No portfolio URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: acumen
-    name: "Acumen"
+    name: Acumen
     category: africa-innovation
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://acumen.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://acumen.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1062,18 +1062,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 403 to this client. No portfolio URL stored. Adapter not implemented."
+      notes: Homepage returned 403 to this client. No portfolio URL stored. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: orange-social-venture-prize
-    name: "Orange Social Venture Prize Africa and Middle East"
+    name: Orange Social Venture Prize Africa and Middle East
     category: africa-innovation
-    description: "PAUSED. May remain METADATA_ONLY later if winners are not published as a stable catalogue."
-    homepage: "https://poesam.orange.com/en"
+    description: PAUSED. May remain METADATA_ONLY later if winners are not published as a stable catalogue.
+    homepage: https://poesam.orange.com/en
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1092,18 +1092,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "poesam.orange.com/en returned 200 and is the official application site named in the competition rules. It is an application portal, not a public winner archive. No winners collection URL verified. Adapter not implemented."
+      notes: poesam.orange.com/en returned 200 and is the official application site named in the competition rules. It is an application portal, not a public winner archive. No winners collection URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED. May remain METADATA_ONLY later if winners are not published as a stable catalogue."
+      notes: PAUSED. May remain METADATA_ONLY later if winners are not published as a stable catalogue.
   - id: ashoka
-    name: "Ashoka Fellows"
+    name: Ashoka Fellows
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.ashoka.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.ashoka.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1122,19 +1122,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 403. No fellows directory URL verified. Adapter not implemented. Person records, when added, must link to the work and must not collect private contact details."
+      notes: Homepage returned 403. No fellows directory URL verified. Adapter not implemented. Person records, when added, must link to the work and must not collect private contact details.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: skoll
-    name: "Skoll Awardees"
+    name: Skoll Awardees
     category: people-innovators
     description: "BLOCKED for ingest: skoll.org robots.txt disallows all paths (Disallow: /). Adapter uses public WP REST grantees when policy allows."
-    homepage: "https://skoll.org/"
-    collection_url: "https://skoll.org/community/awardees/"
+    homepage: https://skoll.org/
+    collection_url: https://skoll.org/community/awardees/
     enabled: false
     status: BLOCKED
     resource_types:
@@ -1158,13 +1158,13 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "BLOCKED by robots.txt. Not silently dropped."
+      notes: BLOCKED by robots.txt. Not silently dropped.
   - id: echoing-green
-    name: "Echoing Green Fellows"
+    name: Echoing Green Fellows
     category: people-innovators
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://echoinggreen.org/"
-    collection_url: "https://echoinggreen.org/fellowship/issues/"
+    homepage: https://echoinggreen.org/
+    collection_url: https://echoinggreen.org/fellowship/issues/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1190,11 +1190,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: cartier-womens-initiative
-    name: "Cartier Women's Initiative"
+    name: Cartier Women's Initiative
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.cartierwomensinitiative.com/"
-    collection_url: "https://www.cartierwomensinitiative.com/fellows"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.cartierwomensinitiative.com/
+    collection_url: https://www.cartierwomensinitiative.com/fellows
     enabled: false
     status: PAUSED
     resource_types:
@@ -1212,18 +1212,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage and /fellows returned 200 (Nuxt SSR shell). Fellow profile URLs are not present in HTML or sitemap.xml; no public Contentful/WP REST route verified. Adapter not implemented."
+      notes: Homepage and /fellows returned 200 (Nuxt SSR shell). Fellow profile URLs are not present in HTML or sitemap.xml; no public Contentful/WP REST route verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until a verified public catalogue API or sitemap exists. Not silently dropped."
+      notes: PAUSED until a verified public catalogue API or sitemap exists. Not silently dropped.
   - id: rolex-awards
-    name: "Rolex Awards for Enterprise"
+    name: Rolex Awards for Enterprise
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.rolex.org/rolex-awards"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.rolex.org/rolex-awards
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1241,19 +1241,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "The Rolex Awards path returned 403 to this client. No laureate collection URL verified. Adapter not implemented."
+      notes: The Rolex Awards path returned 403 to this client. No laureate collection URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: elevate-prize
-    name: "Elevate Prize"
+    name: Elevate Prize
     category: people-innovators
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://elevateprize.org/"
-    collection_url: "https://elevateprize.org/winners/"
+    homepage: https://elevateprize.org/
+    collection_url: https://elevateprize.org/winners/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1278,11 +1278,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: global-good-fund
-    name: "Global Good Fund"
+    name: Global Good Fund
     category: people-innovators
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://globalgoodfund.org/"
-    collection_url: "https://globalgoodfund.org/fellowship-program/"
+    homepage: https://globalgoodfund.org/
+    collection_url: https://globalgoodfund.org/fellowship-program/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1300,7 +1300,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "HTML catalogue adapter (listing HTML and/or sitemap discovery)."
+      notes: HTML catalogue adapter (listing HTML and/or sitemap discovery).
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -1308,10 +1308,10 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: acumen-academy
-    name: "Acumen Academy"
+    name: Acumen Academy
     category: people-innovators
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://acumenacademy.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://acumenacademy.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1330,19 +1330,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. No course catalogue URL verified. Adapter not implemented."
+      notes: Homepage returned 200. No course catalogue URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: audacious-project
-    name: "The Audacious Project"
+    name: The Audacious Project
     category: major-backed-ideas
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.audaciousproject.org/"
-    collection_url: "https://www.audaciousproject.org/grantees"
+    homepage: https://www.audaciousproject.org/
+    collection_url: https://www.audaciousproject.org/grantees
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1368,11 +1368,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: mulago
-    name: "Mulago Foundation"
+    name: Mulago Foundation
     category: major-backed-ideas
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.mulagofoundation.org/"
-    collection_url: "https://www.mulagofoundation.org/portfolio"
+    homepage: https://www.mulagofoundation.org/
+    collection_url: https://www.mulagofoundation.org/portfolio
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1397,11 +1397,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: draper-richards-kaplan
-    name: "Draper Richards Kaplan Foundation"
+    name: Draper Richards Kaplan Foundation
     category: major-backed-ideas
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.drkfoundation.org/"
-    collection_url: "https://www.drkfoundation.org/portfolio/"
+    homepage: https://www.drkfoundation.org/
+    collection_url: https://www.drkfoundation.org/portfolio/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1426,10 +1426,10 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: co-impact
-    name: "Co-Impact"
+    name: Co-Impact
     category: major-backed-ideas
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://co-impact.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://co-impact.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1448,18 +1448,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /our-portfolio/ returned 404 and is not stored. Adapter not implemented."
+      notes: Homepage returned 200. /our-portfolio/ returned 404 and is not stored. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: macarthur-100-and-change
-    name: "MacArthur 100&Change"
+    name: MacArthur 100&Change
     category: major-backed-ideas
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.macfound.org/programs/awards/100change/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.macfound.org/programs/awards/100change/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1478,19 +1478,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "/programs/100change/ redirects to /programs/awards/100change/, which returned 200. No separate winner archive URL verified beyond that page. Adapter not implemented."
+      notes: /programs/100change/ redirects to /programs/awards/100change/, which returned 200. No separate winner archive URL verified beyond that page. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: hundred
-    name: "HundrED"
+    name: HundrED
     category: education-government-design
     description: "PARTIAL: innovation records from the public innovations sitemap (~4k URLs). HTML grid alone is JS-heavy."
-    homepage: "https://hundred.org/en"
-    collection_url: "https://hundred.org/en/innovations"
+    homepage: https://hundred.org/en
+    collection_url: https://hundred.org/en/innovations
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1506,9 +1506,9 @@ sources:
       terms_checked: false
     discovery:
       preferred_method: sitemap
-      sitemap: "https://hundred.org/sitemaps/innovations.xml"
+      sitemap: https://hundred.org/sitemaps/innovations.xml
       rss: null
-      notes: "Public sitemap index lists sitemaps/innovations.xml with /en/innovations/{slug} URLs. Listing HTML exposes only a small server-rendered sample."
+      notes: Public sitemap index lists sitemaps/innovations.xml with /en/innovations/{slug} URLs. Listing HTML exposes only a small server-rendered sample.
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -1516,11 +1516,11 @@ sources:
       historical_backfill: checkpointed
       notes: "PARTIAL: innovations sitemap discovery; use --limit for staged backfill."
   - id: oecd-opsi
-    name: "OECD Observatory of Public Sector Innovation"
+    name: OECD Observatory of Public Sector Innovation
     category: education-government-design
     description: "PARTIAL: innovation case studies from the public WordPress REST case collection."
-    homepage: "https://oecd-opsi.org/"
-    collection_url: "https://oecd-opsi.org/innovations/"
+    homepage: https://oecd-opsi.org/
+    collection_url: https://oecd-opsi.org/innovations/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1538,7 +1538,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "GET /wp-json/wp/v2/case returns innovation permalinks under /innovations/{slug}/. The innovations index HTML is JS-paginated and is not used for discovery."
+      notes: GET /wp-json/wp/v2/case returns innovation permalinks under /innovations/{slug}/. The innovations index HTML is JS-paginated and is not used for discovery.
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -1546,11 +1546,11 @@ sources:
       historical_backfill: checkpointed
       notes: "PARTIAL: WP REST case catalogue; use --limit for staged backfill."
   - id: nesta
-    name: "Nesta"
+    name: Nesta
     category: education-government-design
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://www.nesta.org.uk/"
-    collection_url: "https://www.nesta.org.uk/project/"
+    homepage: https://www.nesta.org.uk/
+    collection_url: https://www.nesta.org.uk/project/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1577,11 +1577,11 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: ideo-org
-    name: "IDEO.org"
+    name: IDEO.org
     category: education-government-design
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://www.ideo.org/"
-    collection_url: "https://www.ideo.org/"
+    homepage: https://www.ideo.org/
+    collection_url: https://www.ideo.org/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1599,19 +1599,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 403. No work collection URL verified. Adapter not implemented."
+      notes: Homepage returned 403. No work collection URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: ideo-design-kit
-    name: "IDEO Design Kit"
+    name: IDEO Design Kit
     category: education-government-design
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://www.designkit.org/"
-    collection_url: "https://www.designkit.org/case-studies.html"
+    homepage: https://www.designkit.org/
+    collection_url: https://www.designkit.org/case-studies.html
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1628,18 +1628,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 403. No methods index URL verified. Adapter not implemented. Update class MANUAL because the kit is a stable method set rather than a news feed."
+      notes: Homepage returned 403. No methods index URL verified. Adapter not implemented. Update class MANUAL because the kit is a stable method set rather than a news feed.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: social-innovation-academy
-    name: "Social Innovation Academy"
+    name: Social Innovation Academy
     category: education-government-design
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.socialinnovationacademy.eu/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.socialinnovationacademy.eu/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1657,19 +1657,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "socialinnovationacademy.eu returned 200 with title Social Innovation Academy. A .org host also exists and was not used. No course collection URL verified. Adapter not implemented."
+      notes: socialinnovationacademy.eu returned 200 with title Social Innovation Academy. A .org host also exists and was not used. No course collection URL verified. Adapter not implemented.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: apolitical
-    name: "Apolitical"
+    name: Apolitical
     category: education-government-design
     description: "PARTIAL: catalogue pages ingested via the shared HTML adapter. Coverage may be incomplete on JS-heavy listings."
-    homepage: "https://apolitical.co/en"
-    collection_url: "https://apolitical.co/en/articles"
+    homepage: https://apolitical.co/en
+    collection_url: https://apolitical.co/en/articles
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1695,10 +1695,10 @@ sources:
       historical_backfill: not-started
       notes: "PARTIAL: first catalogue ingest via html-catalogue adapter."
   - id: solutions-story-tracker
-    name: "Solutions Story Tracker"
+    name: Solutions Story Tracker
     category: solutions-journalism
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://storytracker.solutionsjournalism.org/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://storytracker.solutionsjournalism.org/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1716,18 +1716,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "storytracker.solutionsjournalism.org returned 200. The parent site solutionsjournalism.org also exists; the tracker host is the catalogue. No separate collection path verified beyond the tracker itself. Adapter not implemented. Editorial source."
+      notes: storytracker.solutionsjournalism.org returned 200. The parent site solutionsjournalism.org also exists; the tracker host is the catalogue. No separate collection path verified beyond the tracker itself. Adapter not implemented. Editorial source.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: reasons-to-be-cheerful
-    name: "Reasons to be Cheerful"
+    name: Reasons to be Cheerful
     category: solutions-journalism
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://reasonstobecheerful.world/"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://reasonstobecheerful.world/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1744,19 +1744,19 @@ sources:
       preferred_method: rss
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. An RSS URL was not confirmed in this pass, so rss is null rather than guessed. Adapter not implemented. Editorial source."
+      notes: Homepage returned 200. An RSS URL was not confirmed in this pass, so rss is null rather than guessed. Adapter not implemented. Editorial source.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: atlas-of-the-future
-    name: "Atlas of the Future"
+    name: Atlas of the Future
     category: solutions-journalism
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
-    homepage: "https://atlasofthefuture.org/"
-    collection_url: "https://atlasofthefuture.org/project/"
+    homepage: https://atlasofthefuture.org/
+    collection_url: https://atlasofthefuture.org/project/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1774,18 +1774,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage returned 200. /project/ returned 404 and is not stored. Adapter not implemented. Editorial source."
+      notes: Homepage returned 200. /project/ returned 404 and is not stored. Adapter not implemented. Editorial source.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: fast-company-world-changing-ideas
-    name: "Fast Company World Changing Ideas"
+    name: Fast Company World Changing Ideas
     category: solutions-journalism
-    description: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
-    homepage: "https://www.fastcompany.com/world-changing-ideas"
+    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    homepage: https://www.fastcompany.com/world-changing-ideas
     collection_url: null
     enabled: false
     status: PAUSED
@@ -1804,21 +1804,21 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "The World Changing Ideas path returned 403 to this client. No alternate collection URL stored. Adapter not implemented. Editorial source; do not assign independent-assessment weight."
+      notes: The World Changing Ideas path returned 403 to this client. No alternate collection URL stored. Adapter not implemented. Editorial source; do not assign independent-assessment weight.
     limits:
       requests_per_minute: 6
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted."
+      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
   - id: startgate-um6p
-    name: "StartGate / UM6P startup directory"
+    name: StartGate / UM6P startup directory
     category: africa-innovation
-    description: "PAUSED pending enablement after robots preflight. Paginated public startup directory (listing and detail URLs when present in HTML)."
-    homepage: "https://www.startgate.ma/"
-    collection_url: "https://www.startgate.ma/startups"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement after robots preflight. Paginated public startup directory (listing and detail URLs when present in HTML).
+    homepage: https://www.startgate.ma/
+    collection_url: https://www.startgate.ma/startups
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -1842,15 +1842,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled after robots/terms review. Adapter uses html-catalogue with query pagination."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: digital-africa
-    name: "Digital Africa portfolio"
+    name: Digital Africa portfolio
     category: africa-innovation
-    description: "PAUSED pending enablement. Francophone and pan-African portfolio with stable detail pages."
-    homepage: "https://digital-africa.co/"
-    collection_url: "https://digital-africa.co/portfolio"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Francophone and pan-African portfolio with stable detail pages.
+    homepage: https://digital-africa.co/
+    collection_url: https://digital-africa.co/portfolio
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -1866,7 +1866,7 @@ sources:
       terms_checked: false
     discovery:
       preferred_method: html
-      sitemap: "https://digital-africa.co/sitemap.xml"
+      sitemap: https://digital-africa.co/sitemap.xml
       rss: null
       notes: "Preflight: /portfolio HTTP 200; robots.txt allows crawling (empty Disallow). Detail paths /portfolio/{slug} and /en/portfolio/{slug}. PROGRAMME_SELECTED."
     limits:
@@ -1874,15 +1874,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. Adapter uses html-catalogue plus sitemap."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: ghana-climate-innovation-centre
-    name: "Ghana Climate Innovation Centre ventures"
+    name: Ghana Climate Innovation Centre ventures
     category: africa-innovation
-    description: "PAUSED pending enablement. GCIC alumni venture directory with detail pages."
-    homepage: "https://ghanacic.ashesi.edu.gh/"
-    collection_url: "https://ghanacic.ashesi.edu.gh/alumni-ventures/"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. GCIC alumni venture directory with detail pages.
+    homepage: https://ghanacic.ashesi.edu.gh/
+    collection_url: https://ghanacic.ashesi.edu.gh/alumni-ventures/
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - ORGANISATION
@@ -1906,15 +1906,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: ventures-platform
-    name: "Ventures Platform portfolio"
+    name: Ventures Platform portfolio
     category: africa-innovation
-    description: "PAUSED pending enablement. Pan-African investor portfolio with Webflow company records."
-    homepage: "https://www.venturesplatform.com/"
-    collection_url: "https://www.venturesplatform.com/portfolio"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Pan-African investor portfolio with Webflow company records.
+    homepage: https://www.venturesplatform.com/
+    collection_url: https://www.venturesplatform.com/portfolio
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -1938,15 +1938,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: founders-factory-africa
-    name: "Founders Factory Africa portfolio"
+    name: Founders Factory Africa portfolio
     category: africa-innovation
-    description: "PAUSED pending enablement. Pan-African portfolio with problem/solution detail pages."
-    homepage: "https://www.foundersfactory.africa/"
-    collection_url: "https://www.foundersfactory.africa/portfolio"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Pan-African portfolio with problem/solution detail pages.
+    homepage: https://www.foundersfactory.africa/
+    collection_url: https://www.foundersfactory.africa/portfolio
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -1962,7 +1962,7 @@ sources:
       terms_checked: false
     discovery:
       preferred_method: html
-      sitemap: "http://www.foundersfactory.africa/sitemap.xml"
+      sitemap: http://www.foundersfactory.africa/sitemap.xml
       rss: null
       notes: "Preflight: portfolio and /portfolio/{slug} HTTP 200. robots.txt Disallow empty (allow). Sitemap lists portfolio slugs."
     limits:
@@ -1970,15 +1970,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: baobab-network
-    name: "Baobab Network portfolio"
+    name: Baobab Network portfolio
     category: africa-innovation
-    description: "PAUSED pending enablement. Listing-only portfolio cards on a single public page."
-    homepage: "https://thebaobabnetwork.com/"
-    collection_url: "https://thebaobabnetwork.com/portfolio/"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Listing-only portfolio cards on a single public page.
+    homepage: https://thebaobabnetwork.com/
+    collection_url: https://thebaobabnetwork.com/portfolio/
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -2001,15 +2001,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: injini-african-edtech-map
-    name: "Injini African EdTech Product Map"
+    name: Injini African EdTech Product Map
     category: africa-innovation
-    description: "PAUSED pending enablement. Curated EdTech directory; static HTML may not include full CMS list without client-side fetch."
-    homepage: "https://www.injini.africa/"
-    collection_url: "https://www.injini.africa/african-edtech-map"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Curated EdTech directory; static HTML may not include full CMS list without client-side fetch.
+    homepage: https://www.injini.africa/
+    collection_url: https://www.injini.africa/african-edtech-map
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -2032,15 +2032,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until CMS/API discovery is confirmed. Do not bypass client-only data."
+      notes: PAUSED until CMS/API discovery is confirmed. Do not bypass client-only data.
   - id: ihub-future-of-learning
-    name: "iHub Future of Learning startup directory"
+    name: iHub Future of Learning startup directory
     category: africa-innovation
-    description: "PAUSED pending enablement. East African EdTech accelerator startup profiles."
-    homepage: "https://futureoflearning.ihub.co.ke/"
-    collection_url: "https://futureoflearning.ihub.co.ke/startup-directory/"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. East African EdTech accelerator startup profiles.
+    homepage: https://futureoflearning.ihub.co.ke/
+    collection_url: https://futureoflearning.ihub.co.ke/startup-directory/
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -2063,15 +2063,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: oceanhub-africa
-    name: "OceanHub Africa startup portfolio"
+    name: OceanHub Africa startup portfolio
     category: africa-innovation
-    description: "PAUSED pending enablement. Blue-economy startup archive via public WordPress REST (category startup-portfolio)."
-    homepage: "https://oceanhub.africa/"
-    collection_url: "https://oceanhub.africa/category/startup-portfolio/"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Blue-economy startup archive via public WordPress REST (category startup-portfolio).
+    homepage: https://oceanhub.africa/
+    collection_url: https://oceanhub.africa/category/startup-portfolio/
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - TECHNOLOGY
@@ -2095,15 +2095,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: norrsken-accelerator
-    name: "Norrsken Accelerator portfolio"
+    name: Norrsken Accelerator portfolio
     category: africa-innovation
-    description: "PAUSED pending enablement. Global impact accelerator list with problem/solution fields; retain geography for Africa-weighted search."
-    homepage: "https://accelerator.norrsken.org/"
-    collection_url: "https://accelerator.norrsken.org/portfolio"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Global impact accelerator list with problem/solution fields; retain geography for Africa-weighted search.
+    homepage: https://accelerator.norrsken.org/
+    collection_url: https://accelerator.norrsken.org/portfolio
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - ORGANISATION
@@ -2126,15 +2126,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: norrsken-100
-    name: "Norrsken 100"
+    name: Norrsken 100
     category: africa-innovation
-    description: "PAUSED pending enablement. Annual curated impact startup list (global, includes African companies)."
-    homepage: "https://www.norrsken.org/"
-    collection_url: "https://www.norrsken.org/100"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. Annual curated impact startup list (global, includes African companies).
+    homepage: https://www.norrsken.org/
+    collection_url: https://www.norrsken.org/100
+    enabled: true
+    status: PARTIAL
     resource_types:
       - SOLUTION
       - ORGANISATION
@@ -2157,15 +2157,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: seedstars-africa
-    name: "Seedstars portfolio (Africa filter)"
+    name: Seedstars portfolio (Africa filter)
     category: africa-innovation
     description: "PAUSED pending enablement. PARTIAL: public /funds/portfolio/ exposes Africa-tagged content cards, not a full structured company API."
-    homepage: "https://www.seedstars.com/"
-    collection_url: "https://www.seedstars.com/funds/portfolio/"
-    enabled: false
-    status: PAUSED
+    homepage: https://www.seedstars.com/
+    collection_url: https://www.seedstars.com/funds/portfolio/
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -2188,13 +2188,13 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED with geography filter."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: startupbootcamp-afritech
-    name: "Startupbootcamp AfriTech (SBC AfriTech)"
+    name: Startupbootcamp AfriTech (SBC AfriTech)
     category: africa-innovation
-    description: "PAUSED pending enablement. Portfolio at sbcafritech.com when /startup/{uuid} links are present in server HTML."
-    homepage: "https://sbcafritech.com/"
-    collection_url: "https://sbcafritech.com/"
+    description: PAUSED pending enablement. Portfolio at sbcafritech.com when /startup/{uuid} links are present in server HTML.
+    homepage: https://sbcafritech.com/
+    collection_url: https://sbcafritech.com/
     enabled: false
     status: PAUSED
     resource_types:
@@ -2218,15 +2218,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until catalogue completeness is verified."
+      notes: PAUSED until catalogue completeness is verified.
   - id: cchub-syndicate
-    name: "CcHUB Syndicate portfolio"
+    name: CcHUB Syndicate portfolio
     category: africa-innovation
-    description: "PAUSED pending enablement. West Africa syndicate portfolio HTML page."
-    homepage: "https://syndicate.cchub.africa/"
-    collection_url: "https://syndicate.cchub.africa/portfolio.html"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. West Africa syndicate portfolio HTML page.
+    homepage: https://syndicate.cchub.africa/
+    collection_url: https://syndicate.cchub.africa/portfolio.html
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -2248,13 +2248,13 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until enabled. PROGRAMME_SELECTED."
+      notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
   - id: gitex-africa-supernova
-    name: "GITEX Africa Supernova Challenge"
+    name: GITEX Africa Supernova Challenge
     category: africa-innovation
-    description: "PAUSED. Annual cohort page; origin returned HTTP 403 to this ingest client during preflight."
-    homepage: "https://gitexafrica.com/"
-    collection_url: "https://gitexafrica.com/africa-supernova-challenge"
+    description: PAUSED. Annual cohort page; origin returned HTTP 403 to this ingest client during preflight.
+    homepage: https://gitexafrica.com/
+    collection_url: https://gitexafrica.com/africa-supernova-challenge
     enabled: false
     status: PAUSED
     resource_types:
@@ -2279,15 +2279,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until legitimate HTTP 200 responses are available without bypassing bot checks."
+      notes: PAUSED until legitimate HTTP 200 responses are available without bypassing bot checks.
   - id: africa-tech-festival-startup-hub
-    name: "Africa Tech Festival Startup Hub"
+    name: Africa Tech Festival Startup Hub
     category: africa-innovation
-    description: "PAUSED pending enablement. PARTIAL exhibitor profiles; startup pods not yet isolated from corporate exhibitors."
-    homepage: "https://africatechfestival.com/"
-    collection_url: "https://africatechfestival.com/startups-atf/"
-    enabled: false
-    status: PAUSED
+    description: PAUSED pending enablement. PARTIAL exhibitor profiles; startup pods not yet isolated from corporate exhibitors.
+    homepage: https://africatechfestival.com/
+    collection_url: https://africatechfestival.com/startups-atf/
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -2309,12 +2309,12 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PAUSED until Startup Pod vs sponsor filtering is tightened."
+      notes: PAUSED until Startup Pod vs sponsor filtering is tightened.
   - id: future-africa
-    name: "Future Africa"
+    name: Future Africa
     category: africa-innovation
     description: "BLOCKED: terms expressly prohibit crawling, scraping, and automated extraction."
-    homepage: "https://future.africa/"
+    homepage: https://future.africa/
     collection_url: null
     enabled: false
     status: BLOCKED
@@ -2333,18 +2333,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Terms of Use prohibit crawling, data mining, data scraping and automated extraction. Do not ingest."
+      notes: Terms of Use prohibit crawling, data mining, data scraping and automated extraction. Do not ingest.
     limits:
       requests_per_minute: 0
       concurrency: 0
     coverage:
       historical_backfill: blocked
-      notes: "BLOCKED_TERMS. Registered so the source is not rediscovered."
+      notes: BLOCKED_TERMS. Registered so the source is not rediscovered.
   - id: vc4a
-    name: "VC4A venture database"
+    name: VC4A venture database
     category: africa-innovation
     description: "BLOCKED: terms prohibit automated downloading via spiders, robots, crawlers and data-mining tools."
-    homepage: "https://vc4a.com/"
+    homepage: https://vc4a.com/
     collection_url: null
     enabled: false
     status: BLOCKED
@@ -2363,18 +2363,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Terms prohibit automated data download except narrow exceptions (e.g. permitted RSS). Ordinary crawling is out of scope."
+      notes: Terms prohibit automated data download except narrow exceptions (e.g. permitted RSS). Ordinary crawling is out of scope.
     limits:
       requests_per_minute: 0
       concurrency: 0
     coverage:
       historical_backfill: blocked
-      notes: "BLOCKED_TERMS."
+      notes: BLOCKED_TERMS.
   - id: africa-business-heroes
-    name: "Africa's Business Heroes"
+    name: Africa's Business Heroes
     category: africa-innovation
     description: "BLOCKED unless written permission: terms prohibit storing content in a retrieval system."
-    homepage: "https://africabusinessheroes.org/"
+    homepage: https://africabusinessheroes.org/
     collection_url: null
     enabled: false
     status: BLOCKED
@@ -2393,18 +2393,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Terms prohibit reproduction or storage in a retrieval system without consent. Alice is a retrieval system."
+      notes: Terms prohibit reproduction or storage in a retrieval system without consent. Alice is a retrieval system.
     limits:
       requests_per_minute: 0
       concurrency: 0
     coverage:
       historical_backfill: blocked
-      notes: "BLOCKED_TERMS unless ABH grants permission."
+      notes: BLOCKED_TERMS unless ABH grants permission.
   - id: saviu
-    name: "Saviu Ventures portfolio"
+    name: Saviu Ventures portfolio
     category: africa-innovation
-    description: "PAUSED for permission review. Terms restrict reproduction; do not ingest until clarified."
-    homepage: "https://www.saviu.vc/"
+    description: PAUSED for permission review. Terms restrict reproduction; do not ingest until clarified.
+    homepage: https://www.saviu.vc/
     collection_url: null
     enabled: false
     status: PAUSED
@@ -2423,18 +2423,18 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Strong Francophone African VC portfolio but terms restrict reproduction. Ask/clarify permission before any ingest."
+      notes: Strong Francophone African VC portfolio but terms restrict reproduction. Ask/clarify permission before any ingest.
     limits:
       requests_per_minute: 0
       concurrency: 0
     coverage:
       historical_backfill: not-started
-      notes: "PERMISSION_REVIEW. Adapter not enabled."
+      notes: PERMISSION_REVIEW. Adapter not enabled.
   - id: villgro-africa
-    name: "Villgro Africa health portfolio"
+    name: Villgro Africa health portfolio
     category: africa-innovation
     description: "BLOCKED: public portfolio encounters bot verification; do not bypass."
-    homepage: "https://villgroafrica.org/"
+    homepage: https://villgroafrica.org/
     collection_url: null
     enabled: false
     status: BLOCKED
@@ -2453,10 +2453,351 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Portfolio hits bot-verification wall. Do not use Playwright or other bypass techniques."
+      notes: Portfolio hits bot-verification wall. Do not use Playwright or other bypass techniques.
     limits:
       requests_per_minute: 0
       concurrency: 0
     coverage:
       historical_backfill: blocked
-      notes: "BLOCKED bot wall."
+      notes: BLOCKED bot wall.
+  - id: su-launchlab
+    name: SU LaunchLab Stellenbosch portfolio
+    category: africa-innovation
+    description: "PARTIAL second-pass Africa source. Preflight: /portfolio/ HTTP 200."
+    homepage: https://www.launchlab.co.za/
+    collection_url: https://www.launchlab.co.za/portfolio/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: su-launchlab
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /portfolio/ HTTP 200. Portfolio may be iframe-embedded; adapter discovers public iframe src URLs only."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: kenya-climate-innovation-centre
+    name: Kenya Climate Innovation Centre
+    category: africa-innovation
+    description: "PARTIAL second-pass Africa source. Preflight: kenyacic."
+    homepage: https://kenyacic.org/
+    collection_url: https://kenyacic.org/
+    enabled: false
+    status: PARTIAL
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kenya-climate-innovation-centre
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: kenyacic.org HTTP 200. PARTIAL: venture paths discovered via sitemap when present; no single clean alumni directory verified."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: kosmos-innovation-centre-ghana
+    name: Kosmos Innovation Center Ghana
+    category: africa-innovation
+    description: "PARTIAL second-pass Africa source. PARTIAL cohort source: challenge and finalist announcements on news/blog paths."
+    homepage: https://kosmosinnovationcenter.com/
+    collection_url: https://kosmosinnovationcenter.com/news/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kosmos-innovation-centre-ghana
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "PARTIAL cohort source: challenge and finalist announcements on news/blog paths. Not a stable portfolio API."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: africa-tech-summit-showcase
+    name: Africa Tech Summit Investment Showcase
+    category: africa-innovation
+    description: PARTIAL second-pass Africa source. PARTIAL annual showcase cohorts published as articles.
+    homepage: https://africatechsummit.com/
+    collection_url: https://africatechsummit.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: africa-tech-summit-showcase
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: PARTIAL annual showcase cohorts published as articles. Adapter extracts cohort lines from public pages when collection URL is set.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: mest-africa-challenge
+    name: MEST Africa Challenge
+    category: africa-innovation
+    description: PARTIAL second-pass Africa source. PARTIAL prize-cycle source for pan-African finalists.
+    homepage: https://mest.io/
+    collection_url: https://mest.io/news
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: mest-africa-challenge
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: PARTIAL prize-cycle source for pan-African finalists. Ingest announcement pages, not a portfolio database.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: milken-motsepe-innovation-prize
+    name: Milken-Motsepe Innovation Prize
+    category: africa-innovation
+    description: PARTIAL second-pass Africa source. PARTIAL prize-cycle source.
+    homepage: https://milkenmotsepeprize.org/
+    collection_url: https://milkenmotsepeprize.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: milken-motsepe-innovation-prize
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: PARTIAL prize-cycle source. Public pages list selected agriculture/energy/fintech solutions by competition year.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: global-startup-awards-africa
+    name: Global Startup Awards Africa
+    category: africa-innovation
+    description: PARTIAL second-pass Africa source. PARTIAL annual winners/finalists by category.
+    homepage: https://www.globalstartupawards.com/
+    collection_url: https://www.globalstartupawards.com/regions/africa/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: global-startup-awards-africa
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: PARTIAL annual winners/finalists by category. Editorial cohort extraction only.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: flat6labs-africa
+    name: Flat6Labs Africa programmes
+    category: africa-innovation
+    description: "PARTIAL second-pass Africa source. PARTIAL: Egypt/Tunisia/Morocco programme portfolios still being consolidated."
+    homepage: https://flat6labs.com/
+    collection_url: https://flat6labs.com/portfolio/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: flat6labs-africa
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "PARTIAL: Egypt/Tunisia/Morocco programme portfolios still being consolidated. Adapter registered for public portfolio paths when present."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: growthafrica
+    name: GrowthAfrica ventures
+    category: africa-innovation
+    description: "PARTIAL second-pass Africa source. PARTIAL: portfolio page uses CubePortfolio JS; server HTML may be incomplete."
+    homepage: https://growthafrica.com/
+    collection_url: https://growthafrica.com/investors/portfolio-our-ventures/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: growthafrica
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "PARTIAL: portfolio page uses CubePortfolio JS; server HTML may be incomplete. robots allows fetch with standard bot UA."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: africarena
+    name: AfricArena
+    category: africa-innovation
+    description: PARTIAL second-pass Africa source. PARTIAL event showcase source for African startup finalists.
+    homepage: https://www.africarena.com/
+    collection_url: https://www.africarena.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: africarena
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: PARTIAL event showcase source for African startup finalists. Cohort adapter on public pages.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.
+  - id: africa-fintech-summit-alpha-expo
+    name: Africa Fintech Summit Alpha Expo
+    category: africa-innovation
+    description: PARTIAL second-pass Africa source. PARTIAL fintech summit exhibitor/alpha expo listings.
+    homepage: https://africafintechsummit.com/
+    collection_url: https://africafintechsummit.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: africa-fintech-summit-alpha-expo
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: PARTIAL fintech summit exhibitor/alpha expo listings. Cohort adapter until a stable catalogue is verified.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: PAUSED until collection quality is verified. Adapter is registered for limited cohort extraction.

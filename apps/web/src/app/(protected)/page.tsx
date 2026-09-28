@@ -38,7 +38,7 @@ export default async function DiscoverPage() {
   const sourceStrip = sources.slice(0, 8);
 
   const resourceCount = stats.canonical_resources ?? 0;
-  const statsLine = `${resourceCount.toLocaleString()} resources · 82 sources · ${stats.organisations?.toLocaleString() ?? "0"} organisations · ${stats.people?.toLocaleString() ?? "0"} people`;
+  const statsLine = `${resourceCount.toLocaleString()} resources · 93 sources · ${stats.organisations?.toLocaleString() ?? "0"} organisations · ${stats.people?.toLocaleString() ?? "0"} people`;
 
   return (
     <div>

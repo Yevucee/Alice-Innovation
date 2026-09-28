@@ -199,7 +199,7 @@ export function createLibraryServer(): McpServer {
     "browse_sources",
     {
       title: "Browse sources",
-      description: "List the approved source catalogue, including status and coverage notes. Use this to see which of the 82 sources are active, partial, paused, or blocked.",
+      description: "List the approved source catalogue, including status and coverage notes. Use this to see which of the 93 sources are active, partial, paused, or blocked.",
       inputSchema: {
         category: z.string().max(80).optional(),
         status: z.string().max(40).optional(),

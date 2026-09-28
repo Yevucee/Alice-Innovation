@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadSources } from "../../packages/source-registry/src/load.ts";
 
-test("the registry contains all 82 sources with homepages and no invented blanks", () => {
+test("the registry contains all 93 sources with homepages and no invented blanks", () => {
   const sources = loadSources(new URL("../../config/sources.yaml", import.meta.url).pathname);
-  assert.equal(sources.length, 82);
+  assert.equal(sources.length, 93);
   const ids = new Set(sources.map((source) => source.id));
-  assert.equal(ids.size, 82);
+  assert.equal(ids.size, 93);
   for (const source of sources) {
     const homepage = new URL(source.homepage);
     assert.equal(homepage.protocol, "https:");
@@ -36,7 +36,9 @@ test("the registry contains all 82 sources with homepages and no invented blanks
   assert.equal(byId["wipo-green"].enabled, true);
   assert.equal(byId["future-africa"].status, "BLOCKED");
   assert.equal(byId["vc4a"].status, "BLOCKED");
-  assert.equal(byId["startgate-um6p"].enabled, false);
-  assert.equal(paused.length, 43);
+  assert.equal(byId["startgate-um6p"].enabled, true);
+  assert.equal(byId["startgate-um6p"].status, "PARTIAL");
+  assert.equal(byId["gitex-africa-supernova"].enabled, false);
+  assert.equal(paused.length, 39);
   assert.ok(paused.every((source) => source.enabled === false));
 });

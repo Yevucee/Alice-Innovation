@@ -9,6 +9,7 @@ import { challengeWorksAdapter } from "./challenge-works.js";
 import { wipoGreenAdapter } from "./wipo-green.js";
 import { catalogueAdapters } from "./catalogue-adapters.js";
 import { africaAdapters } from "./africa-adapters.js";
+import { africaSecondPassAdapters } from "./africa-second-pass-adapters.js";
 import { buildPlaceholderAdapters, remainingCatalogueAdapters } from "./placeholder-adapters.js";
 
 const CORE_ADAPTERS: SourceAdapter[] = [
@@ -22,6 +23,7 @@ const CORE_ADAPTERS: SourceAdapter[] = [
   wipoGreenAdapter,
   ...catalogueAdapters,
   ...africaAdapters,
+  ...africaSecondPassAdapters,
   ...remainingCatalogueAdapters,
 ];
 
