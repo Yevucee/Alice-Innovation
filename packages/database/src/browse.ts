@@ -40,19 +40,44 @@ export async function resourcesForSource(
   return { results: found.results, filtered_total: found.filtered_total };
 }
 
+const AFRICAN_COUNTRY_CODES = [
+  "DZ", "AO", "BJ", "BW", "BF", "BI", "CV", "CM", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG",
+  "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML",
+  "MR", "MU", "MA", "MZ", "NA", "NE", "NG", "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD",
+  "TZ", "TG", "TN", "UG", "ZM", "ZW",
+];
+
 export async function resourcesFromAfrica(db: Queryable, limit: number): Promise<CompactResource[]> {
-  const africanCodes = [
-    "DZ", "AO", "BJ", "BW", "BF", "BI", "CV", "CM", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG",
-    "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML",
-    "MR", "MU", "MA", "MZ", "NA", "NE", "NG", "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD",
-    "TZ", "TG", "TN", "UG", "ZM", "ZW",
-  ];
-  const found = await searchLibrary(
+  const byCountry = await searchLibrary(
     db,
-    { query: "", countries: africanCodes.map((c) => c.toLowerCase()), limit, offset: 0, diverse: true },
+    { query: "", countries: AFRICAN_COUNTRY_CODES, limit: limit * 2, offset: 0, diverse: true, sort: "newest" },
     null,
   );
-  return found.results;
+
+  const africaSources = await db.query<{ slug: string }>(
+    `SELECT slug FROM sources WHERE category = 'africa-innovation' AND enabled = true ORDER BY slug`,
+  );
+  const byAfricaSource = africaSources.rows.length > 0
+    ? await searchLibrary(
+      db,
+      {
+        query: "",
+        sources: africaSources.rows.map((row) => row.slug),
+        limit: limit * 2,
+        offset: 0,
+        diverse: true,
+        sort: "newest",
+      },
+      null,
+    )
+    : { results: [] as CompactResource[] };
+
+  const merged = new Map<string, CompactResource>();
+  for (const resource of [...byCountry.results, ...byAfricaSource.results]) {
+    merged.set(resource.resource_id, resource);
+    if (merged.size >= limit) break;
+  }
+  return [...merged.values()].slice(0, limit);
 }
 
 export async function getPerson(db: Queryable, personId: string): Promise<Record<string, unknown> | null> {

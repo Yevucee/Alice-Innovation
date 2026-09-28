@@ -63,8 +63,11 @@ const FILTER_SQL = `
     SELECT 1 FROM resource_locations rl
     JOIN locations loc ON loc.id = rl.location_id
     WHERE rl.resource_id = r.id
-      AND (loc.country_code = ANY($5) OR lower(loc.country_name) = ANY($5))
-  ))
+      AND (
+        upper(loc.country_code) = ANY(SELECT upper(unnest($5::text[])))
+        OR lower(loc.country_name) = ANY(SELECT lower(unnest($5::text[])))
+      )
+  ) OR upper(r.primary_country_code) = ANY(SELECT upper(unnest($5::text[]))))
   AND ($6::text[] IS NULL OR EXISTS (
     SELECT 1 FROM resource_sectors rs
     JOIN sectors sec ON sec.id = rs.sector_id
