@@ -36,6 +36,7 @@
     "ingest:single-flight:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-single-flight-queue.sh",
     "ingest:africa:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-africa-queue.sh",
     "ingest:africa-full:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-africa-full-only.sh",
+    "ingest:africa-tail:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-africa-tail.sh",
     "setup:africa-rollout": "tsx scripts/setup-africa-rollout.ts",
     "ops:cleanup-stale-runs": "tsx scripts/ops-cleanup-stale-ingestion-runs.ts",
     "ops:cleanup-stale-runs:remote": "bash scripts/run-with-production-env.sh npm run ops:cleanup-stale-runs",
