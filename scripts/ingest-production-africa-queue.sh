@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Serial Africa catalogue ingests. Run only via ingest:single-flight or alone.
+# Slugs must match scripts/africa-queue-sources.ts and docs/africa-ingest-checklist.md
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

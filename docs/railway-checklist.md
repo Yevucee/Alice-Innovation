@@ -49,6 +49,8 @@ Post-deploy:
 ```bash
 npm run smoke:production:remote
 npm run migrate   # on MCP shell or via run-with-production-env
+npm run ops:coverage:remote
+npm run check:africa-ingest:remote   # after Africa queue (docs/africa-ingest-checklist.md)
 ```
 
 ## 3. Ingestor service
