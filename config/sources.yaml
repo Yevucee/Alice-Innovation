@@ -2283,7 +2283,7 @@ sources:
   - id: africa-tech-festival-startup-hub
     name: Africa Tech Festival Startup Hub
     category: africa-innovation
-    description: PAUSED pending enablement. PARTIAL exhibitor profiles; startup pods not yet isolated from corporate exhibitors.
+    description: "PARTIAL: exhibitor profiles linked from /startups-atf/ (logo carousel). Not filtered to Startup Pod only."
     homepage: https://africatechfestival.com/
     collection_url: https://africatechfestival.com/startups-atf/
     enabled: true
@@ -2303,13 +2303,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Preflight: /startups-atf/ HTTP 200. robots.txt HTTP 200. Adapter collects *-exhibitor-* profile URLs pending Startup Pod filtering."
+      notes: "Preflight: /startups-atf/ HTTP 200. Adapter ingests /home/sponsors/*-exhibitor-YYYY/ profiles listed on that page (no per-page Startup Pod filter; site does not tag pods on profile HTML)."
     limits:
       requests_per_minute: 8
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: PAUSED until Startup Pod vs sponsor filtering is tightened.
+      notes: "PARTIAL: full exhibitor list from startups-atf listing; corporate exhibitors included until Informa exposes a startup-only feed."
   - id: future-africa
     name: Future Africa
     category: africa-innovation

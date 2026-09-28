@@ -260,6 +260,8 @@ async function discoverSeedstarsAfrica(ctx: AdapterContext): Promise<DiscoveredR
   return refs;
 }
 
+const ATF_EXHIBITOR_PATH = /^\/home\/sponsors\/[a-z0-9-]+-exhibitor-\d{4}\/?$/i;
+
 async function discoverAfricaTechFestival(ctx: AdapterContext): Promise<DiscoveredRef[]> {
   const collection = ctx.source.collection_url;
   if (!collection) return [];
@@ -268,19 +270,18 @@ async function discoverAfricaTechFestival(ctx: AdapterContext): Promise<Discover
   const candidateUrls = new Set<string>();
   $("a[href]").each((_, element) => {
     const href = $(element).attr("href") ?? "";
-    if (!href.includes("exhibitor-")) return;
     try {
-      candidateUrls.add(new URL(href, collection).toString().replace(/\/$/, ""));
+      const absolute = new URL(href, collection);
+      if (!ATF_EXHIBITOR_PATH.test(absolute.pathname)) return;
+      candidateUrls.add(absolute.toString().replace(/\/$/, ""));
     } catch {
       /* ignore */
     }
   });
 
   const refs: DiscoveredRef[] = [];
-  for (const url of candidateUrls) {
+  for (const url of [...candidateUrls].sort()) {
     if (ctx.limit !== null && refs.length >= ctx.limit) break;
-    const profile = await ctx.fetchText(url);
-    if (!/startup\s+pod/i.test(profile.body)) continue;
     const slug = slugify(new URL(url).pathname.split("/").pop() ?? url);
     refs.push({ url, externalId: slug });
   }
@@ -473,12 +474,13 @@ const startupbootcampAfritechAdapter: SourceAdapter = {
 
 const africaTechFestivalAdapter: SourceAdapter = {
   id: "africa-tech-festival-startup-hub",
-  fullCatalogue: false,
+  fullCatalogue: true,
   discover: discoverAfricaTechFestival,
   fetch: defaultFetch,
   parse(page) {
     const $ = load(page.html);
-    const title = $("h1").first().text().trim() || $("title").text().trim();
+    const titleFromMeta = $("title").text().split("|")[0]?.trim();
+    const title = $("h1").first().text().trim() || titleFromMeta || "";
     const summary = $("meta[name='description']").attr("content")?.trim()
       || $("p").first().text().trim()
       || title;
@@ -492,7 +494,7 @@ const africaTechFestivalAdapter: SourceAdapter = {
       resourceType: "ORGANISATION",
       evidenceBasis: "PROGRAMME_SELECTED",
       evidenceStage: "UNKNOWN",
-      rawMetadata: { partial_catalogue: true, exhibitor_profile: true, startup_pod: true },
+      rawMetadata: { partial_catalogue: true, exhibitor_profile: true, startups_atf_listing: true },
       etag: page.etag,
       lastModified: page.lastModified,
     });
