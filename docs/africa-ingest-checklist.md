@@ -13,6 +13,8 @@ Enabled **Africa innovation** catalogues that ship in the production ingest queu
 ```bash
 # Cloud Agent or laptop with Railway CLI + run-with-production-env
 npm run ingest:africa:remote
+# If the limit pass already finished, run only --full:
+npm run ingest:africa-full:remote
 ```
 
 Per source the queue runs:

@@ -48,22 +48,34 @@ const AFRICAN_COUNTRY_CODES = [
 ];
 
 export async function resourcesFromAfrica(db: Queryable, limit: number): Promise<CompactResource[]> {
-  const byCountry = await searchLibrary(
-    db,
-    { query: "", countries: AFRICAN_COUNTRY_CODES, limit: limit * 2, offset: 0, diverse: true, sort: "newest" },
-    null,
-  );
-
   const africaSources = await db.query<{ slug: string }>(
     `SELECT slug FROM sources WHERE category = 'africa-innovation' AND enabled = true ORDER BY slug`,
   );
-  const byAfricaSource = africaSources.rows.length > 0
+  const sourceSlugs = africaSources.rows.map((row) => row.slug);
+
+  const byAfricaSource = sourceSlugs.length > 0
     ? await searchLibrary(
       db,
       {
         query: "",
-        sources: africaSources.rows.map((row) => row.slug),
-        limit: limit * 2,
+        sources: sourceSlugs,
+        limit,
+        offset: 0,
+        diverse: false,
+        sort: "newest",
+      },
+      null,
+    )
+    : { results: [] as CompactResource[] };
+
+  const remaining = Math.max(0, limit - byAfricaSource.results.length);
+  const byCountry = remaining > 0
+    ? await searchLibrary(
+      db,
+      {
+        query: "",
+        countries: AFRICAN_COUNTRY_CODES,
+        limit: remaining * 2,
         offset: 0,
         diverse: true,
         sort: "newest",
@@ -73,7 +85,7 @@ export async function resourcesFromAfrica(db: Queryable, limit: number): Promise
     : { results: [] as CompactResource[] };
 
   const merged = new Map<string, CompactResource>();
-  for (const resource of [...byCountry.results, ...byAfricaSource.results]) {
+  for (const resource of [...byAfricaSource.results, ...byCountry.results]) {
     merged.set(resource.resource_id, resource);
     if (merged.size >= limit) break;
   }
