@@ -145,7 +145,11 @@ export async function searchLibrary(
       sourceId: sources.get(row.id) ?? null,
       lists: ["browse"],
     }));
-    const perSourceCap = filters.diverse ? 1 : Number.POSITIVE_INFINITY;
+    const perSourceCap = filters.sources && filters.sources.length > 0
+      ? Number.POSITIVE_INFINITY
+      : filters.diverse
+        ? 1
+        : Number.POSITIVE_INFINITY;
     const capped = capPerSource(withSource, filters.limit + filters.offset, perSourceCap)
       .slice(filters.offset, filters.offset + filters.limit);
     const hydrated = await hydrate(db, capped);

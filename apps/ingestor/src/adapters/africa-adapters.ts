@@ -10,6 +10,13 @@ function slugify(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+/** Fragments are stripped by canonicaliseUrl; listing-only items need a stable query key. */
+function listingItemUrl(collection: string, slug: string): string {
+  const url = new URL(collection);
+  url.searchParams.set("item", slug);
+  return url.toString();
+}
+
 function listingFetch(ref: DiscoveredRef): Promise<FetchedPage> {
   if (!ref.listingHtml) throw new Error("listingHtml missing on ref");
   return Promise.resolve({
@@ -71,7 +78,7 @@ async function discoverBaobab(ctx: AdapterContext): Promise<DiscoveredRef[]> {
     if (!title) return;
     const slug = slugify(title);
     refs.push({
-      url: `${collection.replace(/\/$/, "")}#${slug}`,
+      url: listingItemUrl(collection, slug),
       externalId: slug,
       listingHtml: $.html(element),
     });
@@ -81,8 +88,8 @@ async function discoverBaobab(ctx: AdapterContext): Promise<DiscoveredRef[]> {
 
 export function parseCchubSyndicateCard(page: FetchedPage): NormalisedDraft {
   const $ = load(page.html);
-  const title = $("h2").first().text().trim();
-  const summary = $("p").first().text().trim();
+  const title = $(".card-body h2, h2").first().text().trim();
+  const summary = $(".card-body p, p").first().text().trim();
   if (!title) throw new Error(`cchub-syndicate card has no title: ${page.url}`);
   const externalId = slugify(title);
   const website = $("a[href^='http']").first().attr("href") ?? null;
@@ -107,15 +114,17 @@ async function discoverCchubSyndicate(ctx: AdapterContext): Promise<DiscoveredRe
   const page = await ctx.fetchText(collection);
   const $ = load(page.body);
   const refs: DiscoveredRef[] = [];
-  $(".card").each((_, element) => {
-    const card = $(element);
-    const title = card.find("h2").first().text().trim();
+  $("li").each((_, element) => {
+    const item = $(element);
+    const body = item.find(".card-body");
+    if (!body.length) return;
+    const title = body.find("h2").first().text().trim();
     if (!title) return;
     const slug = slugify(title);
     refs.push({
-      url: `${collection.replace(/\.html$/, "")}#${slug}`,
+      url: listingItemUrl(collection, slug),
       externalId: slug,
-      listingHtml: $.html(element),
+      listingHtml: $.html(item),
     });
   });
   return refs;
@@ -123,7 +132,7 @@ async function discoverCchubSyndicate(ctx: AdapterContext): Promise<DiscoveredRe
 
 export function parseNorrskenAccordionItem(page: FetchedPage): NormalisedDraft {
   const $ = load(page.html);
-  const title = $("[fs-list-field='name']").first().text().trim();
+  const title = $("[fs-list-field='name'], .faq-question").first().text().trim();
   const problem = $("[fs-list-field='problem']").first().text().trim();
   const solution = $("[fs-list-field='solution']").first().text().trim();
   const year = $("[fs-list-field='year']").first().text().trim();
@@ -158,7 +167,7 @@ async function discoverNorrskenAccordion(ctx: AdapterContext, baseUrl: string): 
     if (!title) return;
     const slug = slugify(title);
     refs.push({
-      url: `${baseUrl.replace(/\/$/, "")}#${slug}`,
+      url: listingItemUrl(baseUrl, slug),
       externalId: slug,
       listingHtml: $.html(element),
     });
@@ -200,7 +209,7 @@ async function discoverNorrsken100(ctx: AdapterContext): Promise<DiscoveredRef[]
     const parent = $(element).closest('[role="listitem"], .w-dyn-item').first();
     const fragment = parent.length ? parent : $(element);
     refs.push({
-      url: `${collection.replace(/\/$/, "")}#${slug}`,
+      url: listingItemUrl(collection, slug),
       externalId: slug,
       listingHtml: $.html(fragment),
     });
@@ -243,7 +252,7 @@ async function discoverSeedstarsAfrica(ctx: AdapterContext): Promise<DiscoveredR
     if (!title) return;
     const slug = slugify(title);
     refs.push({
-      url: `${collection.replace(/\/$/, "")}#${slug}`,
+      url: listingItemUrl(collection, slug),
       externalId: slug,
       listingHtml: $.html(card),
     });
@@ -360,7 +369,7 @@ const gitexSupernovaAdapter: SourceAdapter = {
       if (!/winner|finalist|semifinalist/i.test(text) && !/sector|country/i.test(text)) return;
       const slug = slugify(heading);
       refs.push({
-        url: `${collection.replace(/\/$/, "")}#${slug}`,
+        url: listingItemUrl(collection, `gitex-2026-${slug}`),
         externalId: `gitex-2026-${slug}`,
         listingHtml: $.html(block),
       });
@@ -404,7 +413,7 @@ const injiniAdapter: SourceAdapter = {
       const block = $(element).closest(".company-information-div");
       const slug = slugify(title);
       refs.push({
-        url: `${collection.replace(/\/$/, "")}#${slug}`,
+        url: listingItemUrl(collection, slug),
         externalId: slug,
         listingHtml: block.length ? $.html(block) : $.html($(element).parent()),
       });

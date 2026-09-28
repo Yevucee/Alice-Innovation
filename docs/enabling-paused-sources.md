@@ -17,3 +17,5 @@ npm run ingest:single-flight:remote
 ```
 
 Do **not** start overlapping `ingest-step*` tmux sessions.
+
+Africa catalogue rollout: see **`docs/africa-ingest-checklist.md`** and `npm run check:africa-ingest:remote`.
