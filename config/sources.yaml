@@ -926,11 +926,11 @@ sources:
   - id: afrilabs
     name: AfriLabs
     category: africa-innovation
-    description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+    description: "PARTIAL: member hub profiles via WP REST (post type hub). Complements hub-discovery organisation directory."
     homepage: https://www.afrilabs.com/
-    collection_url: https://www.afrilabs.com/hubs/
-    enabled: false
-    status: PAUSED
+    collection_url: null
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - PROGRAMME
@@ -942,16 +942,16 @@ sources:
       robots_checked: false
       terms_checked: false
     discovery:
-      preferred_method: html
+      preferred_method: api
       sitemap: null
       rss: null
-      notes: Homepage returned 200. No member-directory URL verified. Adapter not implemented.
+      notes: "WP REST /wp-json/wp/v2/hub — same catalogue as hub-discovery AfriLabs adapter."
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
+      notes: "Run limit ingest after hub-discovery; full pass is ~500+ hub pages."
   - id: undp-timbuktoo
     name: UNDP timbuktoo
     category: africa-innovation

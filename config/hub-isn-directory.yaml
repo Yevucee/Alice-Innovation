@@ -1,0 +1,37 @@
+# Curated from public ISN marketing copy (isnhubs.org.ng — SPA; no public API).
+# Expand when ISN publishes machine-readable directory or permits export.
+organisations:
+  - name: Co-Creation Hub (CcHUB)
+    city: Yaba, Lagos
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+    website: https://cchub.africa/
+  - name: Ventures Platform
+    city: Abuja
+    country: Nigeria
+    hub_subtype: ACCELERATOR
+    website: https://venturesplatform.com/
+  - name: NaijaHacks Hub
+    city: Ikeja, Lagos
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+  - name: Innovation Growth Hub
+    city: Port Harcourt
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+  - name: StartZone Kaduna
+    city: Kaduna
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+  - name: Enugu Tech Corridor
+    city: Enugu
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+  - name: Ibadan Innovation Hub
+    city: Ibadan
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+  - name: Kano Digital Innovation Hub
+    city: Kano
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
