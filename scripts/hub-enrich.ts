@@ -42,7 +42,7 @@ async function main(): Promise<void> {
   const onlyMatch = argFlag("--match-only");
   const onlyReprobe = argFlag("--reprobe-only");
   const doMatch = argFlag("--match-names") || (!onlyMatch && !onlyReprobe);
-  const doReprobe = argFlag("--reprobe") || (!onlyMatch && !onlyReprobe);
+  const doReprobe = argFlag("--reprobe") || onlyReprobe || (!onlyMatch && !onlyReprobe);
   if (doMatch) {
     stats.websites_merged = await enrichInnovationHubWebsitesByNameMatch(pool);
     stats.candidates_created = await ensureSourceCandidatesForExternalWebsites(pool);
