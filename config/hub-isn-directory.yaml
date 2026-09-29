@@ -35,3 +35,30 @@ organisations:
     city: Kano
     country: Nigeria
     hub_subtype: INNOVATION_HUB
+  - name: Wennovation Hub
+    city: Lagos
+    country: Nigeria
+    hub_subtype: INCUBATOR
+    website: https://wennovationhub.org/
+  - name: Roar Nigeria Hub
+    city: Nsukka
+    country: Nigeria
+    hub_subtype: UNIVERSITY_INNOVATION_CENTRE
+    website: https://www.roarnigeria.org/
+  - name: The Ventures Park
+    city: Abuja
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+    website: https://theventurespark.com/
+  - name: Start Innovation Hub
+    city: Uyo
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+  - name: EnovateLab
+    city: Kano
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB
+  - name: Cedar STEM and Entrepreneurship Hub
+    city: Lagos
+    country: Nigeria
+    hub_subtype: INNOVATION_HUB

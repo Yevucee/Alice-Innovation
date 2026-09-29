@@ -1,6 +1,6 @@
 import { canonicaliseUrl } from "@alice/shared";
 import type { Queryable } from "@alice/database";
-import { websiteHost } from "@alice/database";
+import { upsertSourceCandidate, websiteHost } from "@alice/database";
 
 /** Copy websites from name-matched peers (seed, FabLabs) onto AfriLabs-only hub rows. */
 export async function enrichInnovationHubWebsitesByNameMatch(db: Queryable): Promise<number> {
@@ -54,6 +54,43 @@ export async function refreshSourceCandidateHomepages(db: Queryable): Promise<nu
        AND o.website_host NOT IN ('afrilabs.com', 'www.afrilabs.com')`,
   );
   return row.rowCount ?? 0;
+}
+
+function proposedSourceSlug(name: string): string {
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 72);
+  return base || "hub-candidate";
+}
+
+/** Create candidates for hub orgs with external websites that lack a candidate row. */
+export async function ensureSourceCandidatesForExternalWebsites(db: Queryable): Promise<number> {
+  const rows = await db.query<{ id: string; name: string; website: string }>(
+    `SELECT o.id::text, o.name, o.website
+     FROM organisations o
+     WHERE o.is_innovation_hub
+       AND o.website IS NOT NULL
+       AND o.website_host IS NOT NULL
+       AND o.website_host NOT IN ('afrilabs.com', 'www.afrilabs.com')
+       AND NOT EXISTS (
+         SELECT 1 FROM innovation_source_candidates c WHERE c.organisation_id = o.id
+       )
+     LIMIT 500`,
+  );
+  let created = 0;
+  for (const row of rows.rows) {
+    try {
+      await upsertSourceCandidate(db, {
+        organisationId: row.id,
+        proposedSlug: proposedSourceSlug(row.name),
+        homepage: row.website,
+        catalogueCapability: "UNKNOWN",
+        verificationNotes: "auto_from_organisation_website",
+      });
+      created += 1;
+    } catch {
+      /* slug collision — skip */
+    }
+  }
+  return created;
 }
 
 export async function linkCandidatesToExistingSources(db: Queryable): Promise<number> {

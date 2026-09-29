@@ -1,5 +1,6 @@
 import { closePool, getPool } from "@alice/database";
 import {
+  ensureSourceCandidatesForExternalWebsites,
   enrichInnovationHubWebsitesByNameMatch,
   linkCandidatesToExistingSources,
   refreshSourceCandidateHomepages,
@@ -44,6 +45,7 @@ async function main(): Promise<void> {
   const doReprobe = argFlag("--reprobe") || (!onlyMatch && !onlyReprobe);
   if (doMatch) {
     stats.websites_merged = await enrichInnovationHubWebsitesByNameMatch(pool);
+    stats.candidates_created = await ensureSourceCandidatesForExternalWebsites(pool);
     stats.candidate_homepages_refreshed = await refreshSourceCandidateHomepages(pool);
     stats.candidates_linked_to_sources = await linkCandidatesToExistingSources(pool);
   }
