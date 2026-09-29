@@ -29,11 +29,15 @@ export async function enrichInnovationHubWebsitesByNameMatch(db: Queryable): Pro
   for (const match of matches.rows) {
     const host = websiteHost(match.website);
     if (!host) continue;
-    await db.query(
-      `UPDATE organisations SET website = $2, website_host = $3, updated_at = now() WHERE id = $1`,
+    const result = await db.query(
+      `UPDATE organisations SET website = $2, website_host = $3, updated_at = now()
+       WHERE id = $1
+         AND NOT EXISTS (
+           SELECT 1 FROM organisations o2 WHERE o2.website_host = $3 AND o2.id <> $1::uuid
+         )`,
       [match.id, normaliseWebsite(match.website), host],
     );
-    updated += 1;
+    updated += result.rowCount ?? 0;
   }
   return updated;
 }
