@@ -36,6 +36,8 @@ export interface HtmlCatalogueConfig {
     /** Follow child sitemap URLs from a sitemap index (e.g. Yoast page-sitemap.xml). */
     followSitemapIndex?: boolean;
   };
+  /** When true, discover only from sitemap / WordPress REST (skip collection_url HTML scrape). */
+  sitemapOnly?: boolean;
   /** Cap listing-page follow-up fetches (pagination / year indexes). */
   maxListingPages?: number;
   /** Follow `?page=n` on the collection URL (1-based page index). */
@@ -261,8 +263,10 @@ export function createHtmlCatalogueAdapter(config: HtmlCatalogueConfig): SourceA
         return discoverWordPressRest(ctx, config.wordpressRest);
       }
       const refs = new Map<string, string>();
-      for (const ref of await discoverFromHtml(ctx, config)) {
-        refs.set(ref.url, ref.externalId ?? ref.url);
+      if (!config.sitemapOnly) {
+        for (const ref of await discoverFromHtml(ctx, config)) {
+          refs.set(ref.url, ref.externalId ?? ref.url);
+        }
       }
       if (config.sitemap) {
         for (const ref of await discoverFromSitemap(ctx, config)) {

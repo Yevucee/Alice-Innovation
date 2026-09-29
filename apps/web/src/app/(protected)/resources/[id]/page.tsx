@@ -34,7 +34,10 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   const sectors = resource.sectors as Array<{ slug: string; name: string }>;
   const problems = resource.problems as Array<{ slug: string; name: string }>;
   const technologies = resource.technologies as Array<{ slug: string; name: string }>;
-  const locations = (resource.locations as Array<{ country_name: string }>).map((l) => l.country_name);
+  const locationRows = resource.locations as Array<{ country_name: string; continent?: string | null }>;
+  const continents = [...new Set(locationRows.map((l) => l.continent).filter(Boolean))] as string[];
+  const countries = [...new Set(locationRows.map((l) => l.country_name).filter(Boolean))];
+  const locationLine = [...continents, ...countries.filter((c) => !continents.includes(c))];
   const tags = classificationTags(interpretation);
   const isPick = resource.review_status === "ALICE_PICK";
 
@@ -54,7 +57,7 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
       <p className="mt-4 text-base leading-relaxed text-muted">{String(resource.source_summary)}</p>
       <p className="mt-3 text-sm text-muted">
         {metaLine([
-          ...locations.slice(0, 2),
+          ...locationLine.slice(0, 3),
           ...sectors.slice(0, 2).map((s) => s.name),
           ...technologies.slice(0, 2).map((t) => t.name),
           formatEvidence(String(resource.evidence_stage)),
@@ -123,6 +126,19 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           </section>
         ) : null}
       </div>
+
+      {locationLine.length > 0 ? (
+        <section className="mt-8 text-sm">
+          <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Location</h2>
+          <ul className="mt-2 space-y-1 text-muted">
+            {locationRows.map((loc, index) => (
+              <li key={`${loc.country_name}-${index}`}>
+                {[loc.continent, loc.country_name].filter(Boolean).join(" · ")}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {(organisations.length > 0 || people.length > 0) ? (
         <section className="mt-10 border-t border-line pt-8">

@@ -85,6 +85,8 @@ export const remainingCatalogueAdapters: SourceAdapter[] = [
     id: "atlas-of-the-future",
     siteOrigin: "https://atlasofthefuture.org",
     pathPattern: /^\/project\/[^/]+\/?$/i,
+    excludePathPattern: /^\/project\/?$/i,
+    sitemapOnly: true,
     sitemap: {
       url: "https://atlasofthefuture.org/sitemap_index.xml",
       followSitemapIndex: true,
