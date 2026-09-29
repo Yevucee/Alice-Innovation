@@ -165,7 +165,7 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
         <section className="mt-12 border-t border-line pt-8">
           <h2 className="text-sm font-medium">Different approaches to the same problem</h2>
           <p className="mt-1 text-xs text-muted">Hybrid search with a per-source cap — not mechanism-classified yet.</p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2">
             {diverse.map((item) => (
               <ResourceCard key={item.resource_id} resource={item} />
             ))}
@@ -177,7 +177,7 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
         <section className="mt-12 border-t border-line pt-8">
           <h2 className="text-sm font-medium">Related ideas</h2>
           <p className="mt-1 text-xs text-muted">Similar indexed content (requires embeddings).</p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2">
             {similar.map((item) => (
               <ResourceCard key={item.resource_id} resource={item} />
             ))}

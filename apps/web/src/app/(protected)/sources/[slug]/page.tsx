@@ -63,7 +63,7 @@ export default async function SourceDetailPage({ params }: { params: Promise<{ s
           Search within this source
         </Link>
       ) : null}
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {results.map((resource) => (
           <ResourceCard key={resource.resource_id} resource={resource} />
         ))}
