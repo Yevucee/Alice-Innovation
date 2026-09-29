@@ -118,7 +118,11 @@ export async function searchLibrary(
   filters: SearchFilters,
   queryEmbedding: number[] | null,
 ): Promise<{ results: CompactResource[]; vector: "used" | "unavailable"; filtered_total: number }> {
-  const candidateLimit = Math.min(100, Math.max(filters.limit * 5, 20));
+  const sourceCount = filters.sources?.length ?? 0;
+  const candidateLimit = Math.min(
+    500,
+    Math.max(filters.limit * 5, 20, sourceCount * (filters.diverse ? 4 : 1)),
+  );
   const params = filterParams(filters);
   let vector: "used" | "unavailable" = queryEmbedding ? "used" : "unavailable";
   const queryText = filters.query.trim();
@@ -146,7 +150,7 @@ export async function searchLibrary(
       lists: ["browse"],
     }));
     const perSourceCap = filters.sources && filters.sources.length > 0
-      ? Number.POSITIVE_INFINITY
+      ? (filters.diverse ? 1 : Number.POSITIVE_INFINITY)
       : filters.diverse
         ? 1
         : Number.POSITIVE_INFINITY;
@@ -359,6 +363,17 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
       score: Number(hit.score.toFixed(6)),
     }];
   });
+}
+
+export async function compactResourcesByIds(db: Queryable, ids: string[]): Promise<CompactResource[]> {
+  if (ids.length === 0) return [];
+  const hits: FusedHit[] = ids.map((id, index) => ({
+    id,
+    score: 1 / (index + 1),
+    sourceId: null,
+    lists: ["browse"],
+  }));
+  return hydrate(db, hits);
 }
 
 export async function getResource(db: Queryable, resourceId: string): Promise<Record<string, unknown> | null> {
