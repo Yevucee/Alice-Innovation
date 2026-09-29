@@ -50,3 +50,11 @@ export {
   validateStoredAccessToken,
   purgeExpiredAccessTokens,
 } from "./mcp-oauth.js";
+export {
+  upsertInnovationHub,
+  recordHubDirectoryDiscovery,
+  upsertSourceCandidate,
+  hubDiscoveryStats,
+  websiteHost,
+} from "./hubs.js";
+export type { HubSubtype, CatalogueCapability, HubUpsertInput } from "./hubs.js";
