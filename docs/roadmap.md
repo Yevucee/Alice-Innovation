@@ -21,6 +21,12 @@
 - **MCP OAuth** — optional client-credentials (`MCP_OAUTH_ENABLED`); static bearer still supported
 - **Mechanism diversity** — `explore_problem` + search `diversity: "mechanism"`
 
+## Africa hub discovery (in progress — `docs/africa-hub-discovery.md`)
+
+- Migration `004_africa_hub_discovery`, `@alice/hub-discovery`, `npm run hubs:discover`
+- Live directories: **AfriLabs** (WP REST), **FabLabs.io** (API), **seed organisations**
+- Source candidates + portfolio links (`--link-portfolios`); directory stubs for GHN, ISN, Impact Hub, etc.
+
 ## Still deferred
 
 - 25-question search evaluation set (Phase 8)

@@ -55,6 +55,8 @@
     "check:africa-ingest:remote": "bash scripts/run-with-production-env.sh npm run check:africa-ingest",
     "classify:batch": "tsx scripts/classify-batch.ts",
     "classify:batch:remote": "bash scripts/run-with-production-env.sh npm run classify:batch",
+    "hubs:discover": "tsx scripts/hub-discovery.ts",
+    "hubs:discover:remote": "bash scripts/run-with-production-env.sh npm run hubs:discover",
     "smoke:production": "tsx scripts/production-smoke-test.ts",
     "smoke:production:remote": "bash scripts/run-with-production-env.sh npm run smoke:production",
     "admin": "tsx apps/admin/src/index.ts",

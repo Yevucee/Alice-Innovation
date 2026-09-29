@@ -1,0 +1,149 @@
+# First-class African innovation hubs (seed before / alongside directory discovery).
+# linked_portfolio_source: existing sources.slug — portfolio innovations link with portfolio_relationship.
+
+organisations:
+  - name: MEST
+    country: Ghana
+    city: Accra
+    hub_subtype: INCUBATOR
+    website: https://meltwater.org/mest/
+    networks: [{ network_slug: afrilabs }]
+  - name: iSpace Foundation
+    country: Ghana
+    city: Accra
+    hub_subtype: INNOVATION_HUB
+    website: https://ispacefoundation.com/
+    networks: [{ network_slug: ghana-hubs-network }]
+  - name: Impact Hub Accra
+    country: Ghana
+    city: Accra
+    hub_subtype: INNOVATION_HUB
+    website: https://accra.impacthub.net/
+    networks: [{ network_slug: impact-hub-global }, { network_slug: ghana-hubs-network }]
+  - name: Ghana Climate Innovation Centre
+    country: Ghana
+    city: Accra
+    hub_subtype: INCUBATOR
+    website: https://ghanacic.com/
+    linked_portfolio_source: ghana-climate-innovation-centre
+    portfolio_relationship: ACCELERATED_BY
+    networks: [{ network_slug: ghana-hubs-network }]
+  - name: Kosmos Innovation Center
+    country: Ghana
+    hub_subtype: ACCELERATOR
+    website: https://www.kicghana.org/
+    linked_portfolio_source: kosmos-innovation-centre-ghana
+    portfolio_relationship: ACCELERATED_BY
+  - name: Kumasi Hive
+    country: Ghana
+    city: Kumasi
+    hub_subtype: INNOVATION_HUB
+    website: https://kumasihive.com/
+    networks: [{ network_slug: ghana-hubs-network }]
+  - name: hapaSpace
+    country: Ghana
+    city: Kumasi
+    hub_subtype: INNOVATION_HUB
+    website: https://hapaspace.com/
+    networks: [{ network_slug: ghana-hubs-network }]
+  - name: HOPin Academy
+    country: Ghana
+    city: Tamale
+    hub_subtype: INNOVATION_HUB
+    website: https://hopinacademy.com/
+    networks: [{ network_slug: ghana-hubs-network }]
+  - name: CcHUB
+    country: Nigeria
+    city: Lagos
+    hub_subtype: INNOVATION_HUB
+    website: https://cchub.africa/
+    linked_portfolio_source: cchub-syndicate
+    portfolio_relationship: SHOWCASED_AT
+    networks: [{ network_slug: afrilabs }]
+  - name: Ventures Platform
+    country: Nigeria
+    city: Abuja
+    hub_subtype: ACCELERATOR
+    website: https://venturesplatform.com/
+    linked_portfolio_source: ventures-platform
+    portfolio_relationship: FUNDED_BY
+  - name: iHub
+    country: Kenya
+    city: Nairobi
+    hub_subtype: INNOVATION_HUB
+    website: https://ihub.co.ke/
+    linked_portfolio_source: ihub-future-of-learning
+    portfolio_relationship: SHOWCASED_AT
+    networks: [{ network_slug: afrilabs }]
+  - name: National ICT Innovation Hub Uganda
+    country: Uganda
+    city: Kampala
+    hub_subtype: UNIVERSITY_INNOVATION_CENTRE
+    website: https://ict.go.ug/
+  - name: iceaddis
+    country: Ethiopia
+    city: Addis Ababa
+    hub_subtype: INNOVATION_HUB
+    website: https://iceaddis.com/
+    networks: [{ network_slug: afrilabs }]
+  - name: Buni Hub
+    country: Tanzania
+    city: Dar es Salaam
+    hub_subtype: INNOVATION_HUB
+    website: https://buni.tz/
+  - name: CTIC Dakar
+    country: Senegal
+    city: Dakar
+    hub_subtype: INNOVATION_HUB
+    website: https://cticdakar.com/
+    networks: [{ network_slug: afrilabs }]
+  - name: ActivSpaces
+    country: Cameroon
+    city: Douala
+    hub_subtype: INNOVATION_HUB
+    website: https://activspaces.com/
+    networks: [{ network_slug: afrilabs }]
+  - name: WoeLabs
+    country: Togo
+    city: Lomé
+    hub_subtype: MAKERSPACE
+    website: https://woelabs.org/
+  - name: BongoHive
+    country: Zambia
+    city: Lusaka
+    hub_subtype: INNOVATION_HUB
+    website: https://bongohive.co.zm/
+    networks: [{ network_slug: afrilabs }]
+  - name: Jacaranda Hub
+    country: Tanzania
+    city: Dar es Salaam
+    hub_subtype: INNOVATION_HUB
+    website: https://jacarandahub.com/
+  - name: Norrsken
+    country: Rwanda
+    city: Kigali
+    hub_subtype: ACCELERATOR
+    website: https://www.norrsken.org/
+    linked_portfolio_source: norrsken-accelerator
+    portfolio_relationship: ACCELERATED_BY
+  - name: StartGate / UM6P
+    country: Morocco
+    city: Benguerir
+    hub_subtype: INNOVATION_HUB
+    website: https://startgate.ma/
+    linked_portfolio_source: startgate-um6p
+    portfolio_relationship: SHOWCASED_AT
+  - name: SU LaunchLab
+    country: South Africa
+    city: Stellenbosch
+    hub_subtype: UNIVERSITY_INNOVATION_CENTRE
+    website: https://launchlab.co.za/
+    linked_portfolio_source: su-launchlab
+    portfolio_relationship: ACCELERATED_BY
+  - name: OceanHub Africa
+    country: South Africa
+    city: Cape Town
+    hub_subtype: INCUBATOR
+    website: https://oceanhub.africa/
+    linked_portfolio_source: oceanhub-africa
+    portfolio_relationship: INCUBATED_BY
