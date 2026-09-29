@@ -53,6 +53,15 @@ npm run ops:coverage:remote
 npm run check:africa-ingest:remote   # after Africa queue (docs/africa-ingest-checklist.md)
 ```
 
+After Africa v1, grow the rest of the library (one ingest at a time):
+
+```bash
+npm run ingest:wait-then-global-backfill:remote   # waits for Startgate, then thin/partial global sources
+npm run setup:africa-second-pass-enable && npm run seed   # enable 11 cohort sources in YAML
+npm run ingest:africa-second-pass:remote
+npm run backfill:africa-countries:remote          # geo tags from adapter metadata
+```
+
 ## 3. Ingestor service
 
 - [ ] Second service; config: **`railway.ingestor.toml`**

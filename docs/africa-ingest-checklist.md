@@ -15,6 +15,8 @@ Enabled **Africa innovation** catalogues that ship in the production ingest queu
 npm run ingest:africa:remote
 # If the limit pass already finished, run only --full:
 npm run ingest:africa-full:remote
+# After a mid-queue crash (e.g. ATF hang), finish the tail:
+npm run ingest:africa-tail:remote
 ```
 
 Per source the queue runs:
