@@ -5,6 +5,7 @@ export { AFRICA_COUNTRY_CODES } from "./africa-countries.js";
 export { loadSeedOrganisations } from "./directories/seed-organisations.js";
 export {
   enrichInnovationHubWebsitesByNameMatch,
+  ensureSourceCandidatesForExternalWebsites,
   refreshSourceCandidateHomepages,
   linkCandidatesToExistingSources,
 } from "./enrich-websites.js";
