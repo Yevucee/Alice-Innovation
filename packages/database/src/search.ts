@@ -85,6 +85,13 @@ const FILTER_SQL = `
     WHERE rl.resource_id = r.id
       AND loc.continent IS NOT NULL
       AND loc.continent = ANY($9::text[])
+  ) OR (
+    $9::text[] IS NOT NULL AND 'Africa' = ANY($9::text[]) AND EXISTS (
+      SELECT 1 FROM resource_source_links l_af
+      JOIN source_items si_af ON si_af.id = l_af.source_item_id
+      JOIN sources s_af ON s_af.id = si_af.source_id
+      WHERE l_af.resource_id = r.id AND s_af.enabled AND s_af.category = 'africa-innovation'
+    )
   ))
   AND ($6::text[] IS NULL OR EXISTS (
     SELECT 1 FROM resource_sectors rs

@@ -49,6 +49,11 @@ export const TECHNOLOGIES: TaxonomyNode[] = [
 ];
 
 export { COUNTRY_CODES, continentForCountryCode, countryCodeFor } from "./country-codes.js";
+export {
+  AFRICA_COUNTRY_CODES,
+  AFRICA_SOURCE_GEO_DEFAULTS,
+  isAfricanCountryCode,
+} from "./africa.js";
 
 export {
   continentNameForSlug,

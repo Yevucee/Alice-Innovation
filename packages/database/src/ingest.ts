@@ -276,10 +276,12 @@ export async function upsertDraft(
       );
     }
 
-    if (draft.countryName) {
+    const locationLabel = draft.countryName
+      ?? (draft.continentName && draft.continentName !== "Global" ? draft.continentName : null);
+    if (locationLabel) {
       const locationId = await ensureLocation(
         client,
-        draft.countryName,
+        locationLabel,
         draft.countryCode,
         draft.continentName ?? null,
       );

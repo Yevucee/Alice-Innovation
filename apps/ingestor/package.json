@@ -11,6 +11,7 @@
     "@alice/database": "*",
     "@alice/shared": "*",
     "@alice/source-registry": "*",
+    "@alice/taxonomy": "*",
     "cheerio": "^1.0.0"
   }
 }

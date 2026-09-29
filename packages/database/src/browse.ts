@@ -40,51 +40,20 @@ export async function resourcesForSource(
   return { results: found.results, filtered_total: found.filtered_total };
 }
 
-const AFRICAN_COUNTRY_CODES = [
-  "DZ", "AO", "BJ", "BW", "BF", "BI", "CV", "CM", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG",
-  "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML",
-  "MR", "MU", "MA", "MZ", "NA", "NE", "NG", "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD",
-  "TZ", "TG", "TN", "UG", "ZM", "ZW",
-];
-
 export async function resourcesFromAfrica(db: Queryable, limit: number): Promise<CompactResource[]> {
-  const perSource = await db.query<{ id: string }>(
-    `SELECT DISTINCT ON (s.slug) r.id::text AS id
-     FROM resources r
-     JOIN resource_source_links l ON l.resource_id = r.id
-     JOIN source_items si ON si.id = l.source_item_id
-     JOIN sources s ON s.id = si.source_id
-     WHERE r.active AND s.enabled AND s.category = 'africa-innovation'
-     ORDER BY s.slug, r.created_at DESC`,
+  const found = await searchLibrary(
+    db,
+    {
+      query: "",
+      continents: ["africa"],
+      limit,
+      offset: 0,
+      diverse: true,
+      sort: "newest",
+    },
+    null,
   );
-
-  const merged = new Map<string, CompactResource>();
-  const catalogueIds = perSource.rows.slice(0, limit).map((row) => row.id);
-  for (const resource of await compactResourcesByIds(db, catalogueIds)) {
-    merged.set(resource.resource_id, resource);
-  }
-
-  const remaining = limit - merged.size;
-  if (remaining > 0) {
-    const byCountry = await searchLibrary(
-      db,
-      {
-        query: "",
-        countries: AFRICAN_COUNTRY_CODES,
-        limit: remaining * 3,
-        offset: 0,
-        diverse: true,
-        sort: "newest",
-      },
-      null,
-    );
-    for (const resource of byCountry.results) {
-      merged.set(resource.resource_id, resource);
-      if (merged.size >= limit) break;
-    }
-  }
-
-  return [...merged.values()].slice(0, limit);
+  return found.results;
 }
 
 export async function getPerson(db: Queryable, personId: string): Promise<Record<string, unknown> | null> {
