@@ -85,7 +85,7 @@ export function createLibraryServer(): McpServer {
     {
       title: "Explore a problem",
       description:
-        "Search for materially different approaches to a real-world problem. Returns hybrid search results with a per-source cap. Mechanism-level diversity is not available until the taxonomy phase; this tool does not write an essay.",
+        "Search for materially different approaches to a real-world problem. Returns hybrid search results with mechanism-level diversity (primary technology or sector bucket). This tool does not write an essay.",
       inputSchema: {
         problem: z.string().min(1).max(500),
         geography: z.string().max(80).optional(),
@@ -100,12 +100,13 @@ export function createLibraryServer(): McpServer {
         const found = await searchLibrary(getPool(), {
           query,
           countries: args.geography ? [args.geography] : undefined,
+          diversity: "mechanism",
           limit: args.limit ?? 10,
           offset: 0,
         }, vector);
         return text({
-          diversity: "per_source_cap_only",
-          note: "Mechanism diversity is not available until the taxonomy phase. Results are hybrid search hits, capped so one source cannot fill the list.",
+          diversity: "mechanism_buckets",
+          note: "Hybrid search with at most one hit per primary technology/sector bucket (fallback when no technology is tagged).",
           results: found.results,
         });
       } catch (error) {

@@ -1,5 +1,11 @@
 import { continentNamesForFilter } from "@alice/taxonomy";
-import { capPerSource, defaultPerSourceCap, reciprocalRankFusion } from "@alice/shared";
+import {
+  capPerBucket,
+  capPerSource,
+  defaultPerMechanismCap,
+  defaultPerSourceCap,
+  reciprocalRankFusion,
+} from "@alice/shared";
 import type { FusedHit } from "@alice/shared";
 import type { Queryable } from "./pool.js";
 
@@ -17,6 +23,8 @@ export interface SearchFilters {
   offset: number;
   /** When true, cap at one hit per source (diverse approaches). */
   diverse?: boolean;
+  /** `source` = one per catalogue; `mechanism` = one per primary technology/sector bucket. */
+  diversity?: "source" | "mechanism";
   sort?: "relevance" | "newest" | "maturity";
 }
 
@@ -109,6 +117,26 @@ function filterParams(filters: SearchFilters): unknown[] {
     arr(filters.technologies),
     continents,
   ];
+}
+
+async function mechanismBucketMap(db: Queryable, ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db.query<{ id: string; bucket: string }>(
+    `SELECT r.id::text,
+            coalesce(
+              (SELECT t.slug FROM resource_technologies rt
+               JOIN technologies t ON t.id = rt.technology_id
+               WHERE rt.resource_id = r.id ORDER BY t.name LIMIT 1),
+              (SELECT sec.slug FROM resource_sectors rs
+               JOIN sectors sec ON sec.id = rs.sector_id
+               WHERE rs.resource_id = r.id ORDER BY sec.name LIMIT 1),
+              'unknown'
+            ) AS bucket
+     FROM resources r
+     WHERE r.id = ANY($1::uuid[])`,
+    [ids],
+  );
+  return new Map(rows.rows.map((row) => [row.id, row.bucket]));
 }
 
 async function primarySourceMap(db: Queryable, ids: string[]): Promise<Map<string, string>> {
@@ -211,16 +239,31 @@ export async function searchLibrary(
   const ids = fused.map((hit) => hit.id);
   const sources = await primarySourceMap(db, ids);
   const withSource: FusedHit[] = fused.map((hit) => ({ ...hit, sourceId: sources.get(hit.id) ?? null }));
-  const perSourceCap = filters.sources && filters.sources.length > 0
-    ? Number.POSITIVE_INFINITY
-    : filters.diverse
-      ? 1
-      : defaultPerSourceCap(filters.limit);
-  const capped = capPerSource(
-    withSource,
-    filters.limit + filters.offset,
-    perSourceCap,
-  ).slice(filters.offset, filters.offset + filters.limit);
+  const diversity = filters.diversity ?? (filters.diverse ? "source" : undefined);
+  let capped: FusedHit[];
+  if (diversity === "mechanism" && !(filters.sources && filters.sources.length > 0)) {
+    const buckets = await mechanismBucketMap(db, withSource.map((hit) => hit.id));
+    const withBucket = withSource.map((hit) => ({
+      ...hit,
+      bucketKey: buckets.get(hit.id) ?? "unknown",
+    }));
+    capped = capPerBucket(
+      withBucket,
+      filters.limit + filters.offset,
+      defaultPerMechanismCap(filters.limit),
+    ).slice(filters.offset, filters.offset + filters.limit);
+  } else {
+    const perSourceCap = filters.sources && filters.sources.length > 0
+      ? Number.POSITIVE_INFINITY
+      : diversity === "source"
+        ? 1
+        : defaultPerSourceCap(filters.limit);
+    capped = capPerSource(
+      withSource,
+      filters.limit + filters.offset,
+      perSourceCap,
+    ).slice(filters.offset, filters.offset + filters.limit);
+  }
 
   let hydrated = await hydrate(db, capped);
   if (filters.sort === "newest") {

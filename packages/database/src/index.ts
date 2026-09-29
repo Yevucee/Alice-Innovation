@@ -36,3 +36,17 @@ export {
   searchPeople,
   searchOrganisations,
 } from "./stats.js";
+export {
+  listCollections,
+  getCollectionBySlug,
+  createCollection,
+  addResourceToCollection,
+  addCollectionNote,
+  collectionWithResources,
+} from "./collections.js";
+export {
+  hashAccessToken,
+  storeAccessToken,
+  validateStoredAccessToken,
+  purgeExpiredAccessTokens,
+} from "./mcp-oauth.js";

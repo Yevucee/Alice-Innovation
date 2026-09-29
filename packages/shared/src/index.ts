@@ -3,7 +3,13 @@ export { sha256, contentHash } from "./hash.js";
 export { htmlToText, truncate, normaliseName } from "./text.js";
 export { classifyDuplicate, nearDuplicateKey } from "./dedupe.js";
 export type { DedupeCandidate, DedupeDecision, DedupeExisting } from "./dedupe.js";
-export { reciprocalRankFusion, capPerSource, defaultPerSourceCap } from "./rrf.js";
+export {
+  reciprocalRankFusion,
+  capPerBucket,
+  capPerSource,
+  defaultPerMechanismCap,
+  defaultPerSourceCap,
+} from "./rrf.js";
 export type { FusedHit, RankedHit } from "./rrf.js";
 export { shouldRetryHttpStatus, isTimeoutError, backoffDelayMs } from "./retry.js";
 export { log, loadDotEnv } from "./log.js";

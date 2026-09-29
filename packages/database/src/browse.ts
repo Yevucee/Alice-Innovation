@@ -116,7 +116,7 @@ export async function diverseApproachesForResource(
 ): Promise<CompactResource[]> {
   const found = await searchLibrary(
     db,
-    { query: queryText, diverse: true, limit: limit + 2, offset: 0 },
+    { query: queryText, diversity: "mechanism", limit: limit + 2, offset: 0 },
     null,
   );
   return found.results.filter((row) => row.resource_id !== resourceId).slice(0, limit);
