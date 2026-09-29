@@ -928,7 +928,7 @@ sources:
     category: africa-innovation
     description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
     homepage: https://www.afrilabs.com/
-    collection_url: null
+    collection_url: https://www.afrilabs.com/hubs/
     enabled: false
     status: PAUSED
     resource_types:
@@ -987,7 +987,7 @@ sources:
     category: africa-innovation
     description: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.
     homepage: https://africaclimateventures.com/
-    collection_url: null
+    collection_url: https://africaclimateventures.com/
     enabled: false
     status: PAUSED
     resource_types:
@@ -1004,7 +1004,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: Homepage returned 200 after redirect from www. No portfolio URL verified. Adapter not implemented.
+      notes: "Homepage portfolio section. Cohort listing adapter registered; enable + ingest when ready."
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -1756,7 +1756,7 @@ sources:
     category: solutions-journalism
     description: "PARTIAL: catalogue ingested via html-catalogue adapter (HTML, sitemap, or WordPress REST)."
     homepage: https://atlasofthefuture.org/
-    collection_url: https://atlasofthefuture.org/project/
+    collection_url: null
     enabled: true
     status: PARTIAL
     resource_types:
@@ -1771,10 +1771,10 @@ sources:
       robots_checked: false
       terms_checked: false
     discovery:
-      preferred_method: html
-      sitemap: null
+      preferred_method: sitemap
+      sitemap: https://atlasofthefuture.org/sitemap_index.xml
       rss: null
-      notes: Homepage returned 200. /project/ returned 404 and is not stored. Adapter not implemented. Editorial source.
+      notes: "Discover via Yoast project-sitemap only; /project/ index is 404. Item pages /project/{slug}/ are server-rendered."
     limits:
       requests_per_minute: 10
       concurrency: 1

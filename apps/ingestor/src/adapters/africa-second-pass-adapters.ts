@@ -9,7 +9,7 @@ function slugify(value: string): string {
 }
 
 /** Parse cohort/finalist blocks from a single article or challenge page. */
-function createCohortPageAdapter(config: {
+export function createCohortPageAdapter(config: {
   id: string;
   resourceType: ResourceType;
   programme: string;
@@ -150,10 +150,16 @@ export const africaSecondPassAdapters: SourceAdapter[] = [
     programme: "Milken-Motsepe Innovation Prize",
     resourceType: "SOLUTION",
   }),
-  createCohortPageAdapter({
+  createHtmlCatalogueAdapter({
     id: "global-startup-awards-africa",
-    programme: "Global Startup Awards Africa",
+    siteOrigin: "https://www.globalstartupawards.com",
+    pathPattern: /^\/(former-winners|competition\/[^/]+)\/?$/i,
+    extraListingUrls: [
+      "https://www.globalstartupawards.com/regions/africa/",
+      "https://www.globalstartupawards.com/former-winners",
+    ],
     resourceType: "ORGANISATION",
+    evidenceBasis: "PROGRAMME_SELECTED",
   }),
   createCohortPageAdapter({
     id: "flat6labs-africa",

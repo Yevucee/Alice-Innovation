@@ -1,6 +1,7 @@
 import { load } from "cheerio";
 import { htmlToText, type NormalisedDraft } from "@alice/shared";
 import { buildDraft } from "./draft.js";
+import { listingCardImageUrl } from "./listing-images.js";
 import { createHtmlCatalogueAdapter, parseHtmlCataloguePage } from "./html-catalogue.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
 
@@ -152,6 +153,9 @@ export function parseNorrskenAccordionItem(page: FetchedPage): NormalisedDraft {
     evidenceBasis: "PROGRAMME_SELECTED",
     evidenceStage: "UNKNOWN",
     countryName: country,
+    imageUrl: listingCardImageUrl(page.html, page.url, {
+      skipPattern: /placeholder-evolve|norrsken.*logo/i,
+    }),
     rawMetadata: { listing_only: true, country, sector, year },
     etag: page.etag,
     lastModified: page.lastModified,
@@ -190,6 +194,7 @@ export function parseNorrsken100Item(page: FetchedPage): NormalisedDraft {
     resourceType: "SOLUTION",
     evidenceBasis: "EDITORIALLY_CURATED",
     evidenceStage: "UNKNOWN",
+    imageUrl: listingCardImageUrl(page.html, page.url),
     rawMetadata: { listing_only: true, catalogue: "norrsken-100" },
     etag: page.etag,
     lastModified: page.lastModified,
@@ -409,15 +414,16 @@ const injiniAdapter: SourceAdapter = {
     const page = await ctx.fetchText(collection);
     const $ = load(page.body);
     const refs: DiscoveredRef[] = [];
-    $("[fs-list-field='Product-Name'].mobilecmsitem").each((_, element) => {
-      const title = $(element).text().trim();
+    $(".company-information-div, .collection-item-6.w-dyn-item").each((_, element) => {
+      const block = $(element);
+      const title = block.find("[fs-list-field='Name'], .company-name-info-text").first().text().trim()
+        || block.find("[fs-list-field='Product-Name']").first().text().trim();
       if (!title || title === "unknown") return;
-      const block = $(element).closest(".company-information-div");
       const slug = slugify(title);
       refs.push({
         url: listingItemUrl(collection, slug),
         externalId: slug,
-        listingHtml: block.length ? $.html(block) : $.html($(element).parent()),
+        listingHtml: $.html(block),
       });
     });
     return refs;
@@ -425,8 +431,9 @@ const injiniAdapter: SourceAdapter = {
   fetch: listingFetch,
   parse(page) {
     const $ = load(page.html);
-    const title = $("[fs-list-field='Product-Name'].mobilecmsitem, [fs-list-field='Product-Name']").first().text().trim();
-    const country = $("[fs-list-field='Country']").first().text().trim();
+    const title = $("[fs-list-field='Name'], .company-name-info-text").first().text().trim()
+      || $("[fs-list-field='Product-Name']").first().text().trim();
+    const country = $("[fs-list-field='Country'], .company-location-text.country").first().text().trim();
     const description = $("[fs-list-field='Description'], #modal-data-description").first().text().trim();
     const summary = [country, description].filter(Boolean).join(" — ") || title;
     if (!title) throw new Error(`injini-african-edtech-map item has no title: ${page.url}`);
@@ -440,6 +447,10 @@ const injiniAdapter: SourceAdapter = {
       evidenceBasis: "EDITORIALLY_CURATED",
       evidenceStage: "UNKNOWN",
       countryName: country || null,
+      imageUrl: listingCardImageUrl(page.html, page.url, {
+        preferSelector: "img.company-logo",
+        skipPattern: /injini.*logo|placeholder/i,
+      }),
       rawMetadata: { listing_only: true, country: country || null },
       etag: page.etag,
       lastModified: page.lastModified,
