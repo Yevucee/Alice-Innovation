@@ -11,6 +11,7 @@ import { catalogueAdapters } from "./catalogue-adapters.js";
 import { africaAdapters } from "./africa-adapters.js";
 import { africaSecondPassAdapters } from "./africa-second-pass-adapters.js";
 import { buildPlaceholderAdapters, remainingCatalogueAdapters } from "./placeholder-adapters.js";
+import { seedstarsAdapter } from "./seedstars.js";
 
 const CORE_ADAPTERS: SourceAdapter[] = [
   solarImpulseAdapter,
@@ -21,6 +22,7 @@ const CORE_ADAPTERS: SourceAdapter[] = [
   xprizeAdapter,
   challengeWorksAdapter,
   wipoGreenAdapter,
+  seedstarsAdapter,
   ...catalogueAdapters,
   ...africaAdapters,
   ...africaSecondPassAdapters,

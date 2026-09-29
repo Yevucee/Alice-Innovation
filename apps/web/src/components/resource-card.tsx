@@ -8,7 +8,7 @@ function placeholderLabel(resource: CompactResource): string {
 }
 
 export function ResourceCard({ resource }: { resource: CompactResource }) {
-  const location = resource.countries[0];
+  const location = resource.countries[0] || resource.continents?.[0];
   const tags = [
     ...resource.sectors.slice(0, 2),
     ...resource.technologies.slice(0, 2),

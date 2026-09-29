@@ -1,3 +1,4 @@
+import { continentNameForSlug, continentSlugs } from "@alice/taxonomy";
 import type { Queryable } from "./pool.js";
 
 export async function libraryStats(db: Queryable): Promise<Record<string, number>> {
@@ -98,12 +99,16 @@ export async function browseCategories(db: Queryable): Promise<Record<string, un
     db.query(`SELECT code, label FROM resource_types ORDER BY code`),
     db.query(`SELECT DISTINCT country_name, country_code FROM locations WHERE country_code IS NOT NULL ORDER BY country_name LIMIT 200`),
   ]);
+  const continents = continentSlugs()
+    .map((slug) => ({ slug, name: continentNameForSlug(slug) }))
+    .filter((row): row is { slug: string; name: string } => Boolean(row.name));
   return {
     sectors: sectors.rows,
     problems: problems.rows,
     technologies: technologies.rows,
     resource_types: types.rows,
     geographies: geos.rows,
+    continents,
   };
 }
 

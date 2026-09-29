@@ -1,0 +1,93 @@
+/** Known country names only. Unknown names stay unresolved rather than guessed. */
+export const COUNTRY_CODES: Record<string, string> = {
+  ghana: "GH",
+  kenya: "KE",
+  nigeria: "NG",
+  "south africa": "ZA",
+  rwanda: "RW",
+  senegal: "SN",
+  uganda: "UG",
+  tanzania: "TZ",
+  ethiopia: "ET",
+  india: "IN",
+  bangladesh: "BD",
+  "united states": "US",
+  usa: "US",
+  "united states of america": "US",
+  "united kingdom": "GB",
+  uk: "GB",
+  france: "FR",
+  germany: "DE",
+  netherlands: "NL",
+  brazil: "BR",
+  mexico: "MX",
+  canada: "CA",
+  australia: "AU",
+  china: "CN",
+  japan: "JP",
+  egypt: "EG",
+  morocco: "MA",
+  uae: "AE",
+  "united arab emirates": "AE",
+  singapore: "SG",
+  indonesia: "ID",
+  vietnam: "VN",
+  philippines: "PH",
+  colombia: "CO",
+  chile: "CL",
+  argentina: "AR",
+  peru: "PE",
+  poland: "PL",
+  romania: "RO",
+  ukraine: "UA",
+};
+
+export function countryCodeFor(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const key = name.trim().toLowerCase();
+  return COUNTRY_CODES[key] ?? null;
+}
+
+const CODE_TO_CONTINENT: Record<string, string> = {
+  GH: "Africa",
+  KE: "Africa",
+  NG: "Africa",
+  ZA: "Africa",
+  RW: "Africa",
+  SN: "Africa",
+  UG: "Africa",
+  TZ: "Africa",
+  ET: "Africa",
+  EG: "Africa",
+  MA: "Africa",
+  IN: "Asia",
+  BD: "Asia",
+  CN: "Asia",
+  JP: "Asia",
+  SG: "Asia",
+  ID: "Asia",
+  VN: "Asia",
+  PH: "Asia",
+  AE: "Middle East and North Africa",
+  US: "Americas",
+  BR: "Americas",
+  MX: "Americas",
+  CA: "Americas",
+  CO: "Americas",
+  CL: "Americas",
+  AR: "Americas",
+  PE: "Americas",
+  AU: "Asia",
+  GB: "Europe",
+  FR: "Europe",
+  DE: "Europe",
+  NL: "Europe",
+  PL: "Europe",
+  RO: "Europe",
+  UA: "Europe",
+};
+
+export function continentForCountryCode(code: string | null | undefined): string | null {
+  if (!code) return null;
+  return CODE_TO_CONTINENT[code.trim().toUpperCase()] ?? null;
+}

@@ -26,6 +26,7 @@ ingest_one "xprize limit 80" --source xprize --limit 80
 ingest_one "eit-food limit 80" --source eit-food --limit 80
 ingest_one "elrha limit 80" --source elrha --limit 80
 ingest_one "nesta limit 80" --source nesta --limit 80
+ingest_one "seedstars full" --source seedstars --full
 
 echo ""
 echo "########## global backfill complete ##########"

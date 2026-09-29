@@ -2158,13 +2158,44 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: "PARTIAL: enabled after robots preflight (Sep 2026). Run limit ingest then full via africa queue."
-  - id: seedstars-africa
-    name: Seedstars portfolio (Africa filter)
-    category: africa-innovation
-    description: "PAUSED pending enablement. PARTIAL: public /funds/portfolio/ exposes Africa-tagged content cards, not a full structured company API."
+  - id: seedstars
+    name: Seedstars portfolio
+    category: general-innovation
+    description: "PARTIAL: public /funds/portfolio/ carousel cards (global regions). Continent and macro-region tags from area-category labels."
     homepage: https://www.seedstars.com/
     collection_url: https://www.seedstars.com/funds/portfolio/
     enabled: true
+    status: PARTIAL
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: seedstars
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /funds/portfolio/ HTTP 200. robots.txt HTTP 200. All carousel cards ingested; location from area-category (continent and country when present)."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "Run full ingest via global backfill queue (not Africa-only filter)."
+  - id: seedstars-africa
+    name: Seedstars portfolio (Africa filter, legacy)
+    category: africa-innovation
+    description: "Superseded by global seedstars source. Kept for historical ingest runs only."
+    homepage: https://www.seedstars.com/
+    collection_url: https://www.seedstars.com/funds/portfolio/
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION

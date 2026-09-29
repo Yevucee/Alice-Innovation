@@ -43,7 +43,7 @@ npm run ingest:single-flight:remote
 | 7 | `ihub-future-of-learning` | ☐ | ☐ |
 | 8 | `oceanhub-africa` | ☐ | ☐ |
 | 9 | `cchub-syndicate` | ☐ | ☐ |
-| 10 | `seedstars-africa` | ☐ | ☐ |
+| 10 | `seedstars` (global; was `seedstars-africa`) | ☐ | ☐ |
 | 11 | `africa-tech-festival-startup-hub` | ☐ | ☐ |
 | 12 | `norrsken-accelerator` | ☐ | ☐ |
 | 13 | `norrsken-100` | ☐ | ☐ |

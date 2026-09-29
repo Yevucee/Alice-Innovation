@@ -14,6 +14,7 @@ interface CategoryData {
   technologies: Array<{ slug: string; name: string }>;
   resource_types: Array<{ code: string; label: string }>;
   geographies: Array<{ country_name: string; country_code: string }>;
+  continents: Array<{ slug: string; name: string }>;
 }
 
 interface SearchResponse {
@@ -45,6 +46,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
     sector: parseList(params.get("sector")),
     tech: parseList(params.get("tech")),
     country: parseList(params.get("country")),
+    continent: parseList(params.get("continent")),
     stage: parseList(params.get("stage")),
     source: parseList(params.get("source")),
     mode: params.get("mode") === "diverse" ? "diverse" : "best",
@@ -60,12 +62,13 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
       sector: state.sector,
       tech: state.tech,
       country: state.country,
+      continent: state.continent,
       stage: state.stage,
       source: state.source,
       mode: state.mode,
       sort: state.sort,
     }),
-    [state.q, state.type, state.problem, state.sector, state.tech, state.country, state.stage, state.source, state.mode, state.sort],
+    [state.q, state.type, state.problem, state.sector, state.tech, state.country, state.continent, state.stage, state.source, state.mode, state.sort],
   );
 
   const updateParams = useCallback((patch: Record<string, string | null>) => {
@@ -81,7 +84,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
     fetch("/api/categories")
       .then((r) => r.json())
       .then((json: CategoryData) => {
-        if (Array.isArray(json?.resource_types) && Array.isArray(json?.geographies)) {
+        if (Array.isArray(json?.resource_types) && Array.isArray(json?.geographies) && Array.isArray(json?.continents)) {
           setCategories(json);
         } else {
           setCategories(null);
@@ -106,6 +109,9 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
       );
       return geo?.country_name ?? value;
     }
+    if (key === "continent") {
+      return categories.continents.find((c) => c.slug === value)?.name ?? value;
+    }
     if (key === "source") return sourceCatalogue.find((s) => s.id === value)?.name ?? value;
     return value.replace(/_/g, " ");
   }, [categories, sourceCatalogue]);
@@ -119,6 +125,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
       sectors: state.sector,
       technologies: state.tech,
       countries: state.country,
+      continents: state.continent,
       evidence_stages: state.stage,
       sources: state.source,
       diverse: state.mode === "diverse",
@@ -151,6 +158,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
     ...state.problem.map((v) => ({ key: "problem", value: v, label: labelFor("problem", v) })),
     ...state.tech.map((v) => ({ key: "tech", value: v, label: labelFor("tech", v) })),
     ...state.country.map((v) => ({ key: "country", value: v, label: labelFor("country", v) })),
+    ...state.continent.map((v) => ({ key: "continent", value: v, label: labelFor("continent", v) })),
     ...state.stage.map((v) => ({ key: "stage", value: v, label: labelFor("stage", v) })),
     ...state.source.map((v) => ({ key: "source", value: v, label: labelFor("source", v) })),
   ];
@@ -174,7 +182,9 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
         selected={state.sector} onToggle={(v) => toggle("sector", v, state.sector)} />
       <FilterGroup title="Technology" options={categories.technologies.slice(0, 14).map((t) => ({ value: t.slug, label: t.name }))}
         selected={state.tech} onToggle={(v) => toggle("tech", v, state.tech)} />
-      <FilterGroup title="Location" options={categories.geographies
+      <FilterGroup title="Continent" options={(categories.continents ?? []).map((c) => ({ value: c.slug, label: c.name }))}
+        selected={state.continent} onToggle={(v) => toggle("continent", v, state.continent)} />
+      <FilterGroup title="Country" options={categories.geographies
         .filter((g) => g.country_code)
         .slice(0, 16)
         .map((g) => ({ value: g.country_code.toLowerCase(), label: g.country_name }))}
@@ -243,6 +253,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
                     : f.key === "problem" ? state.problem
                       : f.key === "tech" ? state.tech
                         : f.key === "country" ? state.country
+                          : f.key === "continent" ? state.continent
                           : f.key === "stage" ? state.stage
                             : state.source;
                 toggle(f.key, f.value, listKey);
@@ -276,6 +287,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
                     : key === "problem" ? state.problem
                       : key === "tech" ? state.tech
                         : key === "country" ? state.country
+                          : key === "continent" ? state.continent
                           : key === "stage" ? state.stage
                             : state.source;
                 toggle(key, value, list);

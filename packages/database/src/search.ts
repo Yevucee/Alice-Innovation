@@ -1,3 +1,4 @@
+import { continentNamesForFilter } from "@alice/taxonomy";
 import { capPerSource, defaultPerSourceCap, reciprocalRankFusion } from "@alice/shared";
 import type { FusedHit } from "@alice/shared";
 import type { Queryable } from "./pool.js";
@@ -6,6 +7,7 @@ export interface SearchFilters {
   query: string;
   resourceTypes?: string[];
   countries?: string[];
+  continents?: string[];
   sources?: string[];
   sectors?: string[];
   problems?: string[];
@@ -25,6 +27,7 @@ export interface CompactResource {
   short_summary: string;
   why_matched: string;
   countries: string[];
+  continents: string[];
   sectors: string[];
   technologies: string[];
   maturity: string;
@@ -68,6 +71,13 @@ const FILTER_SQL = `
         OR lower(loc.country_name) = ANY(SELECT lower(unnest($5::text[])))
       )
   ) OR upper(r.primary_country_code) = ANY(SELECT upper(unnest($5::text[]))))
+  AND ($9::text[] IS NULL OR EXISTS (
+    SELECT 1 FROM resource_locations rl
+    JOIN locations loc ON loc.id = rl.location_id
+    WHERE rl.resource_id = r.id
+      AND loc.continent IS NOT NULL
+      AND loc.continent = ANY($9::text[])
+  ))
   AND ($6::text[] IS NULL OR EXISTS (
     SELECT 1 FROM resource_sectors rs
     JOIN sectors sec ON sec.id = rs.sector_id
@@ -87,6 +97,7 @@ const FILTER_SQL = `
 
 function filterParams(filters: SearchFilters): unknown[] {
   const countries = arr(filters.countries)?.map((value) => value.toLowerCase()) ?? null;
+  const continents = continentNamesForFilter(arr(filters.continents) ?? []);
   return [
     filters.query,
     arr(filters.resourceTypes),
@@ -96,6 +107,7 @@ function filterParams(filters: SearchFilters): unknown[] {
     arr(filters.sectors),
     arr(filters.problems),
     arr(filters.technologies),
+    continents,
   ];
 }
 
@@ -179,7 +191,7 @@ export async function searchLibrary(
          FROM resources r
          WHERE r.embedding IS NOT NULL
            AND ${FILTER_SQL}
-         ORDER BY r.embedding <=> $9::vector
+         ORDER BY r.embedding <=> $10::vector
          LIMIT ${candidateLimit}`,
         [...params, `[${queryEmbedding.join(",")}]`],
       );
@@ -284,18 +296,24 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
     list.push(link);
     linkMap.set(link.resource_id, list);
   }
-  const places = await db.query<{ resource_id: string; country_name: string }>(
-    `SELECT rl.resource_id::text, loc.country_name
+  const places = await db.query<{ resource_id: string; country_name: string; continent: string | null }>(
+    `SELECT rl.resource_id::text, loc.country_name, loc.continent
      FROM resource_locations rl
      JOIN locations loc ON loc.id = rl.location_id
      WHERE rl.resource_id = ANY($1::uuid[])`,
     [ids],
   );
   const placeMap = new Map<string, string[]>();
+  const continentMap = new Map<string, string[]>();
   for (const place of places.rows) {
     const list = placeMap.get(place.resource_id) ?? [];
     if (!list.includes(place.country_name)) list.push(place.country_name);
     placeMap.set(place.resource_id, list);
+    if (place.continent) {
+      const continents = continentMap.get(place.resource_id) ?? [];
+      if (!continents.includes(place.continent)) continents.push(place.continent);
+      continentMap.set(place.resource_id, continents);
+    }
   }
   const sectorRows = await db.query<{ resource_id: string; name: string }>(
     `SELECT rs.resource_id::text, sec.name
@@ -349,6 +367,7 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
       short_summary: row.source_summary,
       why_matched: why,
       countries: placeMap.get(hit.id) ?? [],
+      continents: continentMap.get(hit.id) ?? [],
       sectors: sectorMap.get(hit.id) ?? [],
       technologies: techMap.get(hit.id) ?? [],
       maturity: row.maturity_stage,
@@ -435,7 +454,7 @@ export async function getResource(db: Queryable, resourceId: string): Promise<Re
     [resourceId],
   );
   const locations = await db.query(
-    `SELECT loc.country_name, loc.country_code, loc.city, rl.relationship
+    `SELECT loc.country_name, loc.country_code, loc.continent, loc.city, rl.relationship
      FROM resource_locations rl
      JOIN locations loc ON loc.id = rl.location_id
      WHERE rl.resource_id = $1`,
