@@ -1,0 +1,42 @@
+# Impact Hub locations in Africa (public location subdomains / network pages).
+organisations:
+  - name: Impact Hub Accra
+    country: Ghana
+    city: Accra
+    hub_subtype: INNOVATION_HUB
+    website: https://accra.impacthub.net/
+  - name: Impact Hub Bamako
+    country: Mali
+    city: Bamako
+    hub_subtype: INNOVATION_HUB
+    website: https://bamako.impacthub.net/
+  - name: Impact Hub Harare
+    country: Zimbabwe
+    city: Harare
+    hub_subtype: INNOVATION_HUB
+    website: https://harare.impacthub.net/
+  - name: Impact Hub Kigali
+    country: Rwanda
+    city: Kigali
+    hub_subtype: INNOVATION_HUB
+    website: https://kigali.impacthub.net/
+  - name: Impact Hub Kinshasa
+    country: Democratic Republic of the Congo
+    city: Kinshasa
+    hub_subtype: INNOVATION_HUB
+    website: https://kinshasa.impacthub.net/
+  - name: Impact Hub Lusaka
+    country: Zambia
+    city: Lusaka
+    hub_subtype: INNOVATION_HUB
+    website: https://lusaka.impacthub.net/
+  - name: Impact Hub Monrovia
+    country: Liberia
+    city: Monrovia
+    hub_subtype: INNOVATION_HUB
+    website: https://monrovia.impacthub.net/
+  - name: Impact Hub Khartoum
+    country: Sudan
+    city: Khartoum
+    hub_subtype: INNOVATION_HUB
+    website: https://khartoum.impacthub.net/

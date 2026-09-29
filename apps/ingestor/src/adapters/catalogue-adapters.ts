@@ -32,6 +32,14 @@ export const catalogueAdapters: SourceAdapter[] = [
     evidenceBasis: "INDEPENDENT_ASSESSMENT",
   }),
   createHtmlCatalogueAdapter({
+    id: "afrilabs",
+    siteOrigin: "https://www.afrilabs.com",
+    pathPattern: /^\/hub\/[^/]+\/?$/i,
+    wordpressRest: { origin: "https://www.afrilabs.com", postType: "hub", perPage: 100 },
+    resourceType: "ORGANISATION",
+    evidenceBasis: "PROGRAMME_SELECTED",
+  }),
+  createHtmlCatalogueAdapter({
     id: "skoll",
     siteOrigin: "https://skoll.org",
     pathPattern: /^\/grantee\/[^/]+\/?$/i,

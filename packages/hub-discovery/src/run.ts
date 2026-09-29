@@ -12,7 +12,20 @@ import { probeCatalogueCapability } from "./catalogue-probe.js";
 import { afrilabsDirectory } from "./directories/afrilabs.js";
 import { fablabsIoDirectory } from "./directories/fablabs-io.js";
 import { seedOrganisationsDirectory } from "./directories/seed-organisations.js";
+import { ghanaHubsNetworkDirectory } from "./directories/ghana-hubs-network.js";
+import { createYamlDirectoryAdapter } from "./directories/yaml-directory.js";
 import { directoryStubs } from "./directories/stubs.js";
+
+const isnNigeriaDirectory = createYamlDirectoryAdapter(
+  "isn-nigeria",
+  "config/hub-isn-directory.yaml",
+  "isn-nigeria",
+);
+const impactHubDirectory = createYamlDirectoryAdapter(
+  "impact-hub-global",
+  "config/hub-impact-hub-africa.yaml",
+  "impact-hub-global",
+);
 import { linkPortfolioResourcesToHub } from "./portfolio-links.js";
 import type { DiscoveredHub, DiscoveryContext, HubDirectoryAdapter } from "./types.js";
 
@@ -20,6 +33,9 @@ const ADAPTERS: HubDirectoryAdapter[] = [
   seedOrganisationsDirectory,
   afrilabsDirectory,
   fablabsIoDirectory,
+  ghanaHubsNetworkDirectory,
+  isnNigeriaDirectory,
+  impactHubDirectory,
   ...directoryStubs,
 ];
 

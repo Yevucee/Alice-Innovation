@@ -7,10 +7,10 @@ Build an internal directory of African innovation hubs, incubators, accelerators
 | # | Slug | Role | Status |
 |---|------|------|--------|
 | 1 | `afrilabs` | INGESTION | **Live** — WP REST `hub` post type (~500+ members) |
-| 2 | `ghana-hubs-network` | DISCOVERY_ONLY | Stub — no public member API; use seed + manual |
-| 3 | `isn-nigeria` | DISCOVERY_ONLY | Stub — URL TBD |
+| 2 | `ghana-hubs-network` | DISCOVERY_ONLY | **Live** — seed GHN members + named supplements |
+| 3 | `isn-nigeria` | DISCOVERY_ONLY | **Live** — curated `config/hub-isn-directory.yaml` (SPA site) |
 | 4 | `startup-uganda` | DISCOVERY_ONLY | Stub — URL TBD |
-| 5 | `impact-hub-global` | DISCOVERY_ONLY | Stub — often bot-walled |
+| 5 | `impact-hub-global` | DISCOVERY_ONLY | **Live** — `config/hub-impact-hub-africa.yaml` |
 | 6 | `fablabs-io` | INGESTION | **Live** — `https://www.fablabs.io/api/labs` (Africa filter) |
 | 7 | `orange-digital-centers` | DISCOVERY_ONLY | Stub |
 | 8 | `egypt-tiec` | DISCOVERY_ONLY | Stub |
@@ -56,6 +56,19 @@ npm run hubs:discover:remote -- --directories seed-organisations,afrilabs,fablab
 ```
 
 Use `--limit 50` while testing. Add `--probe` and `--robots` for access verification before promoting candidates to `config/sources.yaml`.
+
+### Website enrichment & reprobe
+
+AfriLabs profiles rarely list external URLs in HTML. Merge websites from **name-matched** seed/FabLabs peers, then reprobe candidates:
+
+```bash
+npm run hubs:enrich -- --match-names --reprobe --limit 200
+npm run hubs:enrich:remote -- --match-names --reprobe --limit 200
+```
+
+### AfriLabs as library source
+
+`afrilabs` is **enabled** in `config/sources.yaml` (WP REST `hub` → `ORGANISATION` resources). Run `npm run seed` then `npm run ingest -- --source afrilabs --limit 80` after deploy.
 
 ## Promoting to ingestion
 

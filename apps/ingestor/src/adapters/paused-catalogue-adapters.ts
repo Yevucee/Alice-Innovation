@@ -38,12 +38,4 @@ export const pausedCatalogueAdapters: SourceAdapter[] = [
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
-  createHtmlCatalogueAdapter({
-    id: "afrilabs",
-    siteOrigin: "https://www.afrilabs.com",
-    pathPattern: /^\/(member|hub)\/[^/]+\/?$/i,
-    extraListingUrls: ["https://www.afrilabs.com/hubs/", "https://www.afrilabs.com/our-hubs/"],
-    resourceType: "ORGANISATION",
-    evidenceBasis: "PROGRAMME_SELECTED",
-  }),
 ];

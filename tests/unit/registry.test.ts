@@ -41,6 +41,8 @@ test("the registry contains all 94 sources with homepages and no invented blanks
   assert.equal(byId["seedstars"].enabled, true);
   assert.equal(byId["seedstars-africa"].enabled, false);
   assert.equal(byId["gitex-africa-supernova"].enabled, false);
-  assert.equal(paused.length, 29);
+  assert.equal(byId["afrilabs"].enabled, true);
+  assert.equal(byId["afrilabs"].status, "PARTIAL");
+  assert.equal(paused.length, 28);
   assert.ok(paused.every((source) => source.enabled === false));
 });
