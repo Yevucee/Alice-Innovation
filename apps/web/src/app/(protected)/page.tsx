@@ -133,7 +133,7 @@ function CardGrid({ resources, empty }: { resources: import("@alice/database").C
     return <p className="text-sm text-muted">{empty}</p>;
   }
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {resources.map((resource) => (
         <ResourceCard key={resource.resource_id} resource={resource} />
       ))}

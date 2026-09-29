@@ -270,7 +270,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
         <aside className="hidden lg:block">{filterPanel}</aside>
         <section>
           {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid auto-rows-fr gap-4 sm:grid-cols-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="h-64 animate-pulse rounded-md bg-line/60" />
               ))}
@@ -296,7 +296,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
             />
           ) : null}
           {!loading && rows.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid auto-rows-fr gap-4 sm:grid-cols-2">
               {rows.map((resource) => (
                 <ResourceCard key={resource.resource_id} resource={resource} />
               ))}
