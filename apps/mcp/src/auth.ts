@@ -1,4 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { validateStoredAccessToken } from "@alice/database";
+import type { Queryable } from "@alice/database";
 
 export function tokensMatch(presented: string, expected: string): boolean {
   const left = Buffer.from(presented);
@@ -7,11 +9,31 @@ export function tokensMatch(presented: string, expected: string): boolean {
   return timingSafeEqual(left, right);
 }
 
-export function authorised(authorizationHeader: string | undefined, expectedToken: string): boolean {
-  if (!expectedToken || !authorizationHeader) return false;
+export function bearerToken(authorizationHeader: string | undefined): string | null {
+  if (!authorizationHeader) return null;
   const match = authorizationHeader.match(/^Bearer\s+(\S+)\s*$/i);
-  if (!match) return false;
-  return tokensMatch(match[1], expectedToken);
+  return match?.[1] ?? null;
+}
+
+export function authorised(authorizationHeader: string | undefined, expectedToken: string): boolean {
+  const token = bearerToken(authorizationHeader);
+  if (!token) return false;
+  if (expectedToken && tokensMatch(token, expectedToken)) return true;
+  return false;
+}
+
+export async function authorisedMcp(
+  db: Queryable,
+  authorizationHeader: string | undefined,
+  expectedToken: string,
+): Promise<boolean> {
+  const token = bearerToken(authorizationHeader);
+  if (!token) return false;
+  if (expectedToken && tokensMatch(token, expectedToken)) return true;
+  if (process.env.MCP_OAUTH_ENABLED === "true") {
+    return validateStoredAccessToken(db, token);
+  }
+  return false;
 }
 
 export function tokenKey(token: string): string {

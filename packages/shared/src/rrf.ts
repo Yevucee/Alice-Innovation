@@ -59,3 +59,27 @@ export function capPerSource<T extends { id: string; sourceId?: string | null }>
 export function defaultPerSourceCap(limit: number): number {
   return Math.max(2, Math.ceil(limit / 4));
 }
+
+/** Cap hits so one taxonomy/mechanism bucket cannot dominate (e.g. one technology family). */
+export function capPerBucket<T extends { id: string; bucketKey?: string | null }>(
+  hits: T[],
+  limit: number,
+  maxPerBucket: number,
+): T[] {
+  if (!Number.isFinite(maxPerBucket)) return hits.slice(0, limit);
+  const counts = new Map<string, number>();
+  const kept: T[] = [];
+  for (const hit of hits) {
+    const key = hit.bucketKey?.trim() || "unknown";
+    const used = counts.get(key) ?? 0;
+    if (used >= maxPerBucket) continue;
+    counts.set(key, used + 1);
+    kept.push(hit);
+    if (kept.length >= limit) break;
+  }
+  return kept;
+}
+
+export function defaultPerMechanismCap(limit: number): number {
+  return Math.max(1, Math.ceil(limit / 5));
+}

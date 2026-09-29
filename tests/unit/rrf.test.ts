@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { capPerSource, defaultPerSourceCap, reciprocalRankFusion } from "../../packages/shared/src/rrf.ts";
+import {
+  capPerBucket,
+  capPerSource,
+  defaultPerMechanismCap,
+  defaultPerSourceCap,
+  reciprocalRankFusion,
+} from "../../packages/shared/src/rrf.ts";
 
 test("reciprocal rank fusion prefers documents that appear in both lists", () => {
   const fused = reciprocalRankFusion([
@@ -25,4 +31,18 @@ test("a broad result list cannot be filled by one source", () => {
   assert.ok(solar.length <= 3);
   assert.equal(capped.length, 4);
   assert.ok(capped.some((hit) => hit.sourceId === "drawdown"));
+});
+
+test("mechanism diversity caps one hit per bucket", () => {
+  const hits = [
+    { id: "1", bucketKey: "solar-pv" },
+    { id: "2", bucketKey: "solar-pv" },
+    { id: "3", bucketKey: "wind" },
+    { id: "4", bucketKey: "storage" },
+    { id: "5", bucketKey: "storage" },
+  ];
+  const capped = capPerBucket(hits, 4, defaultPerMechanismCap(4));
+  const solar = capped.filter((hit) => hit.bucketKey === "solar-pv");
+  assert.equal(solar.length, 1);
+  assert.equal(capped.length, 3);
 });

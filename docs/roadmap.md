@@ -13,15 +13,19 @@
 - **Solar Impulse** `image_url` backfill to 100% (`npm run backfill:solar-images-all:remote`)
 - **MIT Solve** checkpointed `--full` catalogue (`npm run ingest:production-step3:remote` or ingestor shell)
 
-## Still deferred (product scope)
+## Phase 7 (curator bundle — see `docs/phase-7-product.md`)
 
-- Collections and Alice notes (schema + UI)
-- Admin UI with `ADMIN_ENABLED=true` (Phase 7)
-- Taxonomy-phase mechanism diversity for `explore_problem`
+- **Collections & Alice notes** — migration `003_phase7_collections_oauth`, web UI, APIs
+- **Admin UI** — `/admin` gated by `ADMIN_ENABLED=true` on web
+- **Classifier** — ingest hook + `npm run classify:batch`; off by default in production
+- **MCP OAuth** — optional client-credentials (`MCP_OAUTH_ENABLED`); static bearer still supported
+- **Mechanism diversity** — `explore_problem` + search `diversity: "mechanism"`
+
+## Still deferred
+
 - 25-question search evaluation set (Phase 8)
-- Adapters for 56 `PAUSED` sources in `config/sources.yaml`
+- Adapters for remaining `PAUSED` sources in `config/sources.yaml`
 - Engineering for Change (BLOCKED — bot wall)
 - Springwise depth beyond homepage tiles (article 403s)
-- MCP OAuth (static bearer token today)
-- Classifier (`CLASSIFIER_ENABLED=false` by design)
+- Full OAuth authorization-code flow for MCP (only client-credentials in Phase 7)
 - Railway Config-as-Code → Infrastructure-as-Code migration (deadline 2026-12-01)

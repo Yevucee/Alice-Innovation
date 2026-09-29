@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { diverseApproachesForResource, findSimilar, getResource } from "@alice/database";
+import { AddToCollection } from "@/components/add-to-collection";
 import { ResourceCard } from "@/components/resource-card";
 import { formatDate, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine } from "@/lib/format";
 import { pool } from "@/lib/db";
@@ -140,6 +141,8 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
         </section>
       ) : null}
 
+      <AddToCollection resourceId={id} />
+
       {(organisations.length > 0 || people.length > 0) ? (
         <section className="mt-10 border-t border-line pt-8">
           <h2 className="text-sm font-medium">People & organisations</h2>
@@ -164,7 +167,7 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
       {diverse.length > 0 ? (
         <section className="mt-12 border-t border-line pt-8">
           <h2 className="text-sm font-medium">Different approaches to the same problem</h2>
-          <p className="mt-1 text-xs text-muted">Hybrid search with a per-source cap — not mechanism-classified yet.</p>
+          <p className="mt-1 text-xs text-muted">Hybrid search with mechanism-level diversity (technology/sector buckets).</p>
           <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2">
             {diverse.map((item) => (
               <ResourceCard key={item.resource_id} resource={item} />
