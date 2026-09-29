@@ -63,6 +63,7 @@ export interface NormalisedDraft {
   personName: string | null;
   countryName: string | null;
   countryCode: string | null;
+  continentName: string | null;
   tags: string[];
   evidenceStage: EvidenceStage;
   evidenceBasis: EvidenceBasis;

@@ -14,7 +14,6 @@ AFRICA_SOURCES=(
   ihub-future-of-learning
   oceanhub-africa
   cchub-syndicate
-  seedstars-africa
   africa-tech-festival-startup-hub
   norrsken-accelerator
   norrsken-100

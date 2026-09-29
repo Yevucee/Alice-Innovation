@@ -53,6 +53,7 @@ export function buildDraft(input: {
   organisationName?: string | null;
   personName?: string | null;
   countryName?: string | null;
+  continentName?: string | null;
   tags?: string[];
   evidenceStage?: string;
   evidenceBasis?: string;
@@ -67,6 +68,7 @@ export function buildDraft(input: {
   const canonicalUrl = canonicaliseUrl(input.url);
   const summary = truncate(input.summary ?? "", 500);
   const countryName = input.countryName ?? null;
+  const continentName = input.continentName ?? null;
   return {
     resourceType: asResourceType(input.resourceType),
     title: truncate(input.title, 300),
@@ -82,6 +84,7 @@ export function buildDraft(input: {
     personName: input.personName ?? null,
     countryName,
     countryCode: countryCodeFor(countryName),
+    continentName,
     tags: input.tags ?? [],
     evidenceStage: asEvidenceStage(input.evidenceStage),
     evidenceBasis: asEvidenceBasis(input.evidenceBasis),

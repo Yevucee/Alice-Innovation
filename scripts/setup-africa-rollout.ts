@@ -15,7 +15,6 @@ const ENABLE_PARTIAL = new Set([
   "oceanhub-africa",
   "norrsken-accelerator",
   "norrsken-100",
-  "seedstars-africa",
   "cchub-syndicate",
   "africa-tech-festival-startup-hub",
 ]);

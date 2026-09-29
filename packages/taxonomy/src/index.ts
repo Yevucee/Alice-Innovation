@@ -48,37 +48,12 @@ export const TECHNOLOGIES: TaxonomyNode[] = [
   { slug: "mobile-technology", name: "Mobile technology" },
 ];
 
-/** Known country names only. Unknown names stay unresolved rather than guessed. */
-export const COUNTRY_CODES: Record<string, string> = {
-  ghana: "GH",
-  kenya: "KE",
-  nigeria: "NG",
-  "south africa": "ZA",
-  rwanda: "RW",
-  senegal: "SN",
-  uganda: "UG",
-  tanzania: "TZ",
-  ethiopia: "ET",
-  india: "IN",
-  bangladesh: "BD",
-  "united states": "US",
-  usa: "US",
-  "united states of america": "US",
-  "united kingdom": "GB",
-  uk: "GB",
-  france: "FR",
-  germany: "DE",
-  netherlands: "NL",
-  brazil: "BR",
-  mexico: "MX",
-  canada: "CA",
-  australia: "AU",
-  china: "CN",
-  japan: "JP",
-};
+export { COUNTRY_CODES, continentForCountryCode, countryCodeFor } from "./country-codes.js";
 
-export function countryCodeFor(name: string | null | undefined): string | null {
-  if (!name) return null;
-  const key = name.trim().toLowerCase();
-  return COUNTRY_CODES[key] ?? null;
-}
+export {
+  continentNameForSlug,
+  continentNamesForFilter,
+  continentSlugs,
+  parsePortfolioRegionLabel,
+  type ParsedPortfolioRegion,
+} from "./geography.js";

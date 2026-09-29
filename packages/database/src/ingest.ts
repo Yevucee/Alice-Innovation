@@ -44,17 +44,23 @@ async function ensurePerson(db: Queryable, name: string, organisationId: string 
   return row.rows[0].id;
 }
 
-async function ensureLocation(db: Queryable, name: string, code: string | null): Promise<string> {
+async function ensureLocation(
+  db: Queryable,
+  name: string,
+  code: string | null,
+  continent: string | null = null,
+): Promise<string> {
   const found = await db.query<{ id: string }>(
     `SELECT id::text FROM locations
      WHERE country_name = $1 AND country_code IS NOT DISTINCT FROM $2 AND city IS NULL
+       AND continent IS NOT DISTINCT FROM $3
      LIMIT 1`,
-    [name, code],
+    [name, code, continent],
   );
   if (found.rows[0]) return found.rows[0].id;
   const inserted = await db.query<{ id: string }>(
-    `INSERT INTO locations (country_name, country_code) VALUES ($1, $2) RETURNING id::text`,
-    [name, code],
+    `INSERT INTO locations (country_name, country_code, continent) VALUES ($1, $2, $3) RETURNING id::text`,
+    [name, code, continent],
   );
   return inserted.rows[0].id;
 }
@@ -271,7 +277,12 @@ export async function upsertDraft(
     }
 
     if (draft.countryName) {
-      const locationId = await ensureLocation(client, draft.countryName, draft.countryCode);
+      const locationId = await ensureLocation(
+        client,
+        draft.countryName,
+        draft.countryCode,
+        draft.continentName ?? null,
+      );
       await client.query(
         `INSERT INTO resource_locations (resource_id, location_id, relationship, source_item_id)
          VALUES ($1, $2, 'MENTIONED_IN', $3)
