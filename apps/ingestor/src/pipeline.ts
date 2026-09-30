@@ -6,7 +6,9 @@ import {
   saveEmbedding,
   upsertDraft,
   writeCheckpoint,
+  linkResourceTaxonomy,
 } from "@alice/database";
+import { inferTaxonomyFromText } from "@alice/taxonomy";
 import { canonicaliseUrl, contentHash, log } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
 import { classifyResource } from "./classifier.js";
@@ -153,6 +155,13 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
               else if (saved.outcome === "created") counts.created += 1;
               else counts.updated += 1;
               if (saved.outcome !== "unchanged") {
+                const taxonomy = inferTaxonomyFromText({
+                  title: draft.title,
+                  summary: draft.sourceSummary,
+                  text: draft.extractedText,
+                  tags: draft.tags,
+                });
+                await linkResourceTaxonomy(pool, saved.resourceId, taxonomy);
                 try {
                   const text = [draft.title, draft.sourceSummary, draft.extractedText.slice(0, 1000), draft.organisationName ?? "", draft.countryName ?? ""].join("\n");
                   const vectors = await embedTexts([text]);

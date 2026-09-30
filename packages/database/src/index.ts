@@ -10,6 +10,7 @@ export {
   readCheckpoint,
   writeCheckpoint,
 } from "./ingest.js";
+export { linkResourceTaxonomy } from "./taxonomy-links.js";
 export {
   searchLibrary,
   getResource,

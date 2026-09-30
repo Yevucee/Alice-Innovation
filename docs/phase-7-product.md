@@ -21,7 +21,19 @@ npm run migrate
 - **Gate:** Set `ADMIN_ENABLED=true` on the **web** service. Without it, `/admin` returns 404.
 - **Standalone `apps/admin`:** JSON stats on `ADMIN_PORT`; still uses `MCP_AUTH_TOKEN` bearer auth.
 
-## 3. Classifier
+## 3. Taxonomy tags (sectors / problems / technologies)
+
+Browse pages and search filters use `resource_sectors`, `resource_problems`, and `resource_technologies`. **Keyword inference** runs on ingest (title, summary, text, adapter tags) via `inferTaxonomyFromText`.
+
+Backfill the full library after deploy:
+
+```bash
+npm run backfill:taxonomy:remote
+```
+
+This is separate from the optional LLM classifier below (interpretations only).
+
+## 4. Classifier
 
 - **Ingest:** When `CLASSIFIER_ENABLED=true`, new resources get `resource_interpretations` during ingest.
 - **Batch backfill:** `npm run classify:batch -- --limit 100` (or `classify:batch:remote`).
@@ -37,7 +49,7 @@ CLASSIFIER_MODEL=local-8b
 
 **Production:** Use a hosted OpenAI-compatible endpoint (same pattern as embeddings). Do not point Railway at `127.0.0.1`.
 
-## 4. MCP OAuth (client credentials)
+## 5. MCP OAuth (client credentials)
 
 Static `MCP_AUTH_TOKEN` continues to work. Optional OAuth for clients:
 
@@ -54,7 +66,7 @@ MCP_PUBLIC_URL=https://<mcp-host>
 
 Tokens are stored hashed in `mcp_access_tokens` until expiry.
 
-## 5. Mechanism diversity
+## 6. Mechanism diversity
 
 - **Search filter:** `diversity: "mechanism"` (or MCP `explore_problem`, which uses it by default).
 - **Logic:** After hybrid fusion, cap at one hit per primary **technology** slug, else **sector**, else `unknown`.
