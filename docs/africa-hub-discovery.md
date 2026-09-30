@@ -70,11 +70,28 @@ npm run hubs:enrich:remote -- --match-names --reprobe --limit 200
 
 `afrilabs` is **enabled** in `config/sources.yaml` (WP REST `hub` → `ORGANISATION` resources). Run `npm run seed` then `npm run ingest -- --source afrilabs --limit 80` after deploy.
 
-## Promoting to ingestion
+## Hub startup / portfolio ingestion (automated)
+
+First-class hubs with a `linked_portfolio_source` in `config/hub-seed-organisations.yaml` already map to catalogue sources in `config/sources.yaml` (CcHUB syndicate, Ventures Platform, iHub startup directory, Norrsken, OceanHub, etc.). The agent runs a **serial production queue** — not CSV upload or manual promotion:
+
+```bash
+# After seed + migrate; one ingest at a time
+npm run ingest:hub-portfolios:remote
+
+# Or wait for the advisory lock / other ingest jobs to finish first
+npm run ingest:wait-then-hub-portfolios:remote
+
+# Re-link only (no ingest) after resources already exist
+npm run hubs:link-portfolios:remote
+```
+
+Slugs are derived from the seed YAML (`scripts/hub-portfolio-sources.ts`). After each full queue run, `seed-organisations --link-portfolios` attaches ingested resources to hub `organisations` via `resource_organisations` (`INCUBATED_BY`, `ACCELERATED_BY`, `FUNDED_BY`, `SHOWCASED_AT`).
+
+## Promoting new hubs to ingestion
 
 1. Review `innovation_source_candidates` and robots/ToS notes.
 2. Add adapter + `config/sources.yaml` entry (existing ingest pipeline).
-3. Set `linked_source_slug` / enable source — do **not** enable VC4A without permission.
+3. Set `linked_portfolio_source` on the hub in seed YAML when the source slug is known — do **not** enable VC4A without permission.
 
 ## Target
 
