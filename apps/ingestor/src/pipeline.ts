@@ -10,6 +10,7 @@ import {
 import { canonicaliseUrl, contentHash, log } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
 import { classifyResource } from "./classifier.js";
+import { applyGeographyDefaults } from "./geo-defaults.js";
 import { embedTexts, embeddingSettings, embeddingVersion } from "./embeddings.js";
 import { fetchText, HttpStatusError } from "./http.js";
 import { robotsAllows } from "./robots.js";
@@ -141,7 +142,7 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
             try {
               const page = await adapter.fetch(ref, ctx);
               counts.fetched += 1;
-              const draft = adapter.parse(page);
+              const draft = applyGeographyDefaults(adapter.parse(page), source);
               if (options.dryRun) {
                 log("info", "dry_run_item", { source_id: source.id, title: draft.title, url: draft.canonicalUrl });
                 cursor = ref.url;
