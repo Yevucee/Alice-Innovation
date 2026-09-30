@@ -150,16 +150,10 @@ export const africaSecondPassAdapters: SourceAdapter[] = [
     programme: "Milken-Motsepe Innovation Prize",
     resourceType: "SOLUTION",
   }),
-  createHtmlCatalogueAdapter({
+  createCohortPageAdapter({
     id: "global-startup-awards-africa",
-    siteOrigin: "https://www.globalstartupawards.com",
-    pathPattern: /^\/(former-winners|competition\/[^/]+)\/?$/i,
-    extraListingUrls: [
-      "https://www.globalstartupawards.com/regions/africa/",
-      "https://www.globalstartupawards.com/former-winners",
-    ],
+    programme: "Global Startup Awards Africa",
     resourceType: "ORGANISATION",
-    evidenceBasis: "PROGRAMME_SELECTED",
   }),
   createCohortPageAdapter({
     id: "flat6labs-africa",

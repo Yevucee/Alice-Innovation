@@ -2619,8 +2619,8 @@ sources:
     name: MEST Africa Challenge
     category: africa-innovation
     description: PARTIAL second-pass Africa source. PARTIAL prize-cycle source for pan-African finalists.
-    homepage: https://mest.io/
-    collection_url: https://mest.io/news
+    homepage: https://meltwater.org/mest/
+    collection_url: https://meltwater.org/mest/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -2639,13 +2639,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: PARTIAL prize-cycle source for pan-African finalists. Ingest announcement pages, not a portfolio database.
+      notes: "Preflight Sep 2026: mest.io returns 403 to ingest UA; meltwater.org/mest/ HTTP 200. Cohort extraction from public MEST hub page."
     limits:
       requests_per_minute: 8
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "PARTIAL: collection on meltwater.org (Sep 2026). Not a full finalist database."
   - id: milken-motsepe-innovation-prize
     name: Milken-Motsepe Innovation Prize
     category: africa-innovation
@@ -2682,7 +2682,7 @@ sources:
     category: africa-innovation
     description: PARTIAL second-pass Africa source. PARTIAL annual winners/finalists by category.
     homepage: https://www.globalstartupawards.com/
-    collection_url: https://www.globalstartupawards.com/regions/africa/
+    collection_url: https://www.globalstartupawards.com/former-winners
     enabled: true
     status: PARTIAL
     resource_types:
@@ -2701,19 +2701,19 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: PARTIAL annual winners/finalists by category. Editorial cohort extraction only.
+      notes: "Preflight Sep 2026: /regions/africa/ 404; /former-winners HTTP 200 (Squarespace; cohort adapter)."
     limits:
       requests_per_minute: 8
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "PARTIAL: cohort scrape on former-winners page; not per-startup URLs."
   - id: flat6labs-africa
     name: Flat6Labs Africa programmes
     category: africa-innovation
     description: "PARTIAL second-pass Africa source. PARTIAL: Egypt/Tunisia/Morocco programme portfolios still being consolidated."
     homepage: https://flat6labs.com/
-    collection_url: https://flat6labs.com/portfolio/
+    collection_url: https://flat6labs.com/insights/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -2732,13 +2732,13 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "PARTIAL: Egypt/Tunisia/Morocco programme portfolios still being consolidated. Adapter registered for public portfolio paths when present."
+      notes: "Preflight Sep 2026: /portfolio/ 404. Using /insights/ with cohort adapter (news highlights, not startup directory)."
     limits:
       requests_per_minute: 8
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "PARTIAL: insights cohort only until a verified portfolio URL exists."
   - id: growthafrica
     name: GrowthAfrica ventures
     category: africa-innovation
