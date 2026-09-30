@@ -47,6 +47,8 @@
     "ingest:wait-then-hub-portfolios:remote": "bash scripts/run-with-production-env.sh bash scripts/wait-then-ingest-hub-portfolios.sh",
     "ingest:hub-portfolios-resume:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-hub-portfolios-resume.sh",
     "ingest:resume-all:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-resume-all-queue.sh",
+    "preflight:sources": "tsx scripts/preflight-source-urls.ts",
+    "preflight:sources:remote": "bash scripts/run-with-production-env.sh npm run preflight:sources",
     "hubs:link-portfolios": "npm run hubs:discover -- --directories seed-organisations --link-portfolios",
     "hubs:link-portfolios:remote": "bash scripts/run-with-production-env.sh npm run hubs:link-portfolios",
     "setup:africa-second-pass-enable": "tsx scripts/setup-africa-second-pass-enable.ts",
