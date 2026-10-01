@@ -9,6 +9,7 @@ import {
 } from "../../packages/database/src/index.ts";
 import type { Queryable } from "../../packages/database/src/pool.ts";
 import { topResultsMatchPattern } from "../search-quality/relevance.ts";
+import { ensureSearchTestDatabase, seedSearchResourceFixtures } from "../helpers/search-fixtures.ts";
 
 test("searchWithEmbedding invokes injected embedTexts", async () => {
   let invoked = false;
@@ -29,7 +30,6 @@ test("searchWithEmbedding invokes injected embedTexts", async () => {
   assert.equal(invoked, true);
 });
 
-const databaseUrl = process.env.DATABASE_URL;
 const qualityQueries = JSON.parse(
   readFileSync(new URL("../search-quality/queries.json", import.meta.url), "utf8"),
 ) as Array<{
@@ -40,10 +40,11 @@ const qualityQueries = JSON.parse(
   relevance_pattern?: string;
 }>;
 
-test("searchLibrary with embedding and qualityBrowse does not hit text[]/vector cast", {
-  skip: !databaseUrl,
-}, async () => {
+test("searchLibrary with embedding and qualityBrowse does not hit text[]/vector cast", async () => {
+  assert.ok(process.env.DATABASE_URL, "DATABASE_URL must be set");
   const pool = getPool();
+  await ensureSearchTestDatabase(pool);
+  await seedSearchResourceFixtures(pool);
   const embedding = Array.from({ length: 1536 }, (_, index) => (index % 100) * 0.0001);
   for (const qualityBrowse of [false, true] as const) {
     const found = await searchLibrary(
@@ -58,8 +59,9 @@ test("searchLibrary with embedding and qualityBrowse does not hit text[]/vector 
 });
 
 test("search quality queries return results when embeddings are configured", {
-  skip: !databaseUrl || !process.env.EMBEDDING_API_KEY,
+  skip: !process.env.EMBEDDING_API_KEY,
 }, async () => {
+  assert.ok(process.env.DATABASE_URL, "DATABASE_URL must be set");
   const pool = getPool();
   const failures: string[] = [];
   for (const entry of qualityQueries) {

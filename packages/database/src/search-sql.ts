@@ -24,6 +24,12 @@ function arr(values: string[] | undefined): string[] | null {
   return values;
 }
 
+/**
+ * Binds $1 (query text) when a statement uses {@link FILTER_SQL} but not lexical clauses.
+ * Postgres cannot infer types for unused parameters (42P18).
+ */
+export const FILTER_QUERY_TEXT_BIND_SQL = "($1::text IS NOT NULL)";
+
 export const FILTER_SQL = `
   r.active = true
   AND ($2::text[] IS NULL OR r.resource_type = ANY($2))

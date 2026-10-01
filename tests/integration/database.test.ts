@@ -32,6 +32,7 @@ test("migrations, stats, health, and bearer rejection", { skip: !databaseUrl }, 
       method: "POST",
       headers: {
         "content-type": "application/json",
+        accept: "application/json, text/event-stream",
         authorization: "Bearer integration-token",
       },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),

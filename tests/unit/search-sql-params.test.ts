@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   FILTER_PARAM_COUNT,
+  FILTER_QUERY_TEXT_BIND_SQL,
   SEMANTIC_EMBEDDING_PARAM,
   SEMANTIC_MAX_DISTANCE_PARAM,
   appendSemanticQueryParams,
@@ -29,6 +30,10 @@ test("semanticDistancePredicateSql uses post-filter param indices", () => {
   assert.match(sql, /\$12::vector/);
   assert.match(sql, /\$13::float8/);
   assert.doesNotMatch(sql, /\$11::vector/);
+});
+
+test("FILTER_QUERY_TEXT_BIND_SQL anchors $1 for semantic-only SQL", () => {
+  assert.match(FILTER_QUERY_TEXT_BIND_SQL, /\$1::text/);
 });
 
 test("qualityBrowse appends blocklist at $11 without shifting query $1", () => {
