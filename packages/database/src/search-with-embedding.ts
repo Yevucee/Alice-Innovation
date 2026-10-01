@@ -32,6 +32,7 @@ export async function searchWithEmbedding(
   log("info", "search_query_embedding", {
     vector,
     query_chars: query.length,
+    model: process.env.EMBEDDING_MODEL ?? "unset",
   });
   const found = await searchLibrary(db, filters, queryEmbedding);
   const resolvedVector = found.vector === "used" ? "used" : vector;
