@@ -1,4 +1,4 @@
-import { getPool, libraryStats } from "@alice/database";
+import { embeddingAdminStatus, getPool, libraryStats } from "@alice/database";
 import { loadDotEnv, log } from "@alice/shared";
 import express from "express";
 import { authorised } from "../../mcp/src/auth.js";
@@ -24,6 +24,10 @@ app.use((req, res, next) => {
 app.get("/", async (_req, res) => {
   const stats = await libraryStats(getPool());
   res.json({ title: "Alice Innovation Library", ...stats });
+});
+
+app.get("/embeddings", async (_req, res) => {
+  res.json(await embeddingAdminStatus(getPool()));
 });
 
 const port = Number(process.env.ADMIN_PORT || 8081);

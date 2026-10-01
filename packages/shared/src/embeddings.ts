@@ -24,6 +24,9 @@ export interface EmbedTextsResult {
 
 export function embeddingSettings(): EmbeddingSettings {
   const dimensions = Number(process.env.EMBEDDING_DIMENSIONS || 1536);
+  // EMBEDDING_PROVIDER is legacy metadata only (e.g. openai). Routing uses EMBEDDING_BASE_URL
+  // (OpenRouter: https://openrouter.ai/api/v1). It is intentionally not read here.
+  void process.env.EMBEDDING_PROVIDER;
   return {
     baseUrl: (process.env.EMBEDDING_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, ""),
     apiKey: process.env.EMBEDDING_API_KEY || "",

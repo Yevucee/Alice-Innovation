@@ -45,16 +45,20 @@ Same repo, second service, config `railway.ingestor.toml`.
 
 Use the same database URL and embedding variables. Do not set a public domain on the ingestor.
 
-### Embedding backfill (one-off)
+### Embedding backfill
 
 After setting `EMBEDDING_*` on MCP or ingestor, embed existing catalogue rows (batched, resumable):
 
 ```bash
-npm run backfill:embeddings -- --limit 10    # smoke test
+npm run backfill:embeddings -- --limit 10    # smoke test (runs 10-row safety check first)
 npm run backfill:embeddings                  # full catalogue
 ```
 
 From a laptop with Railway env: `npm run backfill:embeddings:remote -- --limit 10`
+
+The **ingestor cron** also runs embedding backfill after each ingest pass when `EMBEDDING_BACKFILL_ON_INGEST` is not `false` (default: on). Cap per run: `EMBEDDING_BACKFILL_MAX_PER_RUN` (default `20000`). A 10-row OpenRouter safety check runs first; failures are logged and do not fail ingestion.
+
+`EMBEDDING_PROVIDER` is ignored; only `EMBEDDING_BASE_URL` selects the API host (OpenRouter in production).
 
 ### Card images (one-off backfill)
 

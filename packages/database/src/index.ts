@@ -30,6 +30,15 @@ export {
 } from "./embedding-text.js";
 export type { EmbeddingTextInput, ResourceEmbeddingRow } from "./embedding-text.js";
 export {
+  runEmbeddingBackfill,
+  runEmbeddingSafetyCheck,
+  recordEmbeddingBackfillRun,
+  latestEmbeddingBackfillRun,
+  embeddingAdminStatus,
+  verifyEmbeddingSafetySample,
+} from "./embedding-backfill.js";
+export type { EmbeddingBackfillSummary, EmbeddingBackfillRunOptions } from "./embedding-backfill.js";
+export {
   listRecentResources,
   resourcesForTaxonomy,
   resourcesForSource,

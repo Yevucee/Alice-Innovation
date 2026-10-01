@@ -1,13 +1,19 @@
 import Link from "next/link";
-import { browseSources, libraryStats, listRecentIngestionRuns } from "@alice/database";
+import {
+  browseSources,
+  embeddingAdminStatus,
+  libraryStats,
+  listRecentIngestionRuns,
+} from "@alice/database";
 import { formatDate } from "@/lib/format";
 import { pool } from "@/lib/db";
 
 export default async function AdminPage() {
-  const [stats, sources, runs] = await Promise.all([
+  const [stats, sources, runs, embeddings] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
+    embeddingAdminStatus(pool()).catch(() => null),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -29,6 +35,46 @@ export default async function AdminPage() {
           </div>
         ))}
       </dl>
+
+      {embeddings ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">Search embeddings</h2>
+          <p className="mt-2 text-muted">
+            Active resources: {embeddings.coverage.active.toLocaleString()} · embedded:{" "}
+            {embeddings.coverage.with_embedding.toLocaleString()} ({embeddings.coverage.pct}%)
+          </p>
+          {embeddings.last_run ? (
+            <dl className="mt-4 grid gap-2 sm:grid-cols-2 text-muted">
+              <div>
+                <dt>Last backfill</dt>
+                <dd className="text-ink">{formatDate(String(embeddings.last_run.completed_at))}</dd>
+              </div>
+              <div>
+                <dt>Embedded / failed</dt>
+                <dd className="text-ink">
+                  {String(embeddings.last_run.embedded)} / {String(embeddings.last_run.failed)}
+                </dd>
+              </div>
+              <div>
+                <dt>Est. cost (USD)</dt>
+                <dd className="text-ink">{String(embeddings.last_run.estimated_cost_usd)}</dd>
+              </div>
+              <div>
+                <dt>Coverage after run</dt>
+                <dd className="text-ink">{String(embeddings.last_run.pct_embedded)}%</dd>
+              </div>
+              {embeddings.last_run.note ? (
+                <div className="sm:col-span-2">
+                  <dt>Note</dt>
+                  <dd className="text-ink">{String(embeddings.last_run.note)}</dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : (
+            <p className="mt-2 text-muted">No backfill run recorded yet (migration 005 + ingestor post-pass).</p>
+          )}
+        </section>
+      ) : null}
 
       <section className="mt-10">
         <h2 className="text-sm font-medium">Recent ingestion runs</h2>
