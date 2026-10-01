@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CompactResource } from "@alice/database";
 import { formatDisplayTitle, formatEvidence, formatResourceType, metaLine } from "@/lib/format";
-import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared";
+import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared/text";
 
 const TYPE_ICONS: Record<string, string> = {
   SOLUTION: "◆",

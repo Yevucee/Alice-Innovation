@@ -30,3 +30,11 @@ export function normaliseName(value: string): string {
     .trim()
     .replace(/\s+/g, " ");
 }
+
+/** Browser-safe re-exports (no node:crypto / node:fs). Use this path from Next client components. */
+export {
+  isLegalFormText,
+  isQualityBrowsePandemicJunk,
+  sanitizeDisplayTitle,
+  sanitizeIngestTitle,
+} from "./legal-form.js";
