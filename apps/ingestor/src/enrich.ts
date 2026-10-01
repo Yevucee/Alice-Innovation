@@ -199,12 +199,12 @@ export async function enrichResourceOnIngest(
   if (!settings.apiKey) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
 
   const inputHash = enrichmentInputHash(evidence.title, evidence.summary, evidence.text);
-  let payload = await readEnrichmentCache(db, inputHash);
+  const cached = await readEnrichmentCache(db, inputHash);
+  let payload: EnrichmentPayload | null = cached.hit ? cached.payload : null;
   let totalTokens = 0;
   let modelUsed = settings.model;
-  let fromCache = Boolean(payload);
 
-  if (!payload) {
+  if (!cached.hit) {
     const fetchImpl = options?.fetchImpl ?? fetch;
     const llm = await callEnrichmentLlm(settings, evidence, fetchImpl);
     modelUsed = llm.modelUsed;
@@ -216,13 +216,19 @@ export async function enrichResourceOnIngest(
     if (payload) await writeEnrichmentCache(db, inputHash, modelUsed, payload);
   }
 
-  if (!payload) {
+  if (!payload || Object.keys(payload).length === 0) {
+    const inferredOnly = await applyEnrichmentToResource(db, resourceId, {}, evidence);
     await recordResourceEnrichmentAttempt(db, resourceId, {
       inputHash,
       model: modelUsed,
-      outcome: "no_data",
+      outcome: inferredOnly.outcome,
     });
-    return { outcome: "no_data", applied: false, totalTokens, budgetPaused: false };
+    return {
+      outcome: inferredOnly.outcome,
+      applied: inferredOnly.changed,
+      totalTokens,
+      budgetPaused: false,
+    };
   }
 
   const applyResult = await applyEnrichmentToResource(db, resourceId, payload, evidence);
@@ -233,7 +239,7 @@ export async function enrichResourceOnIngest(
   });
 
   return {
-    outcome: fromCache && applyResult.outcome === "applied" ? "cached" : applyResult.outcome,
+    outcome: applyResult.outcome,
     applied: applyResult.changed,
     totalTokens,
     budgetPaused: false,
