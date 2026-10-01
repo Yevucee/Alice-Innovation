@@ -11,6 +11,12 @@ export interface UpsertResult {
   contentHash: string;
 }
 
+export interface UpsertDraftOptions {
+  reviewStatus?: "AUTO_INGESTED" | "NEEDS_REVIEW";
+  skipOrgPersonLinks?: boolean;
+  qualityReasons?: string[];
+}
+
 const EXTRACT_LIMIT = 1500;
 
 function indexText(draft: NormalisedDraft): string {
@@ -70,8 +76,16 @@ export async function upsertDraft(
   sourceSlug: string,
   draft: NormalisedDraft,
   runId: string,
+  options: UpsertDraftOptions = {},
 ): Promise<UpsertResult> {
-  const hash = contentHash([draft.title, draft.sourceSummary, draft.extractedText]);
+  const reviewStatus = options.reviewStatus ?? "AUTO_INGESTED";
+  const skipOrgPersonLinks = options.skipOrgPersonLinks === true;
+  const metadata = {
+    ...draft.rawMetadata,
+    ...(options.qualityReasons?.length ? { quality_reasons: options.qualityReasons } : {}),
+  };
+  const draftWithMeta = { ...draft, rawMetadata: metadata };
+  const hash = contentHash([draftWithMeta.title, draftWithMeta.sourceSummary, draftWithMeta.extractedText]);
   const client = await db.connect();
   try {
     await client.query("BEGIN");
@@ -89,7 +103,7 @@ export async function upsertDraft(
        FROM source_items
        WHERE source_id = $1 AND (external_id = $2 OR canonical_url = $3)
        LIMIT 1`,
-      [sourceId, draft.externalId, draft.canonicalUrl],
+      [sourceId, draftWithMeta.externalId, draftWithMeta.canonicalUrl],
     );
 
     if (existing.rows[0] && existing.rows[0].content_hash === hash && existing.rows[0].resource_id) {
@@ -130,35 +144,36 @@ export async function upsertDraft(
       `SELECT resource_id::text FROM source_items
        WHERE canonical_url = $1 AND resource_id IS NOT NULL
        LIMIT 1`,
-      [draft.canonicalUrl],
+      [draftWithMeta.canonicalUrl],
     );
 
     let resourceId = sameUrl.rows[0]?.resource_id ?? existing.rows[0]?.resource_id ?? null;
     let createdResource = false;
-    const summary = truncate(draft.sourceSummary, 500);
-    const indexed = indexText(draft);
+    const summary = truncate(draftWithMeta.sourceSummary, 500);
+    const indexed = indexText(draftWithMeta);
 
     if (!resourceId) {
       const created = await client.query<{ id: string }>(
         `INSERT INTO resources (
            resource_type, canonical_title, source_summary, extracted_index_text,
            evidence_stage, evidence_basis, maturity_stage, cost_level, commercial_status,
-           language, primary_country_code, primary_country_name
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+           language, primary_country_code, primary_country_name, review_status
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
          RETURNING id::text`,
         [
-          draft.resourceType,
-          truncate(draft.title, 300),
+          draftWithMeta.resourceType,
+          truncate(draftWithMeta.title, 300),
           summary,
           indexed,
-          draft.evidenceStage,
-          draft.evidenceBasis,
-          draft.maturityStage || "UNKNOWN",
-          draft.costLevel || "UNKNOWN",
-          draft.commercialStatus || "UNKNOWN",
-          draft.language || "en",
-          draft.countryCode,
-          draft.countryName,
+          draftWithMeta.evidenceStage,
+          draftWithMeta.evidenceBasis,
+          draftWithMeta.maturityStage || "UNKNOWN",
+          draftWithMeta.costLevel || "UNKNOWN",
+          draftWithMeta.commercialStatus || "UNKNOWN",
+          draftWithMeta.language || "en",
+          draftWithMeta.countryCode,
+          draftWithMeta.countryName,
+          reviewStatus,
         ],
       );
       resourceId = created.rows[0].id;
@@ -174,19 +189,21 @@ export async function upsertDraft(
            maturity_stage = CASE WHEN $7 = 'UNKNOWN' THEN maturity_stage ELSE $7 END,
            primary_country_code = COALESCE($8, primary_country_code),
            primary_country_name = COALESCE($9, primary_country_name),
+           review_status = CASE WHEN $10 = 'NEEDS_REVIEW' THEN 'NEEDS_REVIEW' ELSE review_status END,
            active = true,
            updated_at = now()
          WHERE id = $1`,
         [
           resourceId,
-          truncate(draft.title, 300),
+          truncate(draftWithMeta.title, 300),
           summary,
           indexed,
-          draft.evidenceStage,
-          draft.evidenceBasis,
-          draft.maturityStage || "UNKNOWN",
-          draft.countryCode,
-          draft.countryName,
+          draftWithMeta.evidenceStage,
+          draftWithMeta.evidenceBasis,
+          draftWithMeta.maturityStage || "UNKNOWN",
+          draftWithMeta.countryCode,
+          draftWithMeta.countryName,
+          reviewStatus,
         ],
       );
     }
@@ -223,19 +240,19 @@ export async function upsertDraft(
        RETURNING id::text`,
       [
         sourceId,
-        draft.externalId,
-        draft.canonicalUrl,
-        draft.originalUrl,
-        truncate(draft.title, 300),
+        draftWithMeta.externalId,
+        draftWithMeta.canonicalUrl,
+        draftWithMeta.originalUrl,
+        truncate(draftWithMeta.title, 300),
         summary,
-        draft.publishedAt,
+        draftWithMeta.publishedAt,
         hash,
-        draft.etag,
-        draft.lastModified,
-        JSON.stringify(draft.rawMetadata),
-        truncate(draft.extractedText, EXTRACT_LIMIT),
-        draft.language || "en",
-        draft.imageUrl,
+        draftWithMeta.etag,
+        draftWithMeta.lastModified,
+        JSON.stringify(metadata),
+        truncate(draftWithMeta.extractedText, EXTRACT_LIMIT),
+        draftWithMeta.language || "en",
+        draftWithMeta.imageUrl,
         runId,
         resourceId,
       ],
@@ -249,16 +266,16 @@ export async function upsertDraft(
       [resourceId, sourceItemId],
     );
 
-    if (draft.organisationName) {
-      const organisationId = await ensureOrganisation(client, draft.organisationName, draft.countryName);
+    if (!skipOrgPersonLinks && draftWithMeta.organisationName) {
+      const organisationId = await ensureOrganisation(client, draftWithMeta.organisationName, draftWithMeta.countryName);
       await client.query(
         `INSERT INTO resource_organisations (resource_id, organisation_id, relationship, is_primary, source_item_id)
          VALUES ($1, $2, 'DEVELOPED_BY', true, $3)
          ON CONFLICT (resource_id, organisation_id, relationship) DO NOTHING`,
         [resourceId, organisationId, sourceItemId],
       );
-      if (draft.personName) {
-        const personId = await ensurePerson(client, draft.personName, organisationId);
+      if (draftWithMeta.personName) {
+        const personId = await ensurePerson(client, draftWithMeta.personName, organisationId);
         await client.query(
           `INSERT INTO resource_people (resource_id, person_id, relationship, source_item_id)
            VALUES ($1, $2, 'ASSOCIATED_WITH', $3)
@@ -266,8 +283,8 @@ export async function upsertDraft(
           [resourceId, personId, sourceItemId],
         );
       }
-    } else if (draft.personName) {
-      const personId = await ensurePerson(client, draft.personName, null);
+    } else if (!skipOrgPersonLinks && draftWithMeta.personName) {
+      const personId = await ensurePerson(client, draftWithMeta.personName, null);
       await client.query(
         `INSERT INTO resource_people (resource_id, person_id, relationship, source_item_id)
          VALUES ($1, $2, 'ASSOCIATED_WITH', $3)
@@ -276,14 +293,14 @@ export async function upsertDraft(
       );
     }
 
-    const locationLabel = draft.countryName
-      ?? (draft.continentName && draft.continentName !== "Global" ? draft.continentName : null);
+    const locationLabel = draftWithMeta.countryName
+      ?? (draftWithMeta.continentName && draftWithMeta.continentName !== "Global" ? draftWithMeta.continentName : null);
     if (locationLabel) {
       const locationId = await ensureLocation(
         client,
         locationLabel,
-        draft.countryCode,
-        draft.continentName ?? null,
+        draftWithMeta.countryCode,
+        draftWithMeta.continentName ?? null,
       );
       await client.query(
         `INSERT INTO resource_locations (resource_id, location_id, relationship, source_item_id)
@@ -300,7 +317,7 @@ export async function upsertDraft(
            AND lower(canonical_title) = lower($2)
            AND COALESCE(primary_country_code, '') = COALESCE($3, '')
          LIMIT 1`,
-        [resourceId, draft.title, draft.countryCode],
+        [resourceId, draftWithMeta.title, draftWithMeta.countryCode],
       );
       if (near.rows[0] && draft.title.trim().length >= 8) {
         await client.query(

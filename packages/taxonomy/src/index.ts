@@ -64,3 +64,4 @@ export {
 } from "./geography.js";
 
 export { inferTaxonomyFromText, type TaxonomyInference } from "./infer-from-text.js";
+export { inferCountryFromText, type InferredLocation } from "./infer-country-from-text.js";

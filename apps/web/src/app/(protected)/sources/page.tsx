@@ -13,7 +13,7 @@ export default async function SourcesPage() {
       <h1 className="text-2xl font-medium">Indexed sources</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
         Alice continuously indexes these innovation, research and solutions ecosystems into search.
-        The full 61-source catalogue also lists{" "}
+        The registry also lists{" "}
         <Link href="/sources/other-resources" className="text-accent hover:underline">
           {referenceCount} other resources
         </Link>{" "}

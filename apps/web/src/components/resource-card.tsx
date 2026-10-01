@@ -1,10 +1,21 @@
 import Link from "next/link";
 import type { CompactResource } from "@alice/database";
-import { formatEvidence, formatResourceType, metaLine } from "@/lib/format";
+import { formatDisplayTitle, formatEvidence, formatResourceType, metaLine } from "@/lib/format";
 
-function placeholderLabel(resource: CompactResource): string {
-  const seed = resource.sectors[0] || resource.resource_type || "Resource";
-  return seed.slice(0, 1).toUpperCase();
+const TYPE_ICONS: Record<string, string> = {
+  SOLUTION: "◆",
+  TECHNOLOGY: "⚙",
+  ORGANISATION: "⬡",
+  PROJECT: "▣",
+  PROGRAMME: "◎",
+  CASE_STUDY: "▤",
+  RESEARCH: "⌁",
+  PERSON: "◉",
+  POLICY: "⬢",
+};
+
+function typeIcon(resourceType: string): string {
+  return TYPE_ICONS[resourceType] ?? "◈";
 }
 
 export function ResourceCard({ resource }: { resource: CompactResource }) {
@@ -15,6 +26,7 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
   ];
   const evidence = formatEvidence(resource.evidence);
   const meta = metaLine([location, ...resource.sectors.slice(0, 1), ...resource.technologies.slice(0, 1)]);
+  const title = formatDisplayTitle(resource.title);
 
   return (
     <Link
@@ -31,8 +43,14 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-3xl font-light text-accent/40">
-            {placeholderLabel(resource)}
+          <div
+            className="flex h-full flex-col items-center justify-center text-accent/50"
+            aria-hidden
+          >
+            <span className="text-3xl leading-none">{typeIcon(resource.resource_type)}</span>
+            <span className="mt-1 text-[10px] uppercase tracking-wide text-muted/80">
+              {formatResourceType(resource.resource_type)}
+            </span>
           </div>
         )}
         {resource.review_status === "ALICE_PICK" ? (
@@ -46,7 +64,7 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
           {formatResourceType(resource.resource_type)}
         </p>
         <h3 className="line-clamp-2 min-h-[2.75rem] shrink-0 text-base font-medium leading-snug group-hover:text-accent">
-          {resource.title}
+          {title}
         </h3>
         <p className="line-clamp-3 min-h-[4.125rem] shrink-0 text-sm leading-relaxed text-muted">
           {resource.short_summary || "\u00a0"}
@@ -58,7 +76,7 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
           <span className="line-clamp-1 min-w-0 flex-1">
             {resource.primary_organisation || resource.source_names[0] || "\u00a0"}
           </span>
-          <span className="shrink-0 text-right">{evidence}</span>
+          <span className="shrink-0 text-right">{evidence || "\u00a0"}</span>
         </div>
         <p className="line-clamp-1 min-h-[1rem] shrink-0 text-[11px] text-muted/80">
           {tags.length > 0 ? tags.join(" · ") : "\u00a0"}

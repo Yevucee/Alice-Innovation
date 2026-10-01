@@ -8,7 +8,7 @@ import {
 } from "@alice/database";
 import { AddToCollection } from "@/components/add-to-collection";
 import { ResourceCard } from "@/components/resource-card";
-import { formatDate, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine } from "@/lib/format";
+import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, normaliseComparableText } from "@/lib/format";
 import { pool } from "@/lib/db";
 
 function classificationTags(interpretation: Record<string, unknown> | null): string[] {
@@ -48,6 +48,11 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   const locationLine = [...continents, ...countries.filter((c) => !continents.includes(c))];
   const tags = classificationTags(interpretation);
   const isPick = resource.review_status === "ALICE_PICK";
+  const showSourceInformation = resource.excerpt
+    && normaliseComparableText(String(resource.excerpt))
+      !== normaliseComparableText(String(resource.source_summary));
+  const evidenceLabel = formatEvidence(String(resource.evidence_stage));
+  const evidenceBasisLabel = formatEvidenceBasis(String(resource.evidence_basis));
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10 md:px-6">
@@ -61,19 +66,21 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           </span>
         ) : null}
       </div>
-      <h1 className="mt-2 text-3xl font-medium tracking-tight">{String(resource.title)}</h1>
+      <h1 className="mt-2 text-3xl font-medium tracking-tight">{formatDisplayTitle(String(resource.title))}</h1>
       <p className="mt-4 text-base leading-relaxed text-muted">{String(resource.source_summary)}</p>
       <p className="mt-3 text-sm text-muted">
         {metaLine([
           ...locationLine.slice(0, 3),
           ...sectors.slice(0, 2).map((s) => s.name),
           ...technologies.slice(0, 2).map((t) => t.name),
-          formatEvidence(String(resource.evidence_stage)),
+          evidenceLabel,
         ])}
       </p>
-      <p className="mt-2 text-xs text-muted" title="How we know this maturity level">
-        Evidence: {formatEvidenceBasis(String(resource.evidence_basis))}
-      </p>
+      {evidenceBasisLabel ? (
+        <p className="mt-2 text-xs text-muted" title="How we know this maturity level">
+          Evidence: {evidenceBasisLabel}
+        </p>
+      ) : null}
 
       {problems.length > 0 ? (
         <p className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -127,7 +134,7 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
             <p className="mt-2">{String(interpretation.implementation_requirements)}</p>
           </section>
         ) : null}
-        {resource.excerpt ? (
+        {showSourceInformation ? (
           <section>
             <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Source information</h2>
             <p className="mt-2 whitespace-pre-wrap text-muted">{String(resource.excerpt)}</p>

@@ -4,7 +4,7 @@ import type { CompactResource, SearchFilters } from "./search.js";
 import { compactResourcesByIds, searchLibrary } from "./search.js";
 
 export async function listRecentResources(db: Queryable, limit: number): Promise<CompactResource[]> {
-  const found = await searchLibrary(db, { query: "", limit, offset: 0, sort: "newest" }, null);
+  const found = await searchLibrary(db, { query: "", limit, offset: 0, sort: "newest", qualityBrowse: true }, null);
   return found.results;
 }
 
@@ -51,6 +51,7 @@ export async function resourcesFromAfrica(db: Queryable, limit: number): Promise
       offset: 0,
       diverse: true,
       sort: "newest",
+      qualityBrowse: true,
     },
     null,
   );

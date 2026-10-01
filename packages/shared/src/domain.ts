@@ -32,7 +32,7 @@ export const EVIDENCE_BASES = [
   "PRIMARY_DOCUMENTATION",
 ] as const;
 
-export const REVIEW_STATUSES = ["AUTO_INGESTED", "REVIEWED", "ALICE_PICK", "ARCHIVED"] as const;
+export const REVIEW_STATUSES = ["AUTO_INGESTED", "REVIEWED", "ALICE_PICK", "ARCHIVED", "NEEDS_REVIEW"] as const;
 
 export const SOURCE_STATUSES = [
   "ACTIVE",

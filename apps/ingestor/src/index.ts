@@ -1,7 +1,7 @@
 import { closePool, getPool } from "@alice/database";
 import { loadDotEnv, log } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
-import { runPostIngestEmbeddingBackfill } from "./embedding-backfill.js";
+import { runPostIngestMaintenance } from "./post-ingest.js";
 import { runIngestion } from "./pipeline.js";
 
 loadDotEnv();
@@ -35,12 +35,12 @@ async function main(): Promise<void> {
   if (result.failedSources.length) {
     log("warn", "ingest_finished_with_source_failures", { sources: result.failedSources });
   } else {
-    log("info", "ingest_finished", {});
+    log("info", "ingest_finished", { touched_resources: result.touchedResourceIds.length });
   }
   try {
-    await runPostIngestEmbeddingBackfill(getPool());
+    await runPostIngestMaintenance(getPool(), { touchedResourceIds: result.touchedResourceIds });
   } catch (error) {
-    log("warn", "backfill_embeddings_unexpected_error", {
+    log("warn", "post_ingest_maintenance_failed", {
       message: error instanceof Error ? error.message : String(error),
     });
   }

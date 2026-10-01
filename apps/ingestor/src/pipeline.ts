@@ -1,25 +1,17 @@
 import {
-  buildEmbeddingText,
   confirmDisappearances,
-  embeddingTextContentHash,
   getPool,
-  linkResourceTaxonomy,
-  noteSemanticDuplicate,
   readCheckpoint,
-  saveEmbedding,
-  upsertDraft,
   writeCheckpoint,
 } from "@alice/database";
-import { inferTaxonomyFromText, PROBLEMS, SECTORS, TECHNOLOGIES } from "@alice/taxonomy";
 import { canonicaliseUrl, log } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
-import { classifyResource } from "./classifier.js";
-import { applyGeographyDefaults } from "./geo-defaults.js";
-import { embedTexts, embeddingSettings, embeddingVersion } from "./embeddings.js";
 import { fetchText, HttpStatusError } from "./http.js";
 import { robotsAllows } from "./robots.js";
 import { getAdapter } from "./adapters/registry.js";
 import { AccessBlockedError, type AdapterContext, type DiscoveredRef } from "./adapters/types.js";
+import { processIngestItem } from "./item-pipeline.js";
+import { prepareIngestDraft } from "./prepare-draft.js";
 
 const LOCK_KEY = 84261001;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -62,7 +54,7 @@ export interface IngestOptions {
   dryRun: boolean;
 }
 
-export async function runIngestion(options: IngestOptions): Promise<{ failedSources: string[] }> {
+export async function runIngestion(options: IngestOptions): Promise<{ failedSources: string[]; touchedResourceIds: string[] }> {
   const pool = getPool();
   const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
@@ -71,10 +63,11 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
   if (!locked.rows[0]?.locked) {
     log("info", "ingest_skipped", { reason: "lock_held" });
     client.release();
-    return { failedSources: [] };
+    return { failedSources: [], touchedResourceIds: [] };
   }
 
   const failedSources: string[] = [];
+  const touchedResourceIds = new Set<string>();
   try {
     const selected = options.sources.filter((source) => {
       if (options.only && options.only.length > 0) return options.only.includes(source.id);
@@ -146,65 +139,20 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
             try {
               const page = await adapter.fetch(ref, ctx);
               counts.fetched += 1;
-              const draft = applyGeographyDefaults(adapter.parse(page), source);
+              const parsed = adapter.parse(page);
+              const draft = prepareIngestDraft(parsed, source);
               if (options.dryRun) {
                 log("info", "dry_run_item", { source_id: source.id, title: draft.title, url: draft.canonicalUrl });
                 cursor = ref.url;
                 continue;
               }
-              const saved = await upsertDraft(pool, source.id, draft, runId);
+              const processed = await processIngestItem(pool, source, parsed, runId);
+              const saved = processed.saved;
               if (saved.outcome === "unchanged") counts.unchanged += 1;
               else if (saved.outcome === "created") counts.created += 1;
               else counts.updated += 1;
               if (saved.outcome !== "unchanged") {
-                const taxonomy = inferTaxonomyFromText({
-                  title: draft.title,
-                  summary: draft.sourceSummary,
-                  text: draft.extractedText,
-                  tags: draft.tags,
-                });
-                await linkResourceTaxonomy(pool, saved.resourceId, taxonomy);
-                try {
-                  const taxonomyNames = (slugs: string[], nodes: Array<{ slug: string; name: string }>) =>
-                    slugs.map((slug) => nodes.find((node) => node.slug === slug)?.name ?? slug);
-                  const embedInput = buildEmbeddingText({
-                    canonical_title: draft.title,
-                    source_summary: draft.sourceSummary,
-                    extracted_index_text: draft.extractedText,
-                    primary_country_name: draft.countryName,
-                    countries: draft.countryName ? [draft.countryName] : [],
-                    problems: taxonomyNames(taxonomy.problems, PROBLEMS),
-                    sectors: taxonomyNames(taxonomy.sectors, SECTORS),
-                    technologies: taxonomyNames(taxonomy.technologies, TECHNOLOGIES),
-                  });
-                  const vectors = await embedTexts([embedInput]);
-                  const vector = vectors?.[0];
-                  if (vector && vector.length === 1536) {
-                    const settings = embeddingSettings();
-                    await saveEmbedding(
-                      pool,
-                      saved.resourceId,
-                      vector,
-                      settings.model,
-                      embeddingVersion(settings),
-                      embeddingTextContentHash(embedInput),
-                    );
-                    counts.duplicates += await noteSemanticDuplicate(pool, saved.resourceId);
-                  } else if (vector) {
-                    log("warn", "embedding_dimensions", { source_id: source.id, length: vector.length });
-                  }
-                  await classifyResource(pool, saved.resourceId, {
-                    title: draft.title,
-                    summary: draft.sourceSummary,
-                    text: draft.extractedText,
-                  });
-                } catch (error) {
-                  log("warn", "post_process_failed", {
-                    source_id: source.id,
-                    resource_id: saved.resourceId,
-                    message: error instanceof Error ? error.message : String(error),
-                  });
-                }
+                touchedResourceIds.add(saved.resourceId);
               }
               cursor = ref.url;
               if (options.full && !options.dryRun) await writeCheckpoint(pool, source.id, cursor);
@@ -241,7 +189,7 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
     await client.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]);
     client.release();
   }
-  return { failedSources };
+  return { failedSources, touchedResourceIds: [...touchedResourceIds] };
 }
 
 async function finishRun(

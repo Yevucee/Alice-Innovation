@@ -20,7 +20,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   try {
     const stats = await libraryStats(pool());
     statsLine = `${stats.canonical_resources?.toLocaleString() ?? "0"} resources`;
-    footerStats = { resources: stats.canonical_resources, sources: 61 };
+    footerStats = { resources: stats.canonical_resources, sources: stats.enabled_sources };
   } catch {
     statsLine = undefined;
   }
