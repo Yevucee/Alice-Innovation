@@ -15,6 +15,7 @@ import {
 } from "./search-match.js";
 import {
   FILTER_SQL,
+  FILTER_QUERY_TEXT_BIND_SQL,
   appendSemanticQueryParams,
   filterParams,
   OR_TERM_MATCH_COUNT_SQL,
@@ -221,6 +222,7 @@ async function fetchSemanticRows(
     `SELECT r.id::text, NULL::text AS source_id
      FROM resources r
      WHERE r.embedding IS NOT NULL
+       AND ${FILTER_QUERY_TEXT_BIND_SQL}
        AND ${FILTER_SQL}
        AND ${semanticDistancePredicateSql()}
      ORDER BY ${semanticOrderByDistanceSql()}

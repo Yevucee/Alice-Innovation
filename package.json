@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test tests/unit/*.test.ts tests/integration/*.test.ts",
+    "pretest": "bash scripts/ensure-local-test-db.sh",
+    "test": "DATABASE_URL=${DATABASE_URL:-postgresql://alice:alice@localhost:5432/alice_test} tsx --test tests/unit/*.test.ts tests/integration/*.test.ts",
     "migrate": "tsx scripts/migrate.ts",
     "seed": "tsx scripts/seed.ts",
     "mcp": "tsx apps/mcp/src/index.ts",

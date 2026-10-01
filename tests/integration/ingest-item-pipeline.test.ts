@@ -36,7 +36,8 @@ test("processIngestItem runs gate, enrich, embed, taxonomy in order", {
   let enrichCalled = false;
   let embedCalled = false;
 
-  const parsed = parseMitSolve(page("mit-solve-item.html", "https://solve.mit.edu/solutions/113524"));
+  const uniqueUrl = `https://solve.mit.edu/solutions/ingest-test-${Date.now()}`;
+  const parsed = parseMitSolve(page("mit-solve-item.html", uniqueUrl));
   const run = await pool.query(`INSERT INTO ingestion_runs (source_id, status)
     SELECT id, 'RUNNING' FROM sources WHERE slug = 'mit-solve' RETURNING id::text`);
   const runId = run.rows[0]?.id as string;
