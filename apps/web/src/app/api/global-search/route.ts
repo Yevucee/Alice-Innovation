@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   if (!q) return NextResponse.json({ results: [] });
 
   const [resources, people, organisations, sources] = await Promise.all([
-    searchWithEmbedding({ query: q, limit: 5, offset: 0 }),
+    searchWithEmbedding(pool(), { query: q, limit: 5, offset: 0 }),
     searchPeople(pool(), { query: q, limit: 4 }),
     searchOrganisations(pool(), { query: q, limit: 4 }),
     browseSources(pool(), {}),

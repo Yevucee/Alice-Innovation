@@ -1,4 +1,5 @@
 import type { Queryable } from "./pool.js";
+import { searchWithEmbedding } from "./search-with-embedding.js";
 import type { CompactResource, SearchFilters } from "./search.js";
 import { compactResourcesByIds, searchLibrary } from "./search.js";
 
@@ -83,10 +84,9 @@ export async function diverseApproachesForResource(
   queryText: string,
   limit: number,
 ): Promise<CompactResource[]> {
-  const found = await searchLibrary(
+  const found = await searchWithEmbedding(
     db,
     { query: queryText, diversity: "mechanism", limit: limit + 2, offset: 0 },
-    null,
   );
   return found.results.filter((row) => row.resource_id !== resourceId).slice(0, limit);
 }

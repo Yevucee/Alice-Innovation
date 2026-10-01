@@ -14,6 +14,15 @@ export type { FusedHit, RankedHit } from "./rrf.js";
 export { shouldRetryHttpStatus, isTimeoutError, backoffDelayMs } from "./retry.js";
 export { log, loadDotEnv } from "./log.js";
 export {
+  embedTexts,
+  embedTextsDetailed,
+  embeddingSettings,
+  embeddingVersion,
+  embeddingSupportsDimensionsParam,
+  estimateEmbeddingCostUsd,
+} from "./embeddings.js";
+export type { EmbeddingSettings, EmbeddingUsage, EmbedTextsResult } from "./embeddings.js";
+export {
   RESOURCE_TYPES,
   EVIDENCE_STAGES,
   EVIDENCE_BASES,

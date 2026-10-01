@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { libraryStats } from "@alice/database";
+import { log } from "@alice/shared";
 import { requireSession } from "@/lib/api-auth";
 import { pool } from "@/lib/db";
 import { searchWithEmbedding } from "@/lib/search";
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
   const input = parsed.data;
-  const found = await searchWithEmbedding({
+  const found = await searchWithEmbedding(pool(), {
     query: input.query,
     resourceTypes: input.resource_types,
     problems: input.problems,
@@ -45,11 +46,18 @@ export async function POST(request: NextRequest) {
     limit: input.limit,
     offset: input.offset,
   });
+  log("info", "web_search", {
+    vector: found.vector,
+    relaxed: found.relaxed,
+    query_chars: input.query.length,
+    results: found.results.length,
+  });
   const stats = await libraryStats(pool());
   return NextResponse.json({
     results: found.results,
     filtered_total: found.filtered_total,
     library_total: stats.canonical_resources ?? 0,
     vector: found.vector,
+    relaxed: found.relaxed,
   });
 }

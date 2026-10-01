@@ -60,6 +60,8 @@
     "audit:africa-geography": "tsx scripts/audit-africa-geography.ts",
     "audit:africa-geography:remote": "bash scripts/run-with-production-env.sh npm run audit:africa-geography",
     "backfill:taxonomy": "tsx scripts/backfill-resource-taxonomy.ts",
+    "backfill:embeddings": "tsx scripts/backfill-embeddings.ts",
+    "backfill:embeddings:remote": "bash scripts/run-with-production-env.sh npm run backfill:embeddings",
     "backfill:taxonomy:remote": "bash scripts/run-with-production-env.sh npm run backfill:taxonomy",
     "setup:africa-rollout": "tsx scripts/setup-africa-rollout.ts",
     "ops:cleanup-stale-runs": "tsx scripts/ops-cleanup-stale-ingestion-runs.ts",

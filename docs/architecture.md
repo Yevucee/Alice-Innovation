@@ -3,7 +3,7 @@
 Alice Innovation Library is one monorepo and three runtime roles:
 
 - **alice-mcp** stays up. It serves `/health` and Streamable HTTP `/mcp`. It does not keep session state. Durable state is Postgres.
-- **alice-db** is Postgres with pgvector. Full-text search is a weighted `tsvector` on the resource (title highest). The embedding column is `vector(1536)`. An ANN index is deliberately not created until the catalogue is large.
+- **alice-db** is Postgres with pgvector. Full-text search is a weighted `tsvector` on the resource (title highest). The embedding column is `vector(1536)`. Migration `002_resources_embedding_hnsw` adds a partial **HNSW** index on active embedded rows for cosine similarity.
 - **alice-ingestor** is one cron process. It takes a database advisory lock, runs due sources, and exits. A failure in one source is logged and the next source still runs.
 
 ```text
@@ -20,7 +20,7 @@ Full article HTML is not stored and is not returned by MCP.
 
 ## Search
 
-Keyword rank and vector rank are fused with reciprocal rank fusion in `packages/shared`. Broad queries cap how many hits can come from one source. `explore_problem` uses that search and says plainly that mechanism-level diversity waits for the taxonomy phase.
+Keyword rank (`websearch_to_tsquery`) and vector rank are fused with reciprocal rank fusion in `packages/shared` (k≈60). Query-time embeddings use an OpenAI-compatible API (OpenRouter in production). If strict lexical match returns nothing, search relaxes to OR-term lexical, then semantic-only, while keeping user filters. `searchWithEmbedding` in `packages/database` is shared by the web API, MCP, and resource-page diversity. Broad queries cap how many hits can come from one source. `explore_problem` uses hybrid search with mechanism-level diversity.
 
 ## Auth
 

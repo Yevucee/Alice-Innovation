@@ -22,6 +22,7 @@ interface SearchResponse {
   filtered_total: number;
   library_total: number;
   vector: string;
+  relaxed?: boolean;
 }
 
 function parseList(value: string | null): string[] {
@@ -239,6 +240,12 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
           Filters
         </button>
       </div>
+
+      {!loading && meta?.relaxed ? (
+        <p className="mt-4 rounded-md border border-line bg-white px-3 py-2 text-sm text-muted">
+          Showing closest matches — your filters still apply; we relaxed how the search terms are matched.
+        </p>
+      ) : null}
 
       {activeFilters.length > 0 ? (
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">

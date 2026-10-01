@@ -160,11 +160,18 @@ async function primarySourceMap(db: Queryable, ids: string[]): Promise<Map<strin
   return new Map(rows.rows.map((row) => [row.resource_id, row.slug]));
 }
 
+type QueryRelaxation = "strict" | "or_lexical" | "semantic_only";
+
 export async function searchLibrary(
   db: Queryable,
   filters: SearchFilters,
   queryEmbedding: number[] | null,
-): Promise<{ results: CompactResource[]; vector: "used" | "unavailable"; filtered_total: number }> {
+): Promise<{
+  results: CompactResource[];
+  vector: "used" | "unavailable";
+  filtered_total: number;
+  relaxed: boolean;
+}> {
   const sourceCount = filters.sources?.length ?? 0;
   const candidateLimit = Math.min(
     500,
@@ -204,74 +211,33 @@ export async function searchLibrary(
     const capped = capPerSource(withSource, filters.limit + filters.offset, perSourceCap)
       .slice(filters.offset, filters.offset + filters.limit);
     const hydrated = await hydrate(db, capped);
-    const filteredTotal = await countFilteredResources(db, filters);
-    return { results: hydrated, vector: "unavailable", filtered_total: filteredTotal };
+    const filteredTotal = await countFilteredResources(db, filters, null);
+    return { results: hydrated, vector: "unavailable", filtered_total: filteredTotal, relaxed: false };
   }
 
-  const lexical = await db.query<IdRow>(
-    `SELECT r.id::text, NULL::text AS source_id
-     FROM resources r
-     WHERE r.search_vector @@ websearch_to_tsquery('english', $1)
-       AND ${FILTER_SQL}
-     ORDER BY ts_rank_cd(r.search_vector, websearch_to_tsquery('english', $1)) DESC
-     LIMIT ${candidateLimit}`,
-    params,
-  );
+  const relaxationOrder: QueryRelaxation[] = ["strict", "or_lexical", "semantic_only"];
+  let relaxed = false;
+  let fusedHits: FusedHit[] = [];
+  let filteredTotal = 0;
 
-  let semanticRows: IdRow[] = [];
-  if (queryEmbedding && queryEmbedding.length === 1536) {
-    try {
-      const semantic = await db.query<IdRow>(
-        `SELECT r.id::text, NULL::text AS source_id
-         FROM resources r
-         WHERE r.embedding IS NOT NULL
-           AND ${FILTER_SQL}
-         ORDER BY r.embedding <=> $10::vector
-         LIMIT ${candidateLimit}`,
-        [...params, `[${queryEmbedding.join(",")}]`],
-      );
-      semanticRows = semantic.rows;
-    } catch {
-      vector = "unavailable";
-      semanticRows = [];
+  for (const relaxation of relaxationOrder) {
+    const hybrid = await hybridCandidateHits(
+      db,
+      params,
+      queryEmbedding,
+      candidateLimit,
+      relaxation,
+    );
+    vector = hybrid.vector;
+    fusedHits = hybrid.hits;
+    filteredTotal = fusedHits.length;
+    if (fusedHits.length > 0) {
+      relaxed = relaxation !== "strict";
+      break;
     }
-  } else {
-    vector = "unavailable";
   }
 
-  const fused = reciprocalRankFusion([
-    { name: "full_text", hits: lexical.rows },
-    { name: "semantic", hits: semanticRows },
-  ]);
-  const ids = fused.map((hit) => hit.id);
-  const sources = await primarySourceMap(db, ids);
-  const withSource: FusedHit[] = fused.map((hit) => ({ ...hit, sourceId: sources.get(hit.id) ?? null }));
-  const diversity = filters.diversity ?? (filters.diverse ? "source" : undefined);
-  let capped: FusedHit[];
-  if (diversity === "mechanism" && !(filters.sources && filters.sources.length > 0)) {
-    const buckets = await mechanismBucketMap(db, withSource.map((hit) => hit.id));
-    const withBucket = withSource.map((hit) => ({
-      ...hit,
-      bucketKey: buckets.get(hit.id) ?? "unknown",
-    }));
-    capped = capPerBucket(
-      withBucket,
-      filters.limit + filters.offset,
-      defaultPerMechanismCap(filters.limit),
-    ).slice(filters.offset, filters.offset + filters.limit);
-  } else {
-    const perSourceCap = filters.sources && filters.sources.length > 0
-      ? Number.POSITIVE_INFINITY
-      : diversity === "source"
-        ? 1
-        : defaultPerSourceCap(filters.limit);
-    capped = capPerSource(
-      withSource,
-      filters.limit + filters.offset,
-      perSourceCap,
-    ).slice(filters.offset, filters.offset + filters.limit);
-  }
-
+  const capped = await capSearchHits(db, filters, fusedHits);
   let hydrated = await hydrate(db, capped);
   if (filters.sort === "newest") {
     hydrated = [...hydrated].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
@@ -281,25 +247,150 @@ export async function searchLibrary(
       (a, b) => order.indexOf(a.evidence) - order.indexOf(b.evidence),
     );
   }
-  const filteredTotal = await countFilteredResources(db, filters);
-  return { results: hydrated, vector, filtered_total: filteredTotal };
+  return { results: hydrated, vector, filtered_total: filteredTotal, relaxed };
 }
 
-export async function countFilteredResources(db: Queryable, filters: SearchFilters): Promise<number> {
-  const params = filterParams(filters);
+async function fetchSemanticRows(
+  db: Queryable,
+  params: unknown[],
+  queryEmbedding: number[] | null,
+  candidateLimit: number,
+): Promise<{ rows: IdRow[]; vector: "used" | "unavailable" }> {
+  if (!queryEmbedding || queryEmbedding.length !== 1536) {
+    return { rows: [], vector: "unavailable" };
+  }
+  try {
+    const semantic = await db.query<IdRow>(
+      `SELECT r.id::text, NULL::text AS source_id
+       FROM resources r
+       WHERE r.embedding IS NOT NULL
+         AND ${FILTER_SQL}
+       ORDER BY r.embedding <=> $10::vector
+       LIMIT ${candidateLimit}`,
+      [...params, `[${queryEmbedding.join(",")}]`],
+    );
+    return { rows: semantic.rows, vector: "used" };
+  } catch {
+    return { rows: [], vector: "unavailable" };
+  }
+}
+
+async function hybridCandidateHits(
+  db: Queryable,
+  params: unknown[],
+  queryEmbedding: number[] | null,
+  candidateLimit: number,
+  relaxation: QueryRelaxation,
+): Promise<{ hits: FusedHit[]; vector: "used" | "unavailable" }> {
+  const lists: Array<{ name: string; hits: IdRow[] }> = [];
+  let vector: "used" | "unavailable" = "unavailable";
+
+  if (relaxation === "strict") {
+    const lexical = await db.query<IdRow>(
+      `SELECT r.id::text, NULL::text AS source_id
+       FROM resources r
+       WHERE r.search_vector @@ websearch_to_tsquery('english', $1)
+         AND ${FILTER_SQL}
+       ORDER BY ts_rank_cd(r.search_vector, websearch_to_tsquery('english', $1)) DESC
+       LIMIT ${candidateLimit}`,
+      params,
+    );
+    lists.push({ name: "full_text", hits: lexical.rows });
+  } else if (relaxation === "or_lexical") {
+    const orLexical = await db.query<IdRow>(
+      `SELECT r.id::text, NULL::text AS source_id
+       FROM resources r
+       WHERE ${FILTER_SQL}
+         AND EXISTS (
+           SELECT 1
+           FROM regexp_split_to_table(lower(trim($1)), '\\s+') AS term(word)
+           WHERE length(word) >= 2
+             AND r.search_vector @@ plainto_tsquery('english', word)
+         )
+       ORDER BY (
+         SELECT count(*)::int
+         FROM regexp_split_to_table(lower(trim($1)), '\\s+') AS term(word)
+         WHERE length(word) >= 2
+           AND r.search_vector @@ plainto_tsquery('english', word)
+       ) DESC
+       LIMIT ${candidateLimit}`,
+      params,
+    );
+    lists.push({ name: "or_lexical", hits: orLexical.rows });
+  }
+
+  const semantic = await fetchSemanticRows(db, params, queryEmbedding, candidateLimit);
+  vector = semantic.vector;
+  if (relaxation === "semantic_only" || semantic.rows.length > 0) {
+    lists.push({ name: "semantic", hits: semantic.rows });
+  }
+
+  const fused = reciprocalRankFusion(lists);
+  const sources = await primarySourceMap(db, fused.map((hit) => hit.id));
+  const withSource: FusedHit[] = fused.map((hit) => ({
+    ...hit,
+    sourceId: sources.get(hit.id) ?? null,
+  }));
+  return { hits: withSource, vector };
+}
+
+async function capSearchHits(
+  db: Queryable,
+  filters: SearchFilters,
+  withSource: FusedHit[],
+): Promise<FusedHit[]> {
+  const diversity = filters.diversity ?? (filters.diverse ? "source" : undefined);
+  if (diversity === "mechanism" && !(filters.sources && filters.sources.length > 0)) {
+    const buckets = await mechanismBucketMap(db, withSource.map((hit) => hit.id));
+    const withBucket = withSource.map((hit) => ({
+      ...hit,
+      bucketKey: buckets.get(hit.id) ?? "unknown",
+    }));
+    return capPerBucket(
+      withBucket,
+      filters.limit + filters.offset,
+      defaultPerMechanismCap(filters.limit),
+    ).slice(filters.offset, filters.offset + filters.limit);
+  }
+  const perSourceCap = filters.sources && filters.sources.length > 0
+    ? Number.POSITIVE_INFINITY
+    : diversity === "source"
+      ? 1
+      : defaultPerSourceCap(filters.limit);
+  return capPerSource(
+    withSource,
+    filters.limit + filters.offset,
+    perSourceCap,
+  ).slice(filters.offset, filters.offset + filters.limit);
+}
+
+export async function countFilteredResources(
+  db: Queryable,
+  filters: SearchFilters,
+  queryEmbedding: number[] | null,
+): Promise<number> {
   const query = filters.query.trim();
-  const textClause = query
-    ? `r.search_vector @@ websearch_to_tsquery('english', $1)`
-    : "($1::text = '' OR $1::text IS NOT NULL)";
-  const row = await db.query<{ count: string }>(
-    `SELECT count(*)::text AS count
-     FROM resources r
-     WHERE r.active = true
-       AND ${textClause}
-       AND ${FILTER_SQL}`,
-    params,
-  );
-  return Number(row.rows[0]?.count ?? 0);
+  if (!query) {
+    const params = filterParams(filters);
+    const row = await db.query<{ count: string }>(
+      `SELECT count(*)::text AS count
+       FROM resources r
+       WHERE r.active = true
+         AND ($1::text = '' OR $1::text IS NOT NULL)
+         AND ${FILTER_SQL}`,
+      params,
+    );
+    return Number(row.rows[0]?.count ?? 0);
+  }
+  const candidateLimit = 500;
+  const params = filterParams(filters);
+  for (const relaxation of ["strict", "or_lexical", "semantic_only"] as QueryRelaxation[]) {
+    const hybrid = await hybridCandidateHits(db, params, queryEmbedding, candidateLimit, relaxation);
+    if (hybrid.hits.length > 0) {
+      return hybrid.hits.length;
+    }
+  }
+  return 0;
 }
 
 async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource[]> {
@@ -407,9 +498,13 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
     const sourceLinks = linkMap.get(hit.id) ?? [];
     const why = hit.lists.includes("full_text") && hit.lists.includes("semantic")
       ? "hybrid"
-      : hit.lists.includes("semantic")
-        ? "semantic"
-        : "full_text";
+      : hit.lists.includes("or_lexical") && hit.lists.includes("semantic")
+        ? "hybrid"
+        : hit.lists.includes("semantic")
+          ? "semantic"
+          : hit.lists.includes("or_lexical")
+            ? "relaxed_text"
+            : "full_text";
     return [{
       resource_id: row.id,
       title: row.canonical_title,
