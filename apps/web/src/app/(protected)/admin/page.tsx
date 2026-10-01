@@ -64,7 +64,9 @@ export default async function AdminPage() {
             Pending (never attempted): {enrichment.pending.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-muted">
-            Still missing country/stage/org after attempts: {enrichment.missing_fields.toLocaleString()}
+            Missing country: {enrichment.missing_country.toLocaleString()} · stage:{" "}
+            {enrichment.missing_stage.toLocaleString()} · organisation:{" "}
+            {enrichment.missing_org.toLocaleString()}
           </p>
           {enrichment.last_run ? (
             <p className="mt-2 text-xs text-muted">

@@ -1,6 +1,7 @@
 import { runQualityAudit } from "@alice/database";
 import type { Queryable } from "@alice/database";
 import { log } from "@alice/shared";
+import { runPostIngestCatalogueRepairs, resolvePriorityReembedResourceIds } from "./catalogue-repair.js";
 import { runPostIngestEmbeddingBackfill } from "./embedding-backfill.js";
 import { enrichMaxPerRun, runEnrichmentBackfill } from "./enrich.js";
 
@@ -23,6 +24,8 @@ export async function runPostIngestMaintenance(
   input: { touchedResourceIds: string[] },
 ): Promise<void> {
   void input.touchedResourceIds;
+
+  await runPostIngestCatalogueRepairs(db);
 
   if (qualityAuditOnIngestEnabled()) {
     try {
@@ -76,7 +79,8 @@ export async function runPostIngestMaintenance(
   }
 
   try {
-    await runPostIngestEmbeddingBackfill(db, { priorityResourceIds: enrichedResourceIds });
+    const priorityIds = await resolvePriorityReembedResourceIds(db, enrichedResourceIds);
+    await runPostIngestEmbeddingBackfill(db, { priorityResourceIds: priorityIds });
   } catch (error) {
     log("warn", "backfill_embeddings_unexpected_error", {
       message: error instanceof Error ? error.message : String(error),

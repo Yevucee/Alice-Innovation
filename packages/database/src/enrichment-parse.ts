@@ -38,6 +38,42 @@ export function parseEnrichmentPayload(raw: unknown): {
   return { payload: hasAny ? payload : null, error: hasAny ? undefined : "all_unknown" };
 }
 
+export function resolveEnrichmentSectorSlug(
+  label: string | undefined,
+  evidence: { title: string; summary: string; text: string },
+): string | null {
+  if (!label?.trim()) return null;
+  const inferred = inferTaxonomyFromText({
+    title: evidence.title,
+    summary: evidence.summary,
+    text: evidence.text,
+  });
+  const fromLabel = slugFromEnrichmentLabel(label, "sector");
+  if (fromLabel && inferred.sectors.includes(fromLabel)) return fromLabel;
+  if (fromLabel === "water" && !inferred.sectors.includes("water")) {
+    return inferred.sectors[0] ?? null;
+  }
+  if (fromLabel && !inferred.sectors.includes(fromLabel)) {
+    return inferred.sectors[0] ?? null;
+  }
+  return fromLabel;
+}
+
+export function resolveEnrichmentProblemSlug(
+  label: string | undefined,
+  evidence: { title: string; summary: string; text: string },
+): string | null {
+  if (!label?.trim()) return null;
+  const inferred = inferTaxonomyFromText({
+    title: evidence.title,
+    summary: evidence.summary,
+    text: evidence.text,
+  });
+  const fromLabel = slugFromEnrichmentLabel(label, "problem");
+  if (fromLabel && inferred.problems.includes(fromLabel)) return fromLabel;
+  return fromLabel && inferred.problems.length === 0 ? fromLabel : inferred.problems[0] ?? fromLabel;
+}
+
 export function slugFromEnrichmentLabel(label: string, kind: "sector" | "problem"): string | null {
   const norm = label.trim().toLowerCase();
   const catalogue = kind === "sector" ? SECTORS : PROBLEMS;

@@ -12,7 +12,23 @@ interface KeywordRule {
 
 const SECTOR_RULES: KeywordRule[] = [
   { slug: "agriculture", phrases: ["agriculture", "agri-tech", "agritech", "farming", "smallholder", "crop", "livestock", "soil"] },
-  { slug: "water", phrases: ["water", "sanitation", "hygiene", "wastewater", "desalination", "groundwater", "rainwater"] },
+  {
+    slug: "water",
+    phrases: [
+      "drinking water",
+      "clean water",
+      "potable water",
+      "water access",
+      "sanitation",
+      "hygiene",
+      "desalination",
+      "groundwater",
+      "rainwater",
+      "water scarcity",
+      "water supply",
+      "water filter",
+    ],
+  },
   { slug: "energy", phrases: ["energy", "solar", "wind power", "off-grid", "electrification", "battery", "biogas"] },
   { slug: "food", phrases: ["food security", "nutrition", "food system", "food tech"] },
   { slug: "climate", phrases: ["climate", "carbon", "emissions", "decarbon", "net zero", "greenhouse"] },

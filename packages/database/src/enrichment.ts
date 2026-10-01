@@ -1,17 +1,19 @@
 import { contentHash } from "@alice/shared";
 import { countryCodeFor, inferCountryFromText } from "@alice/taxonomy";
 import type { EnrichmentPayload } from "./enrichment-parse.js";
-import { parseEnrichmentPayload, slugFromEnrichmentLabel } from "./enrichment-parse.js";
+import { parseEnrichmentPayload, resolveEnrichmentProblemSlug, resolveEnrichmentSectorSlug } from "./enrichment-parse.js";
 import type { Queryable } from "./pool.js";
 import { linkResourceTaxonomy } from "./taxonomy-links.js";
 import { linkResourceCountryLocation } from "./resource-location.js";
-import { organisationSlug } from "./seed.js";
+import { isLegalFormOrganisationName, resolveOrganisationId } from "./data-repair.js";
 
 export type { EnrichmentPayload };
 export {
   parseEnrichmentPayload,
   parseEnrichmentMessageContent,
   slugFromEnrichmentLabel,
+  resolveEnrichmentSectorSlug,
+  resolveEnrichmentProblemSlug,
 } from "./enrichment-parse.js";
 
 export interface EnrichmentCandidate {
@@ -101,15 +103,10 @@ export async function writeEnrichmentCache(
 }
 
 async function ensureOrganisation(db: Queryable, name: string, country: string | null): Promise<string> {
-  const slug = organisationSlug(name);
-  const row = await db.query<{ id: string }>(
-    `INSERT INTO organisations (name, slug, country)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (slug) DO UPDATE SET country = COALESCE(organisations.country, EXCLUDED.country), updated_at = now()
-     RETURNING id::text`,
-    [name, slug, country],
-  );
-  return row.rows[0].id;
+  if (isLegalFormOrganisationName(name)) {
+    throw new Error("legal_form_org_name");
+  }
+  return resolveOrganisationId(db, name, country);
 }
 
 function enrichPayloadFromEvidence(
@@ -168,19 +165,27 @@ export async function applyEnrichmentToResource(
   }
 
   const orgName = merged.organisation_name?.trim();
-  if (orgName && !/for-profit|not registered|legal form/i.test(orgName)) {
-    const organisationId = await ensureOrganisation(db, orgName, country ?? null);
-    const linked = await db.query(
-      `INSERT INTO resource_organisations (resource_id, organisation_id, relationship, is_primary)
-       VALUES ($1::uuid, $2::uuid, 'DEVELOPED_BY', true)
-       ON CONFLICT (resource_id, organisation_id, relationship) DO NOTHING`,
-      [resourceId, organisationId],
-    );
-    if ((linked.rowCount ?? 0) > 0) fields.push("organisation");
+  if (orgName && !isLegalFormOrganisationName(orgName)) {
+    try {
+      const organisationId = await ensureOrganisation(db, orgName, country ?? null);
+      const linked = await db.query(
+        `INSERT INTO resource_organisations (resource_id, organisation_id, relationship, is_primary)
+         VALUES ($1::uuid, $2::uuid, 'DEVELOPED_BY', true)
+         ON CONFLICT (resource_id, organisation_id, relationship) DO NOTHING`,
+        [resourceId, organisationId],
+      );
+      if ((linked.rowCount ?? 0) > 0) fields.push("organisation");
+    } catch {
+      /* skip legal-form org names */
+    }
   }
 
-  const sectorSlug = merged.sector ? slugFromEnrichmentLabel(merged.sector, "sector") : null;
-  const problemSlug = merged.problem ? slugFromEnrichmentLabel(merged.problem, "problem") : null;
+  const sectorSlug = evidence && merged.sector
+    ? resolveEnrichmentSectorSlug(merged.sector, evidence)
+    : null;
+  const problemSlug = evidence && merged.problem
+    ? resolveEnrichmentProblemSlug(merged.problem, evidence)
+    : null;
   if (sectorSlug || problemSlug) {
     const linked = await linkResourceTaxonomy(
       db,
@@ -267,32 +272,31 @@ export async function recordEnrichmentRun(
 
 export async function enrichmentAdminStatus(db: Queryable): Promise<{
   pending: number;
-  missing_fields: number;
+  missing_country: number;
+  missing_stage: number;
+  missing_org: number;
   paused_budget: boolean;
   last_run: Record<string, unknown> | null;
 }> {
+  const base = `FROM resources r WHERE r.active AND r.review_status <> 'NEEDS_REVIEW'`;
   const pending = await db.query<{ count: string }>(
-    `SELECT count(*)::text AS count
-     FROM resources r
-     WHERE r.active
-       AND r.review_status <> 'NEEDS_REVIEW'
-       AND r.enrichment_attempted_at IS NULL
-       AND (
-         r.primary_country_name IS NULL OR r.primary_country_name = ''
-         OR r.evidence_stage = 'UNKNOWN'
-         OR NOT EXISTS (SELECT 1 FROM resource_organisations ro WHERE ro.resource_id = r.id)
-       )`,
+    `SELECT count(*)::text AS count ${base} AND r.enrichment_attempted_at IS NULL
+     AND (
+       r.primary_country_name IS NULL OR r.primary_country_name = ''
+       OR r.evidence_stage = 'UNKNOWN'
+       OR NOT EXISTS (SELECT 1 FROM resource_organisations ro WHERE ro.resource_id = r.id)
+     )`,
   );
-  const missing = await db.query<{ count: string }>(
-    `SELECT count(*)::text AS count
-     FROM resources r
-     WHERE r.active
-       AND r.review_status <> 'NEEDS_REVIEW'
-       AND (
-         r.primary_country_name IS NULL OR r.primary_country_name = ''
-         OR r.evidence_stage = 'UNKNOWN'
-         OR NOT EXISTS (SELECT 1 FROM resource_organisations ro WHERE ro.resource_id = r.id)
-       )`,
+  const missingCountry = await db.query<{ count: string }>(
+    `SELECT count(*)::text AS count ${base}
+     AND (r.primary_country_name IS NULL OR r.primary_country_name = '')`,
+  );
+  const missingStage = await db.query<{ count: string }>(
+    `SELECT count(*)::text AS count ${base} AND r.evidence_stage = 'UNKNOWN'`,
+  );
+  const missingOrg = await db.query<{ count: string }>(
+    `SELECT count(*)::text AS count ${base}
+     AND NOT EXISTS (SELECT 1 FROM resource_organisations ro WHERE ro.resource_id = r.id)`,
   );
   const last = await db.query(
     `SELECT id::text, completed_at, processed, attempted, applied, no_data, enriched, skipped, failed,
@@ -303,7 +307,9 @@ export async function enrichmentAdminStatus(db: Queryable): Promise<{
   const note = lastRow?.note != null ? String(lastRow.note) : "";
   return {
     pending: Number(pending.rows[0]?.count ?? 0),
-    missing_fields: Number(missing.rows[0]?.count ?? 0),
+    missing_country: Number(missingCountry.rows[0]?.count ?? 0),
+    missing_stage: Number(missingStage.rows[0]?.count ?? 0),
+    missing_org: Number(missingOrg.rows[0]?.count ?? 0),
     paused_budget: note === "enrichment_paused_budget" || /openrouter limit|insufficient credits|402/i.test(note),
     last_run: lastRow,
   };
