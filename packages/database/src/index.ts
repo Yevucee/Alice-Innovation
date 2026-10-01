@@ -72,6 +72,7 @@ export {
   mergeDuplicateOrganisations,
   repairLegalFormOrganisationLinks,
   resolveOrganisationId,
+  repairMarkdownHashTitles,
 } from "./data-repair.js";
 export {
   listRecentResources,

@@ -4,6 +4,14 @@ export { htmlToText, truncate, normaliseName } from "./text.js";
 export { classifyDuplicate, nearDuplicateKey } from "./dedupe.js";
 export { evaluateDraftQuality } from "./quality-gate.js";
 export type { QualityGateResult } from "./quality-gate.js";
+export {
+  isLegalFormText,
+  isQualityBrowsePandemicJunk,
+  sanitizeDisplayTitle,
+  sanitizeIngestTitle,
+  LEGAL_FORM_ORG_SQL_PATTERN,
+  QUALITY_BROWSE_PANDEMIC_PATTERN,
+} from "./legal-form.js";
 export type { DedupeCandidate, DedupeDecision, DedupeExisting } from "./dedupe.js";
 export {
   reciprocalRankFusion,

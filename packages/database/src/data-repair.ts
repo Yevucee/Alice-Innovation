@@ -1,13 +1,10 @@
 import { inferTaxonomyFromText } from "@alice/taxonomy";
-import { normaliseName } from "@alice/shared";
+import { isLegalFormText, LEGAL_FORM_ORG_SQL_PATTERN, normaliseName, sanitizeDisplayTitle } from "@alice/shared";
 import type { Queryable } from "./pool.js";
 import { organisationSlug } from "./seed.js";
 
-const LEGAL_FORM_ORG = /for-profit|non-profit|not registered as any organization|not registered as any organisation|b-corp|legal form|not applicable|hybrid of for-profit/i;
-
 export function isLegalFormOrganisationName(name: string | null | undefined): boolean {
-  if (!name?.trim()) return false;
-  return LEGAL_FORM_ORG.test(name);
+  return isLegalFormText(name);
 }
 
 export function isJunkPersonName(name: string | null | undefined): boolean {
@@ -112,8 +109,8 @@ export async function mergeDuplicateOrganisations(db: Queryable): Promise<{ grou
 
 export async function repairLegalFormOrganisationLinks(db: Queryable): Promise<{ orgs_removed: number; people_cleared: number }> {
   const junkOrgs = await db.query<{ id: string }>(
-    `SELECT id::text FROM organisations
-     WHERE name ~* 'for-profit|not registered as any organization|not registered as any organisation|b-corp|legal form|not applicable|hybrid of for-profit'`,
+    `SELECT id::text FROM organisations WHERE name ~* $1`,
+    [LEGAL_FORM_ORG_SQL_PATTERN],
   );
   let people_cleared = 0;
   for (const org of junkOrgs.rows) {
@@ -151,4 +148,14 @@ export async function resolveOrganisationId(
     [trimmed, slug, country],
   );
   return row.rows[0].id;
+}
+
+export async function repairMarkdownHashTitles(db: Queryable): Promise<number> {
+  const result = await db.query(
+    `UPDATE resources SET
+       canonical_title = trim(regexp_replace(canonical_title, '^#+\\s*', '')),
+       updated_at = now()
+     WHERE canonical_title ~ '^#+\\s'`,
+  );
+  return result.rowCount ?? 0;
 }
