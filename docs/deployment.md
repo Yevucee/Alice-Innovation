@@ -93,4 +93,4 @@ After deploy, run migrations and seed if the database is new (same as MCP). Inge
 
 ## Path
 
-Branch to GitHub, then Railway builds from the connected repo. `main` is the production branch after review. No second database, no Redis, no worker queue.
+Branch to GitHub, then Railway builds from the connected repo. `main` is the production branch after review. Before merging web-facing changes, run `npm run check` (typecheck, tests, and `next build` via `web:build`). No second database, no Redis, no worker queue.
