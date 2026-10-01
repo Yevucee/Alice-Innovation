@@ -30,6 +30,8 @@ export interface SearchFilters {
   /** `source` = one per catalogue; `mechanism` = one per primary technology/sector bucket. */
   diversity?: "source" | "mechanism";
   sort?: "relevance" | "newest" | "maturity";
+  /** Homepage/discover sections: hide NEEDS_REVIEW and thin summaries. */
+  qualityBrowse?: boolean;
 }
 
 export interface CompactResource {
@@ -112,6 +114,10 @@ const FILTER_SQL = `
     JOIN technologies t ON t.id = rt.technology_id
     WHERE rt.resource_id = r.id AND t.slug = ANY($8)
   ))
+  AND ($10::boolean IS NOT TRUE OR (
+    r.review_status NOT IN ('NEEDS_REVIEW', 'ARCHIVED')
+    AND char_length(trim(coalesce(r.source_summary, ''))) >= 40
+  ))
 `;
 
 function filterParams(filters: SearchFilters): unknown[] {
@@ -127,6 +133,7 @@ function filterParams(filters: SearchFilters): unknown[] {
     arr(filters.problems),
     arr(filters.technologies),
     continents,
+    filters.qualityBrowse === true,
   ];
 }
 
@@ -295,7 +302,7 @@ async function fetchSemanticRows(
        FROM resources r
        WHERE r.embedding IS NOT NULL
          AND ${FILTER_SQL}
-       ORDER BY r.embedding <=> $10::vector
+       ORDER BY r.embedding <=> $11::vector
        LIMIT ${candidateLimit}`,
       [...params, `[${queryEmbedding.join(",")}]`],
     );

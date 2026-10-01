@@ -10,6 +10,7 @@ export {
   readCheckpoint,
   writeCheckpoint,
 } from "./ingest.js";
+export type { UpsertDraftOptions, UpsertResult } from "./ingest.js";
 export { linkResourceTaxonomy } from "./taxonomy-links.js";
 export {
   searchLibrary,
@@ -38,6 +39,24 @@ export {
   verifyEmbeddingSafetySample,
 } from "./embedding-backfill.js";
 export type { EmbeddingBackfillSummary, EmbeddingBackfillRunOptions } from "./embedding-backfill.js";
+export {
+  runQualityAudit,
+  auditDraftShape,
+  qualityAdminStatus,
+  summariseReasonCounts,
+  type QualityAuditRow,
+  type QualityAuditSummary,
+} from "./quality-audit.js";
+export {
+  loadEnrichmentCandidates,
+  applyEnrichmentToResource,
+  enrichmentAdminStatus,
+  enrichmentInputHash,
+  readEnrichmentCache,
+  writeEnrichmentCache,
+  recordEnrichmentRun,
+  type EnrichmentPayload,
+} from "./enrichment.js";
 export {
   listRecentResources,
   resourcesForTaxonomy,

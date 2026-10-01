@@ -2,6 +2,8 @@ export { canonicaliseUrl } from "./url.js";
 export { sha256, contentHash } from "./hash.js";
 export { htmlToText, truncate, normaliseName } from "./text.js";
 export { classifyDuplicate, nearDuplicateKey } from "./dedupe.js";
+export { evaluateDraftQuality } from "./quality-gate.js";
+export type { QualityGateResult } from "./quality-gate.js";
 export type { DedupeCandidate, DedupeDecision, DedupeExisting } from "./dedupe.js";
 export {
   reciprocalRankFusion,

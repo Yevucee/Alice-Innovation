@@ -14,7 +14,13 @@ export function parseMitSolve(page: FetchedPage): NormalisedDraft {
     const answer = $(element).find(".text-18, .lg\\:text-20").first().text().replace(/\s+/g, " ").trim();
     if (question && answer) answers.set(question.toLowerCase(), answer);
   });
-  const organisation = [...answers.entries()].find(([question]) => question.includes("organization"))?.[1] ?? null;
+  const organisationEntry = [...answers.entries()].find(([question]) =>
+    /name of your organization/i.test(question) || /name of your organisation/i.test(question),
+  ) ?? [...answers.entries()].find(([question]) =>
+    question.includes("organization")
+    && !/legal|form|type|registered|profit|structure|status/i.test(question),
+  );
+  const organisation = organisationEntry?.[1] ?? null;
   const headquarters = [...answers.entries()].find(([question]) => question.includes("headquartered"))?.[1] ?? null;
   const person = $(".font-bold")
     .filter((_, element) => $(element).text().trim().toLowerCase() === "team leader")

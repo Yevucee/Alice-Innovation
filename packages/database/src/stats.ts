@@ -9,6 +9,7 @@ export async function libraryStats(db: Queryable): Promise<Record<string, number
        (SELECT count(*) FROM people) AS people,
        (SELECT count(*) FROM organisations) AS organisations,
        (SELECT count(*) FROM sources WHERE status = 'ACTIVE') AS active_sources,
+       (SELECT count(*) FROM sources WHERE enabled = true) AS enabled_sources,
        (SELECT count(*) FROM source_items WHERE created_at > now() - interval '24 hours') AS items_added_24h,
        (SELECT count(*) FROM source_items WHERE created_at > now() - interval '7 days') AS items_added_7d,
        (SELECT count(*) FROM source_items WHERE updated_at > now() - interval '7 days' AND created_at <= now() - interval '7 days') AS items_updated_7d,

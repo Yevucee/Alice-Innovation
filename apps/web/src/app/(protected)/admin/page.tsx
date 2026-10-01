@@ -2,18 +2,22 @@ import Link from "next/link";
 import {
   browseSources,
   embeddingAdminStatus,
+  enrichmentAdminStatus,
   libraryStats,
   listRecentIngestionRuns,
+  qualityAdminStatus,
 } from "@alice/database";
 import { formatDate } from "@/lib/format";
 import { pool } from "@/lib/db";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
     embeddingAdminStatus(pool()).catch(() => null),
+    qualityAdminStatus(pool()).catch(() => null),
+    enrichmentAdminStatus(pool()).catch(() => null),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -35,6 +39,33 @@ export default async function AdminPage() {
           </div>
         ))}
       </dl>
+
+      {quality ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">Quality review</h2>
+          <p className="mt-2 text-muted">
+            Resources flagged NEEDS_REVIEW: {quality.needs_review.toLocaleString()}
+          </p>
+          {quality.last_run ? (
+            <p className="mt-2 text-xs text-muted">
+              Last audit flagged {String(quality.last_run.flagged)} of {String(quality.last_run.scanned)} scanned
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {enrichment ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">LLM enrichment</h2>
+          <p className="mt-2 text-muted">Pending resources: {enrichment.pending.toLocaleString()}</p>
+          {enrichment.last_run ? (
+            <p className="mt-2 text-xs text-muted">
+              Last run enriched {String(enrichment.last_run.enriched)} · est. cost USD{" "}
+              {String(enrichment.last_run.estimated_cost_usd)}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       {embeddings ? (
         <section className="mt-10 rounded border border-line bg-white p-4 text-sm">

@@ -2,7 +2,7 @@ import { formatDate } from "@/lib/format";
 
 export function SiteFooter({ stats }: { stats?: { sources?: number; resources?: number } }) {
   const line = stats
-    ? `${stats.resources?.toLocaleString() ?? "—"} resources · ${stats.sources ?? 61} sources`
+    ? `${stats.resources?.toLocaleString() ?? "—"} resources · ${stats.sources?.toLocaleString() ?? "—"} sources`
     : "Alice Innovation Library";
   return (
     <footer className="mt-16 border-t border-line">

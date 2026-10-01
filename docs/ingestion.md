@@ -2,31 +2,60 @@
 
 ## Adapter interface
 
-Each adapter implements `discover`, `fetch`, `parse`, and `normalise` (parse returns the normalised draft directly). Adapters do not import the database.
+Each adapter implements `discover`, `fetch`, and `parse`. Adapters return a normalised draft; they do not import the database or call `upsertDraft` directly.
 
 Discovery order used by the first adapters: sitemap when it lists item URLs, otherwise HTML list pages. Playwright is not a dependency.
 
-## Pipeline
+## Canonical per-item pipeline (required)
 
-`npm run ingest` loads `config/sources.yaml` and expects those rows to be seeded.
+Every ingest entry point (`npm run ingest` with `--due`, `--source`, resume/hub/Africa scripts that invoke the ingestor) must process each parsed item through **`processIngestItem`** in `apps/ingestor/src/item-pipeline.ts`. Adapters must not bypass this module.
 
-- `--due` runs enabled sources whose update class is due. This is the cron default when no `--source` is passed.
-- `--source <id>` runs that source even if it is paused or blocked.
-- `--limit <n>` stops after n items. Use this for a sample.
-- `--full` resumes from `backfill_checkpoints` and, only for adapters marked as a full catalogue, marks items missing from the discover set inactive after a second miss. A sample run never deactivates rows.
-- `--dry-run` parses items and does not upsert them. It still needs `DATABASE_URL` for the run log and lock.
+Ordered steps:
 
-One database advisory lock stops overlapping runs. If the lock is held, the process exits successfully.
+1. **Parse** — adapter `parse(page)` → `NormalisedDraft`
+2. **Prepare** — `prepareIngestDraft` (`geo-defaults` + `inferCountryFromText`)
+3. **Quality gate** — `evaluateDraftQuality` → may set `NEEDS_REVIEW`; skips org/person links when flagged
+4. **Upsert** — `upsertDraft` (resources + source_items; no deletes)
+5. **LLM enrichment** — `enrichResourceOnIngest` when fields missing (not for `NEEDS_REVIEW`); cached by content hash
+6. **Taxonomy link** — `inferTaxonomyFromText` + `linkResourceTaxonomy`
+7. **Embedding** — `buildEmbeddingText` (includes enriched fields) + `saveEmbedding`
+8. **Classifier** (optional) — `classifyResource` when `CLASSIFIER_ENABLED=true`
 
-Retries cover timeouts, HTTP 429, and 5xx, with backoff. 401, 403, and 404 are not retried. robots.txt is fetched first. A 401/403 on robots, or a disallow rule, stops that source. The user agent comes from `INGESTION_USER_AGENT`.
+`--dry-run` still parses and logs items but does not upsert or run post-steps on rows.
 
-Unchanged content hashes only bump `last_seen_at`. Exact canonical URLs link to the existing resource. The same normalised title and country on a new URL becomes `POSSIBLE_DUPLICATE` and both records are kept. Semantic neighbours closer than cosine distance 0.08 are also recorded as possible duplicates and are not merged.
+## Cron / CLI
+
+`npm run ingest` loads `config/sources.yaml` (seeded sources).
+
+- `--due` runs enabled sources whose update class is due. Default when no `--source` is passed.
+- `--source <id>` runs that source even if paused/blocked.
+- `--limit <n>` stops after *n* items.
+- `--full` uses `backfill_checkpoints` and may deactivate missing catalogue URLs (full-catalogue adapters only).
+- `--dry-run` parses only.
+
+One advisory lock prevents overlapping runs.
+
+## Post-ingest maintenance (every ingest run)
+
+After all sources finish, the ingestor runs (failures are logged; ingest status is not failed):
+
+1. **Quality audit** — `QUALITY_AUDIT_ON_INGEST` (default true): `runQualityAudit` with `--apply` semantics on touched resources → sets `NEEDS_REVIEW`
+2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` rows still missing country/stage/org
+3. **Embedding backfill** — existing `EMBEDDING_BACKFILL_ON_INGEST` pass
+
+Manual scripts: `npm run audit:data-quality` (CSV dry-run by default), `npm run enrich:batch`.
+
+## Quality review
+
+`resources.review_status` includes `NEEDS_REVIEW`. Homepage “Recently added” / “From Africa” use `qualityBrowse` filters (exclude `NEEDS_REVIEW`, require summary length).
 
 ## Embeddings and classification
 
-Embeddings use an OpenAI-compatible `POST /embeddings` (OpenRouter in production: `openai/text-embedding-3-small` at 1536 dimensions). No API key means the row is stored without a vector. Other vector lengths are skipped. Indexed text is built with `buildEmbeddingText` (title, summary, extracted text, taxonomy names, locations, and a long interpretation problem statement when present). Re-embedding happens only when `embedding_content_hash` changes. Backfill existing rows with `npm run backfill:embeddings`.
+Embeddings use OpenAI-compatible `POST /embeddings` (OpenRouter in production). Indexed text is built with `buildEmbeddingText`. Re-embedding happens when `embedding_content_hash` changes (including after enrichment).
 
-The classifier, when enabled, is told that source content is untrusted and must not be followed as instructions. Its output is written only to `resource_interpretations`.
+Enrichment uses OpenRouter chat (`ENRICH_MODEL`, default `google/gemini-2.5-flash-lite`) with `ENRICH_API_KEY` or `EMBEDDING_API_KEY`.
+
+The classifier writes only to `resource_interpretations` and treats source HTML as untrusted.
 
 ## First adapters
 
@@ -35,7 +64,7 @@ The classifier, when enabled, is told that source content is untrusted and must 
 | `solar-impulse` | English solution URLs in the sitemap | `script#ng-state` solution object |
 | `mit-solve` | `/solutions/{id}` in the sitemap | `h1`, summary, profile answers |
 | `project-drawdown` | Links on `/explorer` | title field, `.field-summary` |
-| `springwise` | `.tile-post` cards on the homepage | card title; article HTML only if the fetch is allowed |
+| `springwise` | `.tile-post` cards on the homepage | card title; article HTML when allowed |
 | `engineering-for-change` | stops on the bot wall | fixture parser for title and summary |
 
-Page text is stripped of scripts before it is stored, and stored text is capped.
+Page text is stripped of scripts before storage; stored text is capped.
