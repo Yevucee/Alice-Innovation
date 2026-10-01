@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CompactResource } from "@alice/database";
 import { formatDisplayTitle, formatEvidence, formatResourceType, metaLine } from "@/lib/format";
+import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared";
 
 const TYPE_ICONS: Record<string, string> = {
   SOLUTION: "◆",
@@ -26,7 +27,10 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
   ];
   const evidence = formatEvidence(resource.evidence);
   const meta = metaLine([location, ...resource.sectors.slice(0, 1), ...resource.technologies.slice(0, 1)]);
-  const title = formatDisplayTitle(resource.title);
+  const title = sanitizeDisplayTitle(formatDisplayTitle(resource.title));
+  const orgLabel = resource.primary_organisation && !isLegalFormText(resource.primary_organisation)
+    ? resource.primary_organisation
+    : resource.source_names[0] ?? null;
 
   return (
     <Link
@@ -74,7 +78,7 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
         </p>
         <div className="mt-auto flex shrink-0 items-end justify-between gap-2 border-t border-line/60 pt-3 text-xs text-muted">
           <span className="line-clamp-1 min-w-0 flex-1">
-            {resource.primary_organisation || resource.source_names[0] || "\u00a0"}
+            {orgLabel || "\u00a0"}
           </span>
           <span className="shrink-0 text-right">{evidence || "\u00a0"}</span>
         </div>

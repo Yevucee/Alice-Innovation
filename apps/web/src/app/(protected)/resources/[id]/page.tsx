@@ -9,6 +9,7 @@ import {
 import { AddToCollection } from "@/components/add-to-collection";
 import { ResourceCard } from "@/components/resource-card";
 import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, sourceExcerptDuplicatesSummary } from "@/lib/format";
+import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared";
 import { pool } from "@/lib/db";
 
 function classificationTags(interpretation: Record<string, unknown> | null): string[] {
@@ -37,7 +38,8 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
 
   const interpretation = resource.interpretation as Record<string, unknown> | null;
   const sources = resource.sources as Array<{ name: string; canonical_url: string; last_seen_at: string }>;
-  const organisations = resource.organisations as Array<{ id: string; name: string; website?: string }>;
+  const organisations = (resource.organisations as Array<{ id: string; name: string; website?: string }>)
+    .filter((org) => !isLegalFormText(org.name));
   const people = resource.people as Array<{ id: string; name: string; role?: string }>;
   const sectors = resource.sectors as Array<{ slug: string; name: string }>;
   const problems = resource.problems as Array<{ slug: string; name: string }>;
@@ -68,7 +70,9 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           </span>
         ) : null}
       </div>
-      <h1 className="mt-2 text-3xl font-medium tracking-tight">{formatDisplayTitle(String(resource.title))}</h1>
+      <h1 className="mt-2 text-3xl font-medium tracking-tight">
+        {sanitizeDisplayTitle(formatDisplayTitle(String(resource.title)))}
+      </h1>
       <p className="mt-4 text-base leading-relaxed text-muted">{String(resource.source_summary)}</p>
       <p className="mt-3 text-sm text-muted">
         {metaLine([

@@ -1,5 +1,7 @@
 import { continentNamesForFilter } from "@alice/taxonomy";
-import { QUALITY_BROWSE_EXTRA_SQL, qualityBrowseBlocklistParam } from "./quality-browse-sql.js";
+import { QUALITY_BROWSE_EXTRA_SQL, QUALITY_BROWSE_ORDER_SQL, qualityBrowseBlocklistParam } from "./quality-browse-sql.js";
+
+export { QUALITY_BROWSE_ORDER_SQL };
 
 export interface SearchFilters {
   query: string;

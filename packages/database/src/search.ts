@@ -14,15 +14,17 @@ import {
   semanticMaxDistance,
 } from "./search-match.js";
 import {
-  FILTER_SQL,
-  FILTER_QUERY_TEXT_BIND_SQL,
   appendSemanticQueryParams,
+  FILTER_QUERY_TEXT_BIND_SQL,
+  FILTER_SQL,
   filterParams,
   OR_TERM_MATCH_COUNT_SQL,
+  QUALITY_BROWSE_ORDER_SQL,
   semanticDistancePredicateSql,
   semanticOrderByDistanceSql,
   type SearchFilters,
 } from "./search-sql.js";
+import { isLegalFormText, LEGAL_FORM_ORG_SQL_PATTERN, sanitizeDisplayTitle } from "@alice/shared";
 
 export type { SearchFilters };
 
@@ -114,7 +116,7 @@ export async function searchLibrary(
            WHEN 'SCALED' THEN 1 WHEN 'MULTIPLE_DEPLOYMENTS' THEN 2 WHEN 'DEPLOYED' THEN 3
            WHEN 'PILOT' THEN 4 WHEN 'PROTOTYPE' THEN 5 WHEN 'IDEA' THEN 6 ELSE 7 END`
       : filters.qualityBrowse === true
-        ? "r.created_at DESC NULLS LAST"
+        ? QUALITY_BROWSE_ORDER_SQL.trim()
         : "r.created_at DESC";
     const browse = await db.query<IdRow>(
       `SELECT r.id::text, NULL::text AS source_id
@@ -352,6 +354,7 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
               SELECT o.name FROM resource_organisations ro
               JOIN organisations o ON o.id = ro.organisation_id
               WHERE ro.resource_id = r.id
+                AND NOT (o.name ~* '${LEGAL_FORM_ORG_SQL_PATTERN}')
               ORDER BY ro.is_primary DESC, o.name
               LIMIT 1
             ) AS organisation
@@ -445,7 +448,7 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
             : "full_text";
     return [{
       resource_id: row.id,
-      title: row.canonical_title,
+      title: sanitizeDisplayTitle(row.canonical_title),
       resource_type: row.resource_type,
       short_summary: row.source_summary,
       why_matched: why,
@@ -455,7 +458,7 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
       technologies: techMap.get(hit.id) ?? [],
       maturity: row.maturity_stage,
       evidence: row.evidence_stage,
-      primary_organisation: row.organisation,
+      primary_organisation: row.organisation && !isLegalFormText(row.organisation) ? row.organisation : null,
       source_names: [...new Set(sourceLinks.map((link) => link.name))],
       source_urls: sourceLinks.map((link) => link.url).slice(0, 5),
       last_verified: sourceLinks[0]?.seen ? new Date(sourceLinks[0].seen).toISOString() : row.updated_at.toISOString(),

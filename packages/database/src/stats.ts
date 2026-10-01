@@ -1,4 +1,5 @@
 import { continentNameForSlug, continentSlugs } from "@alice/taxonomy";
+import { LEGAL_FORM_ORG_SQL_PATTERN } from "@alice/shared";
 import type { Queryable } from "./pool.js";
 
 export async function libraryStats(db: Queryable): Promise<Record<string, number>> {
@@ -128,9 +129,7 @@ export async function searchPeople(
      LEFT JOIN organisations o ON o.id = p.organisation_id
      WHERE length(trim(p.name)) >= 3
        AND NOT (p.name ~* '^[a-z](\\s+[a-z]){0,2}$')
-       AND (o.id IS NULL OR NOT (
-         o.name ~* 'for-profit|not registered as any organization|not registered as any organisation|b-corp|legal form|not applicable|hybrid of for-profit'
-       ))
+       AND (o.id IS NULL OR NOT (o.name ~* $5))
        AND ($1::text IS NULL OR p.search_vector @@ websearch_to_tsquery('english', $1)
             OR p.name ILIKE '%' || $1 || '%')
        AND ($2::text IS NULL OR lower(p.country) = lower($2))
@@ -140,7 +139,7 @@ export async function searchPeople(
        JOIN resources r ON r.id = rp.resource_id WHERE rp.person_id = p.id
      ) DESC NULLS LAST, p.name
      LIMIT $4`,
-    [input.query || null, input.country ?? null, input.organisation ?? null, input.limit],
+    [input.query || null, input.country ?? null, input.organisation ?? null, input.limit, LEGAL_FORM_ORG_SQL_PATTERN],
   );
   return rows.rows;
 }

@@ -4,6 +4,7 @@ import {
   loadResourceIdsNeedingReembed,
   mergeDuplicateOrganisations,
   repairLegalFormOrganisationLinks,
+  repairMarkdownHashTitles,
 } from "@alice/database";
 import type { Queryable } from "@alice/database";
 import { log } from "@alice/shared";
@@ -12,12 +13,14 @@ export async function runPostIngestCatalogueRepairs(db: Queryable): Promise<void
   try {
     const orgMerge = await mergeDuplicateOrganisations(db);
     const legal = await repairLegalFormOrganisationLinks(db);
+    const markdownTitles = await repairMarkdownHashTitles(db);
     const water = await correctMisassignedWaterSectorTags(db);
     log("info", "post_ingest_catalogue_repairs", {
       org_merge_groups: orgMerge.groups,
       org_merge_removed: orgMerge.removed,
       legal_form_orgs_removed: legal.orgs_removed,
       people_org_cleared: legal.people_cleared,
+      markdown_titles_repaired: markdownTitles,
       water_sector_tags_removed: water,
     });
   } catch (error) {
