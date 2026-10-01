@@ -20,6 +20,9 @@ export interface EmbeddingBackfillSummary {
   safety_check_passed: boolean;
   aborted: boolean;
   note: string;
+  priority_queued?: number;
+  priority_embedded?: number;
+  priority_failed?: number;
 }
 
 export interface EmbeddingBackfillRunOptions {
@@ -50,8 +53,9 @@ export async function recordEmbeddingBackfillRun(
   await db.query(
     `INSERT INTO embedding_backfill_runs (
        embedded, skipped, failed, processed, total_tokens, estimated_cost_usd,
-       pct_embedded, safety_check_passed, aborted, note
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+       pct_embedded, safety_check_passed, aborted, note,
+       priority_queued, priority_embedded, priority_failed
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
     [
       summary.embedded,
       summary.skipped,
@@ -63,6 +67,9 @@ export async function recordEmbeddingBackfillRun(
       summary.safety_check_passed,
       summary.aborted,
       summary.note,
+      summary.priority_queued ?? 0,
+      summary.priority_embedded ?? 0,
+      summary.priority_failed ?? 0,
     ],
   );
 }
@@ -73,7 +80,8 @@ export async function latestEmbeddingBackfillRun(
   const row = await db.query(
     `SELECT id::text, completed_at, embedded, skipped, failed, processed,
             total_tokens, estimated_cost_usd, pct_embedded,
-            safety_check_passed, aborted, note
+            safety_check_passed, aborted, note,
+            priority_queued, priority_embedded, priority_failed
      FROM embedding_backfill_runs
      ORDER BY completed_at DESC
      LIMIT 1`,
@@ -94,20 +102,34 @@ export async function verifyEmbeddingSafetySample(
   db: Queryable,
   expectedModel: string,
   expectedDimensions: number,
-  sampleSize = 10,
+  sampleSizeOrIds: number | string[] = 10,
 ): Promise<{ ok: boolean; detail: string }> {
+  const ids = Array.isArray(sampleSizeOrIds) ? sampleSizeOrIds : null;
+  const sampleSize = Array.isArray(sampleSizeOrIds) ? sampleSizeOrIds.length : sampleSizeOrIds;
   const row = await db.query<{ id: string; dims: number | null; model: string | null }>(
-    `SELECT id::text,
-            vector_dims(embedding) AS dims,
-            embedding_model AS model
-     FROM resources
-     WHERE embedding IS NOT NULL
-     ORDER BY embedded_at DESC NULLS LAST
-     LIMIT $1`,
-    [sampleSize],
+    ids && ids.length > 0
+      ? `SELECT id::text,
+                vector_dims(embedding) AS dims,
+                embedding_model AS model
+         FROM resources
+         WHERE id = ANY($1::uuid[]) AND embedding IS NOT NULL`
+      : `SELECT id::text,
+                vector_dims(embedding) AS dims,
+                embedding_model AS model
+         FROM resources
+         WHERE embedding IS NOT NULL
+         ORDER BY embedded_at DESC NULLS LAST
+         LIMIT $1`,
+    ids && ids.length > 0 ? [ids] : [sampleSize],
   );
   if (row.rows.length === 0) {
     return { ok: false, detail: "No embedded resources found after safety sample" };
+  }
+  if (ids && row.rows.length !== ids.length) {
+    return {
+      ok: false,
+      detail: `Safety sample missing embeddings (${row.rows.length}/${ids.length} resources)`,
+    };
   }
   for (const sample of row.rows) {
     if (sample.dims !== expectedDimensions) {
@@ -176,7 +198,8 @@ export async function runEmbeddingSafetyCheck(
     );
   }
 
-  return verifyEmbeddingSafetySample(db, options.model, 1536, Math.min(sampleSize, pending.length));
+  const sampleIds = pending.map((item) => item.row.id);
+  return verifyEmbeddingSafetySample(db, options.model, 1536, sampleIds);
 }
 
 async function embedResourceRows(

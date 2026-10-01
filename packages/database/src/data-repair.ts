@@ -36,8 +36,7 @@ export async function loadResourceIdsNeedingReembed(db: Queryable, limit = 20_00
 export async function invalidateStaleEnrichmentEmbeddings(db: Queryable): Promise<number> {
   const result = await db.query(
     `UPDATE resources SET embedding_content_hash = NULL, updated_at = now()
-     WHERE active AND enrichment_outcome = 'applied' AND embedding IS NOT NULL
-       AND embedding_content_hash IS NOT NULL`,
+     WHERE active AND enrichment_outcome = 'applied' AND embedding IS NOT NULL`,
   );
   return result.rowCount ?? 0;
 }
@@ -73,38 +72,67 @@ export async function correctMisassignedWaterSectorTags(db: Queryable): Promise<
 }
 
 export async function mergeDuplicateOrganisations(db: Queryable): Promise<{ groups: number; removed: number }> {
-  const groups = await db.query<{ norm: string; ids: string[] }>(
-    `SELECT lower(trim(name)) AS norm, array_agg(id::text ORDER BY created_at, id) AS ids
+  let groups = 0;
+  let removed = 0;
+
+  const slugDupes = await db.query<{ ids: string[] }>(
+    `SELECT array_agg(id::text ORDER BY created_at, id) AS ids
      FROM organisations
-     GROUP BY lower(trim(name))
+     GROUP BY slug
      HAVING count(*) > 1`,
   );
-  let removed = 0;
-  for (const group of groups.rows) {
+  for (const group of slugDupes.rows) {
     const [canonical, ...duplicates] = group.ids;
     if (!canonical || duplicates.length === 0) continue;
-    for (const duplicateId of duplicates) {
-      await db.query(
-        `UPDATE resource_organisations SET organisation_id = $1::uuid
-         WHERE organisation_id = $2::uuid
-           AND NOT EXISTS (
-             SELECT 1 FROM resource_organisations existing
-             WHERE existing.resource_id = resource_organisations.resource_id
-               AND existing.organisation_id = $1::uuid
-               AND existing.relationship = resource_organisations.relationship
-           )`,
-        [canonical, duplicateId],
-      );
-      await db.query(`DELETE FROM resource_organisations WHERE organisation_id = $2::uuid`, [canonical, duplicateId]);
-      await db.query(
-        `UPDATE people SET organisation_id = $1::uuid WHERE organisation_id = $2::uuid`,
-        [canonical, duplicateId],
-      );
-      const del = await db.query(`DELETE FROM organisations WHERE id = $1::uuid`, [duplicateId]);
-      removed += del.rowCount ?? 0;
-    }
+    groups += 1;
+    removed += await mergeOrganisationIds(db, canonical, duplicates);
   }
-  return { groups: groups.rows.length, removed };
+
+  const rows = await db.query<{ id: string; name: string }>(
+    `SELECT id::text, name FROM organisations ORDER BY created_at, id`,
+  );
+  const byKey = new Map<string, string[]>();
+  for (const row of rows.rows) {
+    const key = normaliseOrganisationNameKey(row.name);
+    if (!key) continue;
+    const list = byKey.get(key) ?? [];
+    list.push(row.id);
+    byKey.set(key, list);
+  }
+  for (const ids of byKey.values()) {
+    if (ids.length <= 1) continue;
+    const [canonical, ...duplicates] = ids;
+    groups += 1;
+    removed += await mergeOrganisationIds(db, canonical, duplicates);
+  }
+
+  return { groups, removed };
+}
+
+async function mergeOrganisationIds(db: Queryable, canonical: string, duplicates: string[]): Promise<number> {
+  let removed = 0;
+  for (const duplicateId of duplicates) {
+    if (duplicateId === canonical) continue;
+    await db.query(
+      `UPDATE resource_organisations SET organisation_id = $1::uuid
+       WHERE organisation_id = $2::uuid
+         AND NOT EXISTS (
+           SELECT 1 FROM resource_organisations existing
+           WHERE existing.resource_id = resource_organisations.resource_id
+             AND existing.organisation_id = $1::uuid
+             AND existing.relationship = resource_organisations.relationship
+         )`,
+      [canonical, duplicateId],
+    );
+    await db.query(`DELETE FROM resource_organisations WHERE organisation_id = $1::uuid`, [duplicateId]);
+    await db.query(
+      `UPDATE people SET organisation_id = $1::uuid WHERE organisation_id = $2::uuid`,
+      [canonical, duplicateId],
+    );
+    const del = await db.query(`DELETE FROM organisations WHERE id = $1::uuid`, [duplicateId]);
+    removed += del.rowCount ?? 0;
+  }
+  return removed;
 }
 
 export async function repairLegalFormOrganisationLinks(db: Queryable): Promise<{ orgs_removed: number; people_cleared: number }> {

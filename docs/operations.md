@@ -10,7 +10,7 @@ Processes write one JSON object per line: `time`, `severity`, `service`, `event`
 
 ## Lock
 
-A session advisory lock stops a second ingestor from starting while one is running. The second process logs `ingest_skipped` and exits 0.
+A session advisory lock stops a second ingestor from starting while one is running. The second process logs `ingest_skipped` and exits 0 **without** running post-ingest maintenance (enrichment, re-embed, org repair), so overlapping cron/manual runs do not record spurious zero-count backfills.
 
 ## Access
 
