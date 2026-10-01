@@ -24,7 +24,7 @@ Unchanged content hashes only bump `last_seen_at`. Exact canonical URLs link to 
 
 ## Embeddings and classification
 
-Embeddings use an OpenAI-compatible `POST /embeddings`. No API key means the row is stored without a vector. The column is 1536 dimensions; other lengths are skipped. Re-embedding happens only when the indexed text hash changes.
+Embeddings use an OpenAI-compatible `POST /embeddings` (OpenRouter in production: `openai/text-embedding-3-small` at 1536 dimensions). No API key means the row is stored without a vector. Other vector lengths are skipped. Indexed text is built with `buildEmbeddingText` (title, summary, extracted text, taxonomy names, locations, and a long interpretation problem statement when present). Re-embedding happens only when `embedding_content_hash` changes. Backfill existing rows with `npm run backfill:embeddings`.
 
 The classifier, when enabled, is told that source content is untrusted and must not be followed as instructions. Its output is written only to `resource_interpretations`.
 

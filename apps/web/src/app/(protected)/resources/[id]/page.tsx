@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { diverseApproachesForResource, findSimilar, getResource } from "@alice/database";
+import {
+  diverseApproachesForResource,
+  embeddingCatalogueCoverage,
+  findSimilar,
+  getResource,
+} from "@alice/database";
 import { AddToCollection } from "@/components/add-to-collection";
 import { ResourceCard } from "@/components/resource-card";
 import { formatDate, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine } from "@/lib/format";
@@ -23,6 +28,8 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   if (!resource) notFound();
 
   const similar = await findSimilar(pool(), id, 4);
+  const embeddingCoverage = await embeddingCatalogueCoverage(pool());
+  const similarityIndexBuilding = embeddingCoverage.pct < 50;
   const queryText = `${resource.title} ${resource.source_summary}`.trim().slice(0, 400);
   const diverse = queryText
     ? await diverseApproachesForResource(pool(), id, queryText, 6)
@@ -179,12 +186,20 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
       {similar.length > 0 ? (
         <section className="mt-12 border-t border-line pt-8">
           <h2 className="text-sm font-medium">Related ideas</h2>
-          <p className="mt-1 text-xs text-muted">Similar indexed content (requires embeddings).</p>
+          <p className="mt-1 text-xs text-muted">Similar indexed content by meaning.</p>
           <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2">
             {similar.map((item) => (
               <ResourceCard key={item.resource_id} resource={item} />
             ))}
           </div>
+        </section>
+      ) : similarityIndexBuilding ? (
+        <section className="mt-12 border-t border-line pt-8">
+          <h2 className="text-sm font-medium">Related ideas</h2>
+          <p className="mt-1 text-xs text-muted">
+            Building similarity index… ({embeddingCoverage.with_embedding.toLocaleString()} of{" "}
+            {embeddingCoverage.active.toLocaleString()} resources embedded so far).
+          </p>
         </section>
       ) : null}
 

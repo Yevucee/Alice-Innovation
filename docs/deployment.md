@@ -19,9 +19,9 @@ Environment:
 - `DATABASE_URL`
 - `MCP_AUTH_TOKEN` (long random value)
 - `AUTH_MODE=token`
-- `EMBEDDING_BASE_URL` (hosted; Railway cannot reach `127.0.0.1`)
-- `EMBEDDING_API_KEY`
-- `EMBEDDING_MODEL=text-embedding-3-small`
+- `EMBEDDING_BASE_URL=https://openrouter.ai/api/v1` (hosted; Railway cannot reach `127.0.0.1`)
+- `EMBEDDING_API_KEY` (OpenRouter key)
+- `EMBEDDING_MODEL=openai/text-embedding-3-small`
 - `EMBEDDING_DIMENSIONS=1536`
 - `CLASSIFIER_ENABLED=false`
 - `INGESTION_USER_AGENT`
@@ -44,6 +44,17 @@ Same repo, second service, config `railway.ingestor.toml`.
 - Suggested size: 1 vCPU, 1 GB RAM
 
 Use the same database URL and embedding variables. Do not set a public domain on the ingestor.
+
+### Embedding backfill (one-off)
+
+After setting `EMBEDDING_*` on MCP or ingestor, embed existing catalogue rows (batched, resumable):
+
+```bash
+npm run backfill:embeddings -- --limit 10    # smoke test
+npm run backfill:embeddings                  # full catalogue
+```
+
+From a laptop with Railway env: `npm run backfill:embeddings:remote -- --limit 10`
 
 ### Card images (one-off backfill)
 
@@ -70,7 +81,7 @@ Environment (in addition to `DATABASE_URL`):
 - `WEB_SESSION_SECRET` (long random; not the MCP token in client code)
 - `WEB_AUTH_PASSWORD` (team sign-in password)
 - `WEB_PORT` (Railway sets `PORT`; Next reads `WEB_PORT` — set `WEB_PORT=$PORT` or rely on default 3000 if Railway maps correctly)
-- Same `EMBEDDING_*` as MCP if you want hybrid search in the UI
+- Same four `EMBEDDING_*` variables as MCP (required for hybrid search in the UI)
 
 Restrict the public URL (VPN, Railway private networking, or IP allowlist). Session cookies protect routes; this is not anonymous public data.
 

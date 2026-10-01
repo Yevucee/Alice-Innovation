@@ -6,14 +6,13 @@ import {
   getPool,
   getResource,
   libraryStats,
-  searchLibrary,
   searchOrganisations,
   searchPeople,
+  searchWithEmbedding,
   sourceStatus,
 } from "@alice/database";
 import { log } from "@alice/shared";
 import { z } from "zod";
-import { embedTexts } from "../../ingestor/src/embeddings.js";
 
 const limitSchema = z.number().int().min(1).max(50).optional();
 const offsetSchema = z.number().int().min(0).max(200).optional();
@@ -24,13 +23,6 @@ function text(payload: unknown) {
 
 function failure(message: string) {
   return { isError: true as const, ...text({ error: message }) };
-}
-
-async function queryVector(query: string): Promise<number[] | null> {
-  const vectors = await embedTexts([query]);
-  const vector = vectors?.[0];
-  if (!vector || vector.length !== 1536) return null;
-  return vector;
 }
 
 export function createLibraryServer(): McpServer {
@@ -58,8 +50,7 @@ export function createLibraryServer(): McpServer {
     },
     async (args) => {
       try {
-        const vector = await queryVector(args.query);
-        const found = await searchLibrary(getPool(), {
+        const found = await searchWithEmbedding(getPool(), {
           query: args.query,
           resourceTypes: args.resource_types,
           problems: args.problems,
@@ -71,8 +62,8 @@ export function createLibraryServer(): McpServer {
           evidenceStages: args.evidence_stages,
           limit: args.limit ?? 10,
           offset: args.offset ?? 0,
-        }, vector);
-        return text({ vector: found.vector, results: found.results });
+        });
+        return text({ vector: found.vector, relaxed: found.relaxed, results: found.results });
       } catch (error) {
         log("error", "search_library_failed", { message: error instanceof Error ? error.message : String(error) });
         return failure("Search failed");
@@ -96,17 +87,18 @@ export function createLibraryServer(): McpServer {
     async (args) => {
       try {
         const query = [args.problem, ...(args.constraints ?? [])].join(" ");
-        const vector = await queryVector(query);
-        const found = await searchLibrary(getPool(), {
+        const found = await searchWithEmbedding(getPool(), {
           query,
           countries: args.geography ? [args.geography] : undefined,
           diversity: "mechanism",
           limit: args.limit ?? 10,
           offset: 0,
-        }, vector);
+        });
         return text({
           diversity: "mechanism_buckets",
           note: "Hybrid search with at most one hit per primary technology/sector bucket (fallback when no technology is tagged).",
+          vector: found.vector,
+          relaxed: found.relaxed,
           results: found.results,
         });
       } catch (error) {

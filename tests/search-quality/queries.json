@@ -1,0 +1,53 @@
+[
+  {
+    "id": "rural-water-filtration",
+    "query": "low cost water filtration for rural villages",
+    "min_results": 1,
+    "note": "Natural-language query; should match via semantic and/or relaxed lexical after backfill."
+  },
+  {
+    "id": "water-filter-keywords",
+    "query": "water filter",
+    "min_results": 1
+  },
+  {
+    "id": "solar-rural",
+    "query": "affordable solar power for off-grid homes",
+    "min_results": 1
+  },
+  {
+    "id": "cold-chain-food",
+    "query": "reduce food spoilage cold storage smallholder farmers",
+    "min_results": 1
+  },
+  {
+    "id": "sanitation",
+    "query": "improved sanitation latrine low income communities",
+    "min_results": 1
+  },
+  {
+    "id": "irrigation",
+    "query": "drip irrigation water efficient agriculture",
+    "min_results": 1
+  },
+  {
+    "id": "healthcare-access",
+    "query": "mobile clinic rural healthcare access",
+    "min_results": 1
+  },
+  {
+    "id": "waste-plastic",
+    "query": "plastic waste recycling community",
+    "min_results": 1
+  },
+  {
+    "id": "education-technology",
+    "query": "digital learning tools underserved schools",
+    "min_results": 1
+  },
+  {
+    "id": "flood-resilience",
+    "query": "flood early warning vulnerable communities",
+    "min_results": 1
+  }
+]

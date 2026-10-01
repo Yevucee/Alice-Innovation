@@ -26,9 +26,9 @@ Variables:
 DATABASE_URL=<from pgvector service>
 MCP_AUTH_TOKEN=<openssl rand -hex 32>
 AUTH_MODE=token
-EMBEDDING_BASE_URL=https://api.openai.com/v1
-EMBEDDING_API_KEY=<secret>
-EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_BASE_URL=https://openrouter.ai/api/v1
+EMBEDDING_API_KEY=<OpenRouter secret>
+EMBEDDING_MODEL=openai/text-embedding-3-small
 EMBEDDING_DIMENSIONS=1536
 CLASSIFIER_ENABLED=false
 INGESTION_USER_AGENT=AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)

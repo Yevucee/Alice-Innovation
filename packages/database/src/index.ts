@@ -19,6 +19,16 @@ export {
   compactResourcesByIds,
 } from "./search.js";
 export type { CompactResource, SearchFilters } from "./search.js";
+export { searchWithEmbedding } from "./search-with-embedding.js";
+export type { EmbedTextsFn } from "./search-with-embedding.js";
+export {
+  buildEmbeddingText,
+  embeddingTextContentHash,
+  loadResourcesForEmbedding,
+  countActiveResources,
+  embeddingCatalogueCoverage,
+} from "./embedding-text.js";
+export type { EmbeddingTextInput, ResourceEmbeddingRow } from "./embedding-text.js";
 export {
   listRecentResources,
   resourcesForTaxonomy,

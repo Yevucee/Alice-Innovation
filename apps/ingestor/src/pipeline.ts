@@ -1,15 +1,17 @@
 import {
+  buildEmbeddingText,
   confirmDisappearances,
+  embeddingTextContentHash,
   getPool,
+  linkResourceTaxonomy,
   noteSemanticDuplicate,
   readCheckpoint,
   saveEmbedding,
   upsertDraft,
   writeCheckpoint,
-  linkResourceTaxonomy,
 } from "@alice/database";
-import { inferTaxonomyFromText } from "@alice/taxonomy";
-import { canonicaliseUrl, contentHash, log } from "@alice/shared";
+import { inferTaxonomyFromText, PROBLEMS, SECTORS, TECHNOLOGIES } from "@alice/taxonomy";
+import { canonicaliseUrl, log } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
 import { classifyResource } from "./classifier.js";
 import { applyGeographyDefaults } from "./geo-defaults.js";
@@ -163,12 +165,30 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
                 });
                 await linkResourceTaxonomy(pool, saved.resourceId, taxonomy);
                 try {
-                  const text = [draft.title, draft.sourceSummary, draft.extractedText.slice(0, 1000), draft.organisationName ?? "", draft.countryName ?? ""].join("\n");
-                  const vectors = await embedTexts([text]);
+                  const taxonomyNames = (slugs: string[], nodes: Array<{ slug: string; name: string }>) =>
+                    slugs.map((slug) => nodes.find((node) => node.slug === slug)?.name ?? slug);
+                  const embedInput = buildEmbeddingText({
+                    canonical_title: draft.title,
+                    source_summary: draft.sourceSummary,
+                    extracted_index_text: draft.extractedText,
+                    primary_country_name: draft.countryName,
+                    countries: draft.countryName ? [draft.countryName] : [],
+                    problems: taxonomyNames(taxonomy.problems, PROBLEMS),
+                    sectors: taxonomyNames(taxonomy.sectors, SECTORS),
+                    technologies: taxonomyNames(taxonomy.technologies, TECHNOLOGIES),
+                  });
+                  const vectors = await embedTexts([embedInput]);
                   const vector = vectors?.[0];
                   if (vector && vector.length === 1536) {
                     const settings = embeddingSettings();
-                    await saveEmbedding(pool, saved.resourceId, vector, settings.model, embeddingVersion(settings), contentHash([text]));
+                    await saveEmbedding(
+                      pool,
+                      saved.resourceId,
+                      vector,
+                      settings.model,
+                      embeddingVersion(settings),
+                      embeddingTextContentHash(embedInput),
+                    );
                     counts.duplicates += await noteSemanticDuplicate(pool, saved.resourceId);
                   } else if (vector) {
                     log("warn", "embedding_dimensions", { source_id: source.id, length: vector.length });
