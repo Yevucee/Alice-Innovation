@@ -76,14 +76,14 @@ export function enrichmentInputHash(title: string, summary: string, text: string
 export async function readEnrichmentCache(
   db: Queryable,
   hash: string,
-): Promise<EnrichmentPayload | null> {
+): Promise<{ hit: boolean; payload: EnrichmentPayload }> {
   const row = await db.query<{ payload: EnrichmentPayload }>(
     `SELECT payload FROM resource_enrichment_cache WHERE content_hash = $1`,
     [hash],
   );
-  const raw = row.rows[0]?.payload;
-  if (!raw) return null;
-  return parseEnrichmentPayload(raw).payload;
+  if (!row.rows[0]) return { hit: false, payload: {} };
+  const parsed = parseEnrichmentPayload(row.rows[0].payload);
+  return { hit: true, payload: parsed.payload ?? {} };
 }
 
 export async function writeEnrichmentCache(
