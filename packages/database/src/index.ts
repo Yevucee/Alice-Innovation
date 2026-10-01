@@ -64,6 +64,16 @@ export {
   type ApplyEnrichmentResult,
 } from "./enrichment.js";
 export {
+  correctMisassignedWaterSectorTags,
+  invalidateStaleEnrichmentEmbeddings,
+  isJunkPersonName,
+  isLegalFormOrganisationName,
+  loadResourceIdsNeedingReembed,
+  mergeDuplicateOrganisations,
+  repairLegalFormOrganisationLinks,
+  resolveOrganisationId,
+} from "./data-repair.js";
+export {
   listRecentResources,
   resourcesForTaxonomy,
   resourcesForSource,

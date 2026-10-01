@@ -61,6 +61,31 @@ export async function runPostIngestEmbeddingBackfill(
     };
   };
 
+  const priorityIds = [...new Set(input?.priorityResourceIds ?? [])];
+  let priorityEmbedded = 0;
+  let priorityFailed = 0;
+  let priorityTokens = 0;
+
+  if (priorityIds.length > 0) {
+    log("info", "backfill_embeddings_priority_start", { count: priorityIds.length });
+    try {
+      const priority = await runEmbeddingBackfillForResourceIds(db, priorityIds, {
+        embedBatch,
+        model: settings.model,
+        version,
+        throwOnConsecutiveFailures: false,
+      });
+      priorityEmbedded = priority.embedded;
+      priorityFailed = priority.failed;
+      priorityTokens = priority.total_tokens;
+      log("info", "backfill_embeddings_priority_complete", priority);
+    } catch (error) {
+      log("warn", "backfill_embeddings_priority_failed", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   log("info", "backfill_embeddings_safety_check_start", {
     model: settings.model,
     dimensions: settings.dimensions,
@@ -73,38 +98,33 @@ export async function runPostIngestEmbeddingBackfill(
     10,
   );
 
+  let summary: EmbeddingBackfillSummary;
   if (!safety.ok) {
-    const summary: EmbeddingBackfillSummary = {
-      processed: 0,
+    summary = {
+      processed: priorityIds.length,
       skipped: 0,
-      embedded: 0,
-      failed: 0,
-      total_tokens: 0,
-      estimated_cost_usd: 0,
-      pct_embedded: 0,
+      embedded: priorityEmbedded,
+      failed: priorityFailed,
+      total_tokens: priorityTokens,
+      estimated_cost_usd: Number(((priorityTokens / 1_000_000) * 0.02).toFixed(4)),
+      pct_embedded: (await embeddingAdminStatus(db)).coverage.pct,
       safety_check_passed: false,
-      aborted: true,
-      note: safety.detail,
+      aborted: priorityEmbedded === 0,
+      note: `priority_reembedded=${priorityEmbedded}; safety_failed=${safety.detail}`,
     };
-    try {
-      const coverage = await embeddingAdminStatus(db);
-      summary.pct_embedded = coverage.coverage.pct;
-      await recordEmbeddingBackfillRun(db, summary);
-    } catch (error) {
-      log("warn", "backfill_embeddings_record_failed", {
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-    log("error", "backfill_embeddings_safety_check_failed", { detail: safety.detail });
+    await recordEmbeddingBackfillRun(db, summary);
+    log("error", "backfill_embeddings_safety_check_failed", { detail: safety.detail, priority_embedded: priorityEmbedded });
     log("info", "backfill_embeddings_complete", {
-      embedded: 0,
-      skipped: 0,
-      failed: 0,
-      total_tokens: 0,
-      estimated_cost_usd: 0,
+      embedded: summary.embedded,
+      skipped: summary.skipped,
+      failed: summary.failed,
+      total_tokens: summary.total_tokens,
+      estimated_cost_usd: summary.estimated_cost_usd,
       pct_embedded: summary.pct_embedded,
-      safety_check_passed: false,
-      aborted: true,
+      safety_check_passed: summary.safety_check_passed,
+      aborted: summary.aborted,
+      priority_embedded: priorityEmbedded,
+      note: summary.note,
     });
     return;
   }
@@ -113,28 +133,9 @@ export async function runPostIngestEmbeddingBackfill(
     max_per_run: embeddingBackfillMaxPerRun(),
     model: settings.model,
     safety: safety.detail,
-    priority_ids: input?.priorityResourceIds?.length ?? 0,
+    priority_ids: priorityIds.length,
   });
 
-  let priorityEmbedded = 0;
-  if (input?.priorityResourceIds && input.priorityResourceIds.length > 0) {
-    try {
-      const priority = await runEmbeddingBackfillForResourceIds(db, input.priorityResourceIds, {
-        embedBatch,
-        model: settings.model,
-        version,
-        throwOnConsecutiveFailures: false,
-      });
-      priorityEmbedded = priority.embedded;
-      log("info", "backfill_embeddings_priority_complete", priority);
-    } catch (error) {
-      log("warn", "backfill_embeddings_priority_failed", {
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  let summary: EmbeddingBackfillSummary;
   try {
     summary = await runEmbeddingBackfill(db, {
       limit: embeddingBackfillMaxPerRun(),
@@ -162,6 +163,14 @@ export async function runPostIngestEmbeddingBackfill(
     log("error", "backfill_embeddings_failed", { message: summary.note });
   }
 
+  summary.embedded += priorityEmbedded;
+  summary.failed += priorityFailed;
+  summary.total_tokens += priorityTokens;
+  summary.estimated_cost_usd = Number(((summary.total_tokens / 1_000_000) * 0.02).toFixed(4));
+  summary.note = summary.note
+    ? `${summary.note}; priority_reembedded=${priorityEmbedded}`
+    : `priority_reembedded=${priorityEmbedded}`;
+
   try {
     await recordEmbeddingBackfillRun(db, summary);
   } catch (error) {
@@ -171,7 +180,7 @@ export async function runPostIngestEmbeddingBackfill(
   }
 
   log("info", "backfill_embeddings_complete", {
-    embedded: summary.embedded + priorityEmbedded,
+    embedded: summary.embedded,
     skipped: summary.skipped,
     failed: summary.failed,
     total_tokens: summary.total_tokens,
