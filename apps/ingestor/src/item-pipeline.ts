@@ -130,7 +130,7 @@ export async function processIngestItem(
     hasOrganisation: orgRow.rows[0]?.exists === true,
     reviewStatus,
   });
-  if (enrichResult.enriched) steps.push("enrich");
+  if (enrichResult.applied) steps.push("enrich");
   else steps.push("enrich_skipped");
 
   const taxonomy = inferTaxonomyFromText({
@@ -198,7 +198,7 @@ export async function processIngestItem(
   return {
     saved,
     qualityFlagged: quality.needsReview,
-    enriched: enrichResult.enriched,
+    enriched: enrichResult.applied,
     embedded,
     steps,
   };

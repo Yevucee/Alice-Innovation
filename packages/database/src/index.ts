@@ -56,7 +56,12 @@ export {
   readEnrichmentCache,
   writeEnrichmentCache,
   recordEnrichmentRun,
+  recordResourceEnrichmentAttempt,
+  parseEnrichmentPayload,
+  parseEnrichmentMessageContent,
   type EnrichmentPayload,
+  type EnrichmentOutcome,
+  type ApplyEnrichmentResult,
 } from "./enrichment.js";
 export {
   listRecentResources,

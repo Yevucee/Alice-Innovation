@@ -8,7 +8,7 @@ import {
 } from "@alice/database";
 import { AddToCollection } from "@/components/add-to-collection";
 import { ResourceCard } from "@/components/resource-card";
-import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, normaliseComparableText } from "@/lib/format";
+import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, sourceExcerptDuplicatesSummary } from "@/lib/format";
 import { pool } from "@/lib/db";
 
 function classificationTags(interpretation: Record<string, unknown> | null): string[] {
@@ -45,12 +45,14 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   const locationRows = resource.locations as Array<{ country_name: string; continent?: string | null }>;
   const continents = [...new Set(locationRows.map((l) => l.continent).filter(Boolean))] as string[];
   const countries = [...new Set(locationRows.map((l) => l.country_name).filter(Boolean))];
+  if (countries.length === 0 && resource.country) {
+    countries.push(String(resource.country));
+  }
   const locationLine = [...continents, ...countries.filter((c) => !continents.includes(c))];
   const tags = classificationTags(interpretation);
   const isPick = resource.review_status === "ALICE_PICK";
   const showSourceInformation = resource.excerpt
-    && normaliseComparableText(String(resource.excerpt))
-      !== normaliseComparableText(String(resource.source_summary));
+    && !sourceExcerptDuplicatesSummary(String(resource.source_summary), String(resource.excerpt));
   const evidenceLabel = formatEvidence(String(resource.evidence_stage));
   const evidenceBasisLabel = formatEvidenceBasis(String(resource.evidence_basis));
 

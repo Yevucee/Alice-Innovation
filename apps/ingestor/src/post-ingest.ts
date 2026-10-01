@@ -56,6 +56,9 @@ export async function runPostIngestMaintenance(
       enrichedResourceIds = summary.enriched_resource_ids;
       log("info", "post_ingest_enrichment_backfill", {
         processed: summary.processed,
+        attempted: summary.attempted,
+        applied: summary.applied,
+        no_data: summary.no_data,
         enriched: summary.enriched,
         skipped: summary.skipped,
         failed: summary.failed,
