@@ -16,7 +16,7 @@ Ordered steps:
 2. **Prepare** — `prepareIngestDraft` (`geo-defaults` + `inferCountryFromText`)
 3. **Quality gate** — `evaluateDraftQuality` → may set `NEEDS_REVIEW`; skips org/person links when flagged
 4. **Upsert** — `upsertDraft` (resources + source_items; no deletes)
-5. **LLM enrichment** — `enrichResourceOnIngest` when fields missing (not for `NEEDS_REVIEW`); cached by content hash
+5. **LLM enrichment** — cached by content hash; writes country + `resource_locations`, stage, org, taxonomy links; records `enrichment_attempted_at` so empty LLM responses are not re-billed unless content changes
 6. **Taxonomy link** — `inferTaxonomyFromText` + `linkResourceTaxonomy`
 7. **Embedding** — `buildEmbeddingText` (includes enriched fields) + `saveEmbedding`
 8. **Classifier** (optional) — `classifyResource` when `CLASSIFIER_ENABLED=true`

@@ -60,10 +60,17 @@ export default async function AdminPage() {
           {enrichment.paused_budget ? (
             <p className="mt-2 font-medium text-amber-800">Paused — OpenRouter limit reached</p>
           ) : null}
-          <p className="mt-2 text-muted">Pending resources: {enrichment.pending.toLocaleString()}</p>
+          <p className="mt-2 text-muted">
+            Pending (never attempted): {enrichment.pending.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Still missing country/stage/org after attempts: {enrichment.missing_fields.toLocaleString()}
+          </p>
           {enrichment.last_run ? (
             <p className="mt-2 text-xs text-muted">
-              Last run enriched {String(enrichment.last_run.enriched)} · est. cost USD{" "}
+              Last run — attempted {String(enrichment.last_run.attempted ?? enrichment.last_run.processed)} · applied{" "}
+              {String(enrichment.last_run.applied ?? enrichment.last_run.enriched)} · no data{" "}
+              {String(enrichment.last_run.no_data ?? "—")} · est. cost USD{" "}
               {String(enrichment.last_run.estimated_cost_usd)}
             </p>
           ) : null}

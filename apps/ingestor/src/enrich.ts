@@ -2,9 +2,12 @@ import {
   applyEnrichmentToResource,
   enrichmentInputHash,
   loadEnrichmentCandidates,
+  parseEnrichmentMessageContent,
   readEnrichmentCache,
   recordEnrichmentRun,
+  recordResourceEnrichmentAttempt,
   writeEnrichmentCache,
+  type EnrichmentOutcome,
   type EnrichmentPayload,
 } from "@alice/database";
 import type { Queryable } from "@alice/database";
@@ -14,6 +17,7 @@ export interface EnrichSettings {
   baseUrl: string;
   apiKey: string;
   model: string;
+  fallbackModel: string;
 }
 
 export const ENRICHMENT_PAUSED_BUDGET_NOTE = "enrichment_paused_budget";
@@ -23,6 +27,7 @@ export function enrichSettings(): EnrichSettings {
     baseUrl: (process.env.ENRICH_BASE_URL || process.env.EMBEDDING_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, ""),
     apiKey: process.env.ENRICH_API_KEY || process.env.EMBEDDING_API_KEY || "",
     model: process.env.ENRICH_MODEL || "google/gemini-2.5-flash-lite",
+    fallbackModel: process.env.ENRICH_FALLBACK_MODEL || "openai/gpt-4o-mini",
   };
 }
 
@@ -68,6 +73,16 @@ async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function modelError(status: number, bodyText: string): boolean {
+  if (status === 404 || status === 400) {
+    const lower = bodyText.toLowerCase();
+    return lower.includes("model") || lower.includes("not found");
+  }
+  return false;
+}
+
+let parseFailureLogBudget = 3;
+
 async function callEnrichmentLlm(
   settings: EnrichSettings,
   evidence: { title: string; summary: string; text: string },
@@ -77,72 +92,84 @@ async function callEnrichmentLlm(
   totalTokens: number;
   budgetPaused: boolean;
   rateLimited: boolean;
+  modelUsed: string;
+  parseError?: string;
 }> {
+  const models = [settings.model, settings.fallbackModel].filter((value, index, arr) => arr.indexOf(value) === index);
   let attempt = 0;
   while (attempt < 6) {
     attempt += 1;
-    const response = await fetchImpl(`${settings.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${settings.apiKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: settings.model,
-        temperature: 0,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: "Extract JSON keys country, city, stage, problem, sector, organisation_name. Use UNKNOWN when unclear.",
-          },
-          {
-            role: "user",
-            content: `${evidence.title}\n${evidence.summary}\n${evidence.text.slice(0, 1500)}`,
-          },
-        ],
-      }),
-    });
-    const bodyText = await response.text();
-    if (response.status === 429) {
-      const retryAfter = Number(response.headers.get("retry-after") ?? "0");
-      const delayMs = retryAfter > 0 ? retryAfter * 1000 : Math.min(30_000, 1000 * 2 ** attempt);
-      await sleep(delayMs);
-      continue;
-    }
-    if (!response.ok) {
-      if (isEnrichmentBudgetError(response.status, bodyText)) {
-        return { payload: null, totalTokens: 0, budgetPaused: true, rateLimited: false };
+    for (const model of models) {
+      const response = await fetchImpl(`${settings.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${settings.apiKey}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: "Extract JSON keys country, city, stage, problem, sector, organisation_name. Use UNKNOWN when unclear. country must be a real country name when mentioned.",
+            },
+            {
+              role: "user",
+              content: `${evidence.title}\n${evidence.summary}\n${evidence.text.slice(0, 1500)}`,
+            },
+          ],
+        }),
+      });
+      const bodyText = await response.text();
+      if (response.status === 429) {
+        const retryAfter = Number(response.headers.get("retry-after") ?? "0");
+        const delayMs = retryAfter > 0 ? retryAfter * 1000 : Math.min(30_000, 1000 * 2 ** attempt);
+        await sleep(delayMs);
+        break;
       }
-      log("warn", "enrich_llm_failed", { status: response.status });
-      return { payload: null, totalTokens: 0, budgetPaused: false, rateLimited: false };
-    }
-    let body: {
-      choices?: Array<{ message?: { content?: string } }>;
-      usage?: { total_tokens?: number };
-    };
-    try {
-      body = JSON.parse(bodyText) as typeof body;
-    } catch {
-      return { payload: null, totalTokens: 0, budgetPaused: false, rateLimited: false };
-    }
-    try {
-      return {
-        payload: JSON.parse(body.choices?.[0]?.message?.content ?? "{}") as EnrichmentPayload,
-        totalTokens: body.usage?.total_tokens ?? 0,
-        budgetPaused: false,
-        rateLimited: false,
+      if (!response.ok) {
+        if (isEnrichmentBudgetError(response.status, bodyText)) {
+          return { payload: null, totalTokens: 0, budgetPaused: true, rateLimited: false, modelUsed: model };
+        }
+        if (modelError(response.status, bodyText) && model !== models[models.length - 1]) {
+          log("warn", "enrich_llm_model_failed", { status: response.status, model });
+          continue;
+        }
+        log("warn", "enrich_llm_failed", { status: response.status, model });
+        return { payload: null, totalTokens: 0, budgetPaused: false, rateLimited: false, modelUsed: model };
+      }
+      let body: {
+        choices?: Array<{ message?: { content?: string } }>;
+        usage?: { total_tokens?: number };
       };
-    } catch {
+      try {
+        body = JSON.parse(bodyText) as typeof body;
+      } catch {
+        return { payload: null, totalTokens: 0, budgetPaused: false, rateLimited: false, modelUsed: model, parseError: "response_json_invalid" };
+      }
+      const content = body.choices?.[0]?.message?.content ?? "{}";
+      const parsed = parseEnrichmentMessageContent(content);
+      if (!parsed.payload && parseFailureLogBudget > 0) {
+        parseFailureLogBudget -= 1;
+        log("warn", "enrich_llm_parse_failed", {
+          model,
+          error: parsed.error,
+          raw_sample: parsed.rawSample,
+        });
+      }
       return {
-        payload: null,
+        payload: parsed.payload,
         totalTokens: body.usage?.total_tokens ?? 0,
         budgetPaused: false,
         rateLimited: false,
+        modelUsed: model,
+        parseError: parsed.error,
       };
     }
   }
-  return { payload: null, totalTokens: 0, budgetPaused: false, rateLimited: true };
+  return { payload: null, totalTokens: 0, budgetPaused: false, rateLimited: true, modelUsed: settings.model };
 }
 
 export async function enrichResourceOnIngest(
@@ -158,31 +185,59 @@ export async function enrichResourceOnIngest(
     reviewStatus: string;
   },
   options?: { settings?: EnrichSettings; fetchImpl?: typeof fetch },
-): Promise<{ enriched: boolean; totalTokens: number; budgetPaused: boolean }> {
-  if (!enrichEnabled()) return { enriched: false, totalTokens: 0, budgetPaused: false };
-  if (evidence.reviewStatus === "NEEDS_REVIEW") return { enriched: false, totalTokens: 0, budgetPaused: false };
-  if (!resourceNeedsEnrichment(evidence)) return { enriched: false, totalTokens: 0, budgetPaused: false };
+): Promise<{
+  outcome: EnrichmentOutcome | "skipped" | "cached";
+  applied: boolean;
+  totalTokens: number;
+  budgetPaused: boolean;
+}> {
+  if (!enrichEnabled()) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
+  if (evidence.reviewStatus === "NEEDS_REVIEW") return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
+  if (!resourceNeedsEnrichment(evidence)) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
 
   const settings = options?.settings ?? enrichSettings();
-  if (!settings.apiKey) return { enriched: false, totalTokens: 0, budgetPaused: false };
+  if (!settings.apiKey) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
 
-  const hash = enrichmentInputHash(evidence.title, evidence.summary, evidence.text);
-  let payload = await readEnrichmentCache(db, hash);
+  const inputHash = enrichmentInputHash(evidence.title, evidence.summary, evidence.text);
+  let payload = await readEnrichmentCache(db, inputHash);
   let totalTokens = 0;
+  let modelUsed = settings.model;
+  let fromCache = Boolean(payload);
+
   if (!payload) {
     const fetchImpl = options?.fetchImpl ?? fetch;
     const llm = await callEnrichmentLlm(settings, evidence, fetchImpl);
+    modelUsed = llm.modelUsed;
     if (llm.budgetPaused) {
-      return { enriched: false, totalTokens: 0, budgetPaused: true };
+      return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: true };
     }
     payload = llm.payload;
     totalTokens = llm.totalTokens;
-    if (payload) await writeEnrichmentCache(db, hash, settings.model, payload);
+    if (payload) await writeEnrichmentCache(db, inputHash, modelUsed, payload);
   }
 
-  if (!payload) return { enriched: false, totalTokens, budgetPaused: false };
-  const changed = await applyEnrichmentToResource(db, resourceId, payload);
-  return { enriched: changed, totalTokens, budgetPaused: false };
+  if (!payload) {
+    await recordResourceEnrichmentAttempt(db, resourceId, {
+      inputHash,
+      model: modelUsed,
+      outcome: "no_data",
+    });
+    return { outcome: "no_data", applied: false, totalTokens, budgetPaused: false };
+  }
+
+  const applyResult = await applyEnrichmentToResource(db, resourceId, payload, evidence);
+  await recordResourceEnrichmentAttempt(db, resourceId, {
+    inputHash,
+    model: modelUsed,
+    outcome: applyResult.outcome,
+  });
+
+  return {
+    outcome: fromCache && applyResult.outcome === "applied" ? "cached" : applyResult.outcome,
+    applied: applyResult.changed,
+    totalTokens,
+    budgetPaused: false,
+  };
 }
 
 async function mapWithConcurrency<T, R>(
@@ -214,6 +269,9 @@ export async function runEnrichmentBackfill(
   },
 ): Promise<{
   processed: number;
+  attempted: number;
+  applied: number;
+  no_data: number;
   enriched: number;
   skipped: number;
   failed: number;
@@ -222,8 +280,11 @@ export async function runEnrichmentBackfill(
   enriched_resource_ids: string[];
   paused_budget: boolean;
 }> {
+  parseFailureLogBudget = 3;
   const candidates = await loadEnrichmentCandidates(db, input.limit, input.resourceIds ?? null);
-  let enriched = 0;
+  let attempted = 0;
+  let applied = 0;
+  let no_data = 0;
   let skipped = 0;
   let failed = 0;
   let total_tokens = 0;
@@ -235,6 +296,9 @@ export async function runEnrichmentBackfill(
   if (candidates.length === 0) {
     await recordEnrichmentRun(db, {
       processed: 0,
+      attempted: 0,
+      applied: 0,
+      no_data: 0,
       enriched: 0,
       skipped: 0,
       failed: 0,
@@ -243,6 +307,9 @@ export async function runEnrichmentBackfill(
     });
     return {
       processed: 0,
+      attempted: 0,
+      applied: 0,
+      no_data: 0,
       enriched: 0,
       skipped: 0,
       failed: 0,
@@ -264,7 +331,7 @@ export async function runEnrichmentBackfill(
 
   const outcomes = await mapWithConcurrency(candidates, concurrency, async (candidate) => {
     if (budget.paused) {
-      return { enriched: false, skipped: true, failed: false, totalTokens: 0, resourceId: candidate.id };
+      return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id };
     }
     try {
       const result = await enrichResourceOnIngest(
@@ -284,38 +351,46 @@ export async function runEnrichmentBackfill(
       if (result.budgetPaused) {
         budget.paused = true;
         log("info", "enrichment_paused_budget", {});
-        return { enriched: false, skipped: true, failed: false, totalTokens: 0, resourceId: candidate.id };
+        return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id };
       }
-      if (result.enriched) {
-        return {
-          enriched: true,
-          skipped: false,
-          failed: false,
-          totalTokens: result.totalTokens,
-          resourceId: candidate.id,
-        };
+      if (result.outcome === "skipped") {
+        return { kind: "skipped" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
       }
-      return { enriched: false, skipped: true, failed: false, totalTokens: result.totalTokens, resourceId: candidate.id };
+      if (result.outcome === "failed") {
+        return { kind: "failed" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
+      }
+      if (result.applied) {
+        return { kind: "applied" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
+      }
+      return { kind: "no_data" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
     } catch {
-      return { enriched: false, skipped: false, failed: true, totalTokens: 0, resourceId: candidate.id };
+      return { kind: "failed" as const, totalTokens: 0, resourceId: candidate.id };
     }
   });
 
   for (const outcome of outcomes) {
     total_tokens += outcome.totalTokens;
-    if (outcome.enriched) {
-      enriched += 1;
+    if (outcome.kind === "applied") {
+      attempted += 1;
+      applied += 1;
       enriched_resource_ids.push(outcome.resourceId);
-    } else if (outcome.failed) failed += 1;
-    else skipped += 1;
+    } else if (outcome.kind === "no_data") {
+      attempted += 1;
+      no_data += 1;
+    } else if (outcome.kind === "failed") {
+      attempted += 1;
+      failed += 1;
+    } else skipped += 1;
   }
 
   paused_budget = budget.paused;
-
   const estimated_cost_usd = Number((total_tokens * 0.0000005).toFixed(6));
   await recordEnrichmentRun(db, {
     processed: candidates.length,
-    enriched,
+    attempted,
+    applied,
+    no_data,
+    enriched: applied,
     skipped,
     failed,
     total_tokens,
@@ -325,7 +400,10 @@ export async function runEnrichmentBackfill(
 
   return {
     processed: candidates.length,
-    enriched,
+    attempted,
+    applied,
+    no_data,
+    enriched: applied,
     skipped,
     failed,
     total_tokens,

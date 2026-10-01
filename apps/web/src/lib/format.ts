@@ -47,3 +47,18 @@ export function metaLine(parts: Array<string | null | undefined>): string {
 export function normaliseComparableText(value: string): string {
   return value.replace(/\s+/g, " ").trim().toLowerCase();
 }
+
+/** True when excerpt repeats the summary (exact or shared long prefix). */
+export function sourceExcerptDuplicatesSummary(summary: string, excerpt: string): boolean {
+  const a = normaliseComparableText(summary);
+  const b = normaliseComparableText(excerpt);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.length >= 40 && b.startsWith(a)) return true;
+  if (b.length >= 40 && a.startsWith(b)) return true;
+  const prefixLen = Math.min(120, a.length, b.length);
+  if (prefixLen >= 80 && a.slice(0, prefixLen) === b.slice(0, prefixLen)) return true;
+  if (a.length >= 80 && b.startsWith(a.slice(0, 80))) return true;
+  if (b.length >= 80 && a.startsWith(b.slice(0, 80))) return true;
+  return false;
+}
