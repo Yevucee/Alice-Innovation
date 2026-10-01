@@ -2,6 +2,7 @@ import {
   embeddingAdminStatus,
   recordEmbeddingBackfillRun,
   runEmbeddingBackfill,
+  runEmbeddingBackfillForResourceIds,
   runEmbeddingSafetyCheck,
   type EmbeddingBackfillSummary,
 } from "@alice/database";
@@ -34,7 +35,10 @@ export function embeddingBackfillMaxPerRun(): number {
   return envNumber("EMBEDDING_BACKFILL_MAX_PER_RUN", 20000);
 }
 
-export async function runPostIngestEmbeddingBackfill(db: Queryable): Promise<void> {
+export async function runPostIngestEmbeddingBackfill(
+  db: Queryable,
+  input?: { priorityResourceIds?: string[] },
+): Promise<void> {
   if (!embeddingBackfillOnIngestEnabled()) {
     log("info", "backfill_embeddings_skipped", { reason: "EMBEDDING_BACKFILL_ON_INGEST=false" });
     return;
@@ -109,7 +113,26 @@ export async function runPostIngestEmbeddingBackfill(db: Queryable): Promise<voi
     max_per_run: embeddingBackfillMaxPerRun(),
     model: settings.model,
     safety: safety.detail,
+    priority_ids: input?.priorityResourceIds?.length ?? 0,
   });
+
+  let priorityEmbedded = 0;
+  if (input?.priorityResourceIds && input.priorityResourceIds.length > 0) {
+    try {
+      const priority = await runEmbeddingBackfillForResourceIds(db, input.priorityResourceIds, {
+        embedBatch,
+        model: settings.model,
+        version,
+        throwOnConsecutiveFailures: false,
+      });
+      priorityEmbedded = priority.embedded;
+      log("info", "backfill_embeddings_priority_complete", priority);
+    } catch (error) {
+      log("warn", "backfill_embeddings_priority_failed", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   let summary: EmbeddingBackfillSummary;
   try {
@@ -148,7 +171,7 @@ export async function runPostIngestEmbeddingBackfill(db: Queryable): Promise<voi
   }
 
   log("info", "backfill_embeddings_complete", {
-    embedded: summary.embedded,
+    embedded: summary.embedded + priorityEmbedded,
     skipped: summary.skipped,
     failed: summary.failed,
     total_tokens: summary.total_tokens,
@@ -156,5 +179,6 @@ export async function runPostIngestEmbeddingBackfill(db: Queryable): Promise<voi
     pct_embedded: summary.pct_embedded,
     safety_check_passed: summary.safety_check_passed,
     aborted: summary.aborted,
+    priority_embedded: priorityEmbedded,
   });
 }

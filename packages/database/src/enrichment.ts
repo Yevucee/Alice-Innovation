@@ -135,6 +135,13 @@ export async function applyEnrichmentToResource(
     changed = true;
   }
 
+  if (changed) {
+    await db.query(
+      `UPDATE resources SET embedding_content_hash = NULL, updated_at = now() WHERE id = $1::uuid`,
+      [resourceId],
+    );
+  }
+
   return changed;
 }
 
@@ -168,6 +175,7 @@ export async function recordEnrichmentRun(
 
 export async function enrichmentAdminStatus(db: Queryable): Promise<{
   pending: number;
+  paused_budget: boolean;
   last_run: Record<string, unknown> | null;
 }> {
   const pending = await db.query<{ count: string }>(
@@ -185,8 +193,11 @@ export async function enrichmentAdminStatus(db: Queryable): Promise<{
     `SELECT id::text, completed_at, processed, enriched, skipped, failed, total_tokens, estimated_cost_usd, note
      FROM enrichment_backfill_runs ORDER BY started_at DESC LIMIT 1`,
   );
+  const lastRow = last.rows[0] ?? null;
+  const note = lastRow?.note != null ? String(lastRow.note) : "";
   return {
     pending: Number(pending.rows[0]?.count ?? 0),
-    last_run: last.rows[0] ?? null,
+    paused_budget: note === "enrichment_paused_budget" || /openrouter limit|insufficient credits|402/i.test(note),
+    last_run: lastRow,
   };
 }

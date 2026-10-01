@@ -61,7 +61,7 @@ export function auditDraftShape(draft: Pick<
 export async function loadResourcesForQualityAudit(
   db: Queryable,
   resourceIds: string[] | null,
-  limit: number,
+  limit: number | null,
 ): Promise<Array<{
   id: string;
   title: string;
@@ -104,8 +104,10 @@ export async function loadResourcesForQualityAudit(
      WHERE r.active
        AND ($1::uuid[] IS NULL OR r.id = ANY($1::uuid[]))
      ORDER BY r.updated_at DESC
-     LIMIT $2`,
-    [resourceIds && resourceIds.length > 0 ? resourceIds : null, limit],
+     ${limit == null ? "" : "LIMIT $2"}`,
+    limit == null
+      ? [resourceIds && resourceIds.length > 0 ? resourceIds : null]
+      : [resourceIds && resourceIds.length > 0 ? resourceIds : null, limit],
   );
   return rows.rows as Array<{
     id: string;
@@ -123,12 +125,12 @@ export async function runQualityAudit(
   db: Queryable,
   input: {
     resourceIds?: string[] | null;
-    limit?: number;
+    limit?: number | null;
     dryRun: boolean;
     apply?: boolean;
   },
 ): Promise<QualityAuditSummary> {
-  const limit = input.limit ?? 50_000;
+  const limit = input.limit === undefined ? null : input.limit;
   const resources = await loadResourcesForQualityAudit(db, input.resourceIds ?? null, limit);
   const reason_counts: Record<string, number> = {};
   const rows: QualityAuditRow[] = [];

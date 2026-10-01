@@ -57,6 +57,9 @@ export default async function AdminPage() {
       {enrichment ? (
         <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
           <h2 className="text-sm font-medium">LLM enrichment</h2>
+          {enrichment.paused_budget ? (
+            <p className="mt-2 font-medium text-amber-800">Paused — OpenRouter limit reached</p>
+          ) : null}
           <p className="mt-2 text-muted">Pending resources: {enrichment.pending.toLocaleString()}</p>
           {enrichment.last_run ? (
             <p className="mt-2 text-xs text-muted">

@@ -22,11 +22,13 @@ export async function runPostIngestMaintenance(
   db: Queryable,
   input: { touchedResourceIds: string[] },
 ): Promise<void> {
+  void input.touchedResourceIds;
+
   if (qualityAuditOnIngestEnabled()) {
     try {
       const summary = await runQualityAudit(db, {
-        resourceIds: input.touchedResourceIds.length > 0 ? input.touchedResourceIds : null,
-        limit: 5000,
+        resourceIds: null,
+        limit: null,
         dryRun: false,
         apply: true,
       });
@@ -44,13 +46,23 @@ export async function runPostIngestMaintenance(
     log("info", "post_ingest_quality_audit_skipped", { reason: "QUALITY_AUDIT_ON_INGEST=false" });
   }
 
+  let enrichedResourceIds: string[] = [];
   if (enrichBackfillOnIngestEnabled()) {
     try {
       const summary = await runEnrichmentBackfill(db, {
         limit: enrichMaxPerRun(),
-        resourceIds: input.touchedResourceIds.length > 0 ? input.touchedResourceIds : null,
+        resourceIds: null,
       });
-      log("info", "post_ingest_enrichment_backfill", summary);
+      enrichedResourceIds = summary.enriched_resource_ids;
+      log("info", "post_ingest_enrichment_backfill", {
+        processed: summary.processed,
+        enriched: summary.enriched,
+        skipped: summary.skipped,
+        failed: summary.failed,
+        total_tokens: summary.total_tokens,
+        estimated_cost_usd: summary.estimated_cost_usd,
+        paused_budget: summary.paused_budget,
+      });
     } catch (error) {
       log("warn", "post_ingest_enrichment_backfill_failed", {
         message: error instanceof Error ? error.message : String(error),
@@ -61,7 +73,7 @@ export async function runPostIngestMaintenance(
   }
 
   try {
-    await runPostIngestEmbeddingBackfill(db);
+    await runPostIngestEmbeddingBackfill(db, { priorityResourceIds: enrichedResourceIds });
   } catch (error) {
     log("warn", "backfill_embeddings_unexpected_error", {
       message: error instanceof Error ? error.message : String(error),

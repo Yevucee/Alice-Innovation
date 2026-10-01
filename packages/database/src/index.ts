@@ -32,6 +32,7 @@ export {
 export type { EmbeddingTextInput, ResourceEmbeddingRow } from "./embedding-text.js";
 export {
   runEmbeddingBackfill,
+  runEmbeddingBackfillForResourceIds,
   runEmbeddingSafetyCheck,
   recordEmbeddingBackfillRun,
   latestEmbeddingBackfillRun,

@@ -39,9 +39,9 @@ One advisory lock prevents overlapping runs.
 
 After all sources finish, the ingestor runs (failures are logged; ingest status is not failed):
 
-1. **Quality audit** — `QUALITY_AUDIT_ON_INGEST` (default true): `runQualityAudit` with `--apply` semantics on touched resources → sets `NEEDS_REVIEW`
-2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` rows still missing country/stage/org
-3. **Embedding backfill** — existing `EMBEDDING_BACKFILL_ON_INGEST` pass
+1. **Quality audit** — `QUALITY_AUDIT_ON_INGEST` (default true): scans **all active** resources each run → sets `NEEDS_REVIEW`
+2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` (default **15000**) pending rows, parallel (`ENRICH_CONCURRENCY`, default 8), content-hash cache, pauses cleanly on OpenRouter budget errors (`enrichment_paused_budget`)
+3. **Embedding backfill** — re-embeds enriched rows in the same run (hash cleared on apply), then catalogue backfill
 
 Manual scripts: `npm run audit:data-quality` (CSV dry-run by default), `npm run enrich:batch`.
 
