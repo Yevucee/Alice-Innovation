@@ -39,6 +39,7 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
   const [loading, setLoading] = useState(true);
   const [mobileFilters, setMobileFilters] = useState(false);
   const [sourceCatalogue, setSourceCatalogue] = useState<Array<{ id: string; name: string }>>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const state = useMemo(() => ({
     q: params.get("q") ?? "",
@@ -134,11 +135,12 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
       limit: 20,
       offset: state.offset,
     };
+    setSearchError(null);
     fetch("/api/search", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
       .then(async (r) => {
-        const json = await r.json() as SearchResponse & { error?: string };
+        const json = await r.json() as SearchResponse & { error?: string; message?: string };
         if (!r.ok || !Array.isArray(json.results)) {
-          throw new Error(json.error ?? "search_failed");
+          throw new Error(json.message ?? json.error ?? "search_failed");
         }
         return json;
       })
@@ -146,8 +148,10 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
         setMeta(payload);
         setRows((previous) => (state.offset === 0 ? payload.results : [...previous, ...payload.results]));
       })
-      .catch(() => {
-        setMeta({ results: [], filtered_total: 0, library_total: libraryTotal, vector: "unavailable" });
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Search failed. Please try again.";
+        setSearchError(message);
+        setMeta(null);
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -241,7 +245,13 @@ export function SearchExperience({ libraryTotal }: { libraryTotal: number }) {
         </button>
       </div>
 
-      {!loading && meta?.relaxed ? (
+      {!loading && searchError ? (
+        <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900" role="alert">
+          {searchError}
+        </p>
+      ) : null}
+
+      {!loading && !searchError && meta?.relaxed ? (
         <p className="mt-4 rounded-md border border-line bg-white px-3 py-2 text-sm text-muted">
           Showing closest matches — your filters still apply; we relaxed how the search terms are matched.
         </p>

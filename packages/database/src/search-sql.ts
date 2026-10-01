@@ -79,6 +79,13 @@ export const FILTER_SQL = `
   ))
 `;
 
+/** Positional params produced by {@link filterParams} ($1 … $FILTER_PARAM_COUNT). */
+export const FILTER_PARAM_COUNT = 11;
+
+/** $1 query, $2–$9 filters, $10 qualityBrowse flag, $11 quality blocklist (text[]). */
+export const SEMANTIC_EMBEDDING_PARAM = FILTER_PARAM_COUNT + 1;
+export const SEMANTIC_MAX_DISTANCE_PARAM = FILTER_PARAM_COUNT + 2;
+
 export function filterParams(filters: SearchFilters): unknown[] {
   const countries = arr(filters.countries)?.map((value) => value.toLowerCase()) ?? null;
   const continents = continentNamesForFilter(arr(filters.continents) ?? []);
@@ -95,6 +102,28 @@ export function filterParams(filters: SearchFilters): unknown[] {
     filters.qualityBrowse === true,
     qualityBrowseBlocklistParam(),
   ];
+}
+
+export function appendSemanticQueryParams(
+  filterBindParams: unknown[],
+  queryEmbedding: number[],
+  maxDistance: number,
+): unknown[] {
+  if (filterBindParams.length !== FILTER_PARAM_COUNT) {
+    throw new Error(
+      `filterParams length ${filterBindParams.length} !== ${FILTER_PARAM_COUNT}`,
+    );
+  }
+  return [...filterBindParams, `[${queryEmbedding.join(",")}]`, maxDistance];
+}
+
+/** Distance predicate for hybrid semantic search (embedding + max distance appended after filter params). */
+export function semanticDistancePredicateSql(): string {
+  return `(r.embedding <=> $${SEMANTIC_EMBEDDING_PARAM}::vector) <= $${SEMANTIC_MAX_DISTANCE_PARAM}::float8`;
+}
+
+export function semanticOrderByDistanceSql(): string {
+  return `r.embedding <=> $${SEMANTIC_EMBEDDING_PARAM}::vector`;
 }
 
 export const OR_TERM_MATCH_COUNT_SQL = `

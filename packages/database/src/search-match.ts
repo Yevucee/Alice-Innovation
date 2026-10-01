@@ -1,5 +1,12 @@
 import type { Queryable } from "./pool.js";
-import { FILTER_SQL, filterParams, OR_TERM_MATCH_COUNT_SQL, type SearchFilters } from "./search-sql.js";
+import {
+  FILTER_SQL,
+  appendSemanticQueryParams,
+  filterParams,
+  OR_TERM_MATCH_COUNT_SQL,
+  semanticDistancePredicateSql,
+  type SearchFilters,
+} from "./search-sql.js";
 
 export function semanticMaxDistance(): number {
   const raw = Number(process.env.SEARCH_SEMANTIC_MAX_DISTANCE ?? "0.42");
@@ -24,7 +31,7 @@ export function matchPredicateSql(
   const semanticClause = options.includeSemantic
     ? `OR (
          r.embedding IS NOT NULL
-         AND (r.embedding <=> $11::vector) <= $12::float8
+         AND ${semanticDistancePredicateSql()}
        )`
     : "";
   return `(
@@ -53,7 +60,7 @@ export async function countSearchMatches(
        AND ${FILTER_SQL}
        AND ${predicate}`,
     hasVector
-      ? [...params, `[${queryEmbedding!.join(",")}]`, maxDistance]
+      ? appendSemanticQueryParams(params, queryEmbedding!, maxDistance)
       : params,
   );
   return Number(row.rows[0]?.count ?? 0);
