@@ -37,12 +37,16 @@ async function main(): Promise<void> {
   } else {
     log("info", "ingest_finished", { touched_resources: result.touchedResourceIds.length });
   }
-  try {
-    await runPostIngestMaintenance(getPool(), { touchedResourceIds: result.touchedResourceIds });
-  } catch (error) {
-    log("warn", "post_ingest_maintenance_failed", {
-      message: error instanceof Error ? error.message : String(error),
-    });
+  if (result.ingestSkippedDueToLock) {
+    log("info", "post_ingest_skipped", { reason: "ingest_lock_held" });
+  } else {
+    try {
+      await runPostIngestMaintenance(getPool(), { touchedResourceIds: result.touchedResourceIds });
+    } catch (error) {
+      log("warn", "post_ingest_maintenance_failed", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
   await closePool();
 }

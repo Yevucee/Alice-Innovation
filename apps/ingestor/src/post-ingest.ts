@@ -25,7 +25,15 @@ export async function runPostIngestMaintenance(
 ): Promise<void> {
   void input.touchedResourceIds;
 
-  await runPostIngestCatalogueRepairs(db);
+  let catalogueNote = "";
+  try {
+    const repairs = await runPostIngestCatalogueRepairs(db);
+    catalogueNote = `org_merge_removed=${repairs.org_merge_removed}; org_merge_groups=${repairs.org_merge_groups}`;
+  } catch (error) {
+    log("warn", "post_ingest_catalogue_repairs_failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   if (qualityAuditOnIngestEnabled()) {
     try {
@@ -79,8 +87,13 @@ export async function runPostIngestMaintenance(
   }
 
   try {
-    const priorityIds = await resolvePriorityReembedResourceIds(db, enrichedResourceIds);
-    await runPostIngestEmbeddingBackfill(db, { priorityResourceIds: priorityIds });
+    const queue = await resolvePriorityReembedResourceIds(db, enrichedResourceIds);
+    await runPostIngestEmbeddingBackfill(db, {
+      priorityResourceIds: queue.ids,
+      priorityQueued: queue.ids.length,
+      catalogueRepairNote: catalogueNote,
+      reembedQueueMeta: queue,
+    });
   } catch (error) {
     log("warn", "backfill_embeddings_unexpected_error", {
       message: error instanceof Error ? error.message : String(error),

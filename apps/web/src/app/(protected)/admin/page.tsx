@@ -99,6 +99,17 @@ export default async function AdminPage() {
                 </dd>
               </div>
               <div>
+                <dt>Priority queue / re-embedded</dt>
+                <dd className="text-ink">
+                  {String(embeddings.last_run.priority_queued ?? "—")} /{" "}
+                  {String(embeddings.last_run.priority_embedded ?? "—")}
+                  {embeddings.last_run.priority_failed != null &&
+                  Number(embeddings.last_run.priority_failed) > 0
+                    ? ` (${String(embeddings.last_run.priority_failed)} failed)`
+                    : null}
+                </dd>
+              </div>
+              <div>
                 <dt>Est. cost (USD)</dt>
                 <dd className="text-ink">{String(embeddings.last_run.estimated_cost_usd)}</dd>
               </div>

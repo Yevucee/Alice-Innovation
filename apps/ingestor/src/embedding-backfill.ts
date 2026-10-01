@@ -35,9 +35,38 @@ export function embeddingBackfillMaxPerRun(): number {
   return envNumber("EMBEDDING_BACKFILL_MAX_PER_RUN", 20000);
 }
 
+function composeBackfillNote(input: {
+  catalogueRepairNote?: string;
+  reembedQueueMeta?: {
+    enriched_this_run: number;
+    embedding_hashes_invalidated: number;
+    stale_ids: number;
+  };
+  extra?: string;
+}): string {
+  const parts: string[] = [];
+  if (input.catalogueRepairNote) parts.push(input.catalogueRepairNote);
+  if (input.reembedQueueMeta) {
+    parts.push(
+      `reembed_enriched=${input.reembedQueueMeta.enriched_this_run}; reembed_invalidated=${input.reembedQueueMeta.embedding_hashes_invalidated}; reembed_stale=${input.reembedQueueMeta.stale_ids}`,
+    );
+  }
+  if (input.extra) parts.push(input.extra);
+  return parts.join("; ");
+}
+
 export async function runPostIngestEmbeddingBackfill(
   db: Queryable,
-  input?: { priorityResourceIds?: string[] },
+  input?: {
+    priorityResourceIds?: string[];
+    priorityQueued?: number;
+    catalogueRepairNote?: string;
+    reembedQueueMeta?: {
+      enriched_this_run: number;
+      embedding_hashes_invalidated: number;
+      stale_ids: number;
+    };
+  },
 ): Promise<void> {
   if (!embeddingBackfillOnIngestEnabled()) {
     log("info", "backfill_embeddings_skipped", { reason: "EMBEDDING_BACKFILL_ON_INGEST=false" });
@@ -62,6 +91,7 @@ export async function runPostIngestEmbeddingBackfill(
   };
 
   const priorityIds = [...new Set(input?.priorityResourceIds ?? [])];
+  const priorityQueued = input?.priorityQueued ?? priorityIds.length;
   let priorityEmbedded = 0;
   let priorityFailed = 0;
   let priorityTokens = 0;
@@ -110,7 +140,14 @@ export async function runPostIngestEmbeddingBackfill(
       pct_embedded: (await embeddingAdminStatus(db)).coverage.pct,
       safety_check_passed: false,
       aborted: priorityEmbedded === 0,
-      note: `priority_reembedded=${priorityEmbedded}; safety_failed=${safety.detail}`,
+      priority_queued: priorityQueued,
+      priority_embedded: priorityEmbedded,
+      priority_failed: priorityFailed,
+      note: composeBackfillNote({
+        catalogueRepairNote: input?.catalogueRepairNote,
+        reembedQueueMeta: input?.reembedQueueMeta,
+        extra: `priority_reembedded=${priorityEmbedded}; safety_failed=${safety.detail}`,
+      }),
     };
     await recordEmbeddingBackfillRun(db, summary);
     log("error", "backfill_embeddings_safety_check_failed", { detail: safety.detail, priority_embedded: priorityEmbedded });
@@ -167,9 +204,16 @@ export async function runPostIngestEmbeddingBackfill(
   summary.failed += priorityFailed;
   summary.total_tokens += priorityTokens;
   summary.estimated_cost_usd = Number(((summary.total_tokens / 1_000_000) * 0.02).toFixed(4));
-  summary.note = summary.note
-    ? `${summary.note}; priority_reembedded=${priorityEmbedded}`
-    : `priority_reembedded=${priorityEmbedded}`;
+  summary.priority_queued = priorityQueued;
+  summary.priority_embedded = priorityEmbedded;
+  summary.priority_failed = priorityFailed;
+  summary.note = composeBackfillNote({
+    catalogueRepairNote: input?.catalogueRepairNote,
+    reembedQueueMeta: input?.reembedQueueMeta,
+    extra: summary.note
+      ? `${summary.note}; priority_reembedded=${priorityEmbedded}`
+      : `priority_reembedded=${priorityEmbedded}`,
+  });
 
   try {
     await recordEmbeddingBackfillRun(db, summary);

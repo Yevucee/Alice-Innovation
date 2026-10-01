@@ -54,7 +54,9 @@ export interface IngestOptions {
   dryRun: boolean;
 }
 
-export async function runIngestion(options: IngestOptions): Promise<{ failedSources: string[]; touchedResourceIds: string[] }> {
+export async function runIngestion(
+  options: IngestOptions,
+): Promise<{ failedSources: string[]; touchedResourceIds: string[]; ingestSkippedDueToLock: boolean }> {
   const pool = getPool();
   const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
@@ -63,7 +65,7 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
   if (!locked.rows[0]?.locked) {
     log("info", "ingest_skipped", { reason: "lock_held" });
     client.release();
-    return { failedSources: [], touchedResourceIds: [] };
+    return { failedSources: [], touchedResourceIds: [], ingestSkippedDueToLock: true };
   }
 
   const failedSources: string[] = [];
@@ -189,7 +191,7 @@ export async function runIngestion(options: IngestOptions): Promise<{ failedSour
     await client.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]);
     client.release();
   }
-  return { failedSources, touchedResourceIds: [...touchedResourceIds] };
+  return { failedSources, touchedResourceIds: [...touchedResourceIds], ingestSkippedDueToLock: false };
 }
 
 async function finishRun(
