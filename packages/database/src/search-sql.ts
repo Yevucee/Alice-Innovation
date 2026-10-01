@@ -1,4 +1,5 @@
 import { continentNamesForFilter } from "@alice/taxonomy";
+import { QUALITY_BROWSE_EXTRA_SQL, qualityBrowseBlocklistParam } from "./quality-browse-sql.js";
 
 export interface SearchFilters {
   query: string;
@@ -74,6 +75,7 @@ export const FILTER_SQL = `
   AND ($10::boolean IS NOT TRUE OR (
     r.review_status NOT IN ('NEEDS_REVIEW', 'ARCHIVED')
     AND char_length(trim(coalesce(r.source_summary, ''))) >= 40
+    ${QUALITY_BROWSE_EXTRA_SQL}
   ))
 `;
 
@@ -91,6 +93,7 @@ export function filterParams(filters: SearchFilters): unknown[] {
     arr(filters.technologies),
     continents,
     filters.qualityBrowse === true,
+    qualityBrowseBlocklistParam(),
   ];
 }
 

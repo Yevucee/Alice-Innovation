@@ -5,6 +5,7 @@ import {
   embeddingCatalogueCoverage,
   embeddingTextContentHash,
   loadResourcesForEmbedding,
+  loadResourcesForEmbeddingByIds,
 } from "./embedding-text.js";
 import { saveEmbedding } from "./ingest.js";
 
@@ -176,6 +177,103 @@ export async function runEmbeddingSafetyCheck(
   }
 
   return verifyEmbeddingSafetySample(db, options.model, 1536, Math.min(sampleSize, pending.length));
+}
+
+async function embedResourceRows(
+  db: Queryable,
+  rows: Awaited<ReturnType<typeof loadResourcesForEmbedding>>,
+  options: Pick<
+    EmbeddingBackfillRunOptions,
+    "embedBatch" | "model" | "version" | "dryRun" | "maxConsecutiveErrors" | "throwOnConsecutiveFailures"
+  >,
+): Promise<{ embedded: number; skipped: number; failed: number; total_tokens: number; aborted: boolean; note: string }> {
+  const batchSize = DEFAULT_BATCH;
+  const maxConsecutive = options.maxConsecutiveErrors ?? DEFAULT_MAX_CONSECUTIVE;
+  const throwOnFailures = options.throwOnConsecutiveFailures ?? true;
+  const dryRun = options.dryRun ?? false;
+  let skipped = 0;
+  let failed = 0;
+  let embedded = 0;
+  let totalTokens = 0;
+  let consecutiveErrors = 0;
+  let aborted = false;
+  let note = "";
+
+  const pendingAll = rows
+    .map((row) => {
+      const text = buildEmbeddingText({
+        canonical_title: row.canonical_title,
+        source_summary: row.source_summary,
+        extracted_index_text: row.extracted_index_text,
+        primary_country_name: row.primary_country_name,
+        countries: row.countries,
+        problems: row.problems,
+        sectors: row.sectors,
+        technologies: row.technologies,
+        interpretation_problem_statement: row.interpretation_problem_statement,
+      });
+      const hash = embeddingTextContentHash(text);
+      return { row, text, hash };
+    })
+    .filter((item) => item.row.embedding_content_hash !== item.hash);
+
+  skipped += rows.length - pendingAll.length;
+
+  for (let offset = 0; offset < pendingAll.length; offset += batchSize) {
+    const pending = pendingAll.slice(offset, offset + batchSize);
+    if (pending.length === 0) continue;
+    if (dryRun) {
+      embedded += pending.length;
+      continue;
+    }
+    const result = await options.embedBatch(pending.map((item) => item.text));
+    if (result.usage?.total_tokens) totalTokens += result.usage.total_tokens;
+    if (!result.vectors || result.vectors.length !== pending.length) {
+      failed += pending.length;
+      consecutiveErrors += 1;
+      if (consecutiveErrors >= maxConsecutive) {
+        aborted = true;
+        note = `Stopped after ${maxConsecutive} consecutive embedding API failures`;
+        if (throwOnFailures) throw new Error(note);
+        break;
+      }
+      continue;
+    }
+    consecutiveErrors = 0;
+    for (let i = 0; i < pending.length; i += 1) {
+      const vector = result.vectors[i];
+      const item = pending[i];
+      if (!vector || vector.length !== 1536) {
+        failed += 1;
+        continue;
+      }
+      await saveEmbedding(db, item.row.id, vector, options.model, options.version, item.hash);
+      embedded += 1;
+    }
+  }
+
+  return { embedded, skipped, failed, total_tokens: totalTokens, aborted, note };
+}
+
+export async function runEmbeddingBackfillForResourceIds(
+  db: Queryable,
+  resourceIds: string[],
+  options: Pick<
+    EmbeddingBackfillRunOptions,
+    "embedBatch" | "model" | "version" | "dryRun" | "maxConsecutiveErrors" | "throwOnConsecutiveFailures"
+  >,
+): Promise<{ embedded: number; skipped: number; failed: number; total_tokens: number }> {
+  if (resourceIds.length === 0) {
+    return { embedded: 0, skipped: 0, failed: 0, total_tokens: 0 };
+  }
+  const rows = await loadResourcesForEmbeddingByIds(db, resourceIds);
+  const result = await embedResourceRows(db, rows, options);
+  return {
+    embedded: result.embedded,
+    skipped: result.skipped,
+    failed: result.failed,
+    total_tokens: result.total_tokens,
+  };
 }
 
 export async function runEmbeddingBackfill(

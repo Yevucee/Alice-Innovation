@@ -115,6 +115,57 @@ export async function loadResourcesForEmbedding(
   return rows.rows;
 }
 
+export async function loadResourcesForEmbeddingByIds(
+  db: Queryable,
+  resourceIds: string[],
+): Promise<ResourceEmbeddingRow[]> {
+  if (resourceIds.length === 0) return [];
+  const rows = await db.query<ResourceEmbeddingRow>(
+    `SELECT r.id::text,
+            r.canonical_title,
+            r.source_summary,
+            r.extracted_index_text,
+            r.primary_country_name,
+            r.embedding_content_hash,
+            COALESCE((
+              SELECT array_agg(DISTINCT p.name ORDER BY p.name)
+              FROM resource_problems rp
+              JOIN problems p ON p.id = rp.problem_id
+              WHERE rp.resource_id = r.id
+            ), '{}') AS problems,
+            COALESCE((
+              SELECT array_agg(DISTINCT sec.name ORDER BY sec.name)
+              FROM resource_sectors rs
+              JOIN sectors sec ON sec.id = rs.sector_id
+              WHERE rs.resource_id = r.id
+            ), '{}') AS sectors,
+            COALESCE((
+              SELECT array_agg(DISTINCT t.name ORDER BY t.name)
+              FROM resource_technologies rt
+              JOIN technologies t ON t.id = rt.technology_id
+              WHERE rt.resource_id = r.id
+            ), '{}') AS technologies,
+            COALESCE((
+              SELECT array_agg(DISTINCT loc.country_name ORDER BY loc.country_name)
+              FROM resource_locations rl
+              JOIN locations loc ON loc.id = rl.location_id
+              WHERE rl.resource_id = r.id
+            ), '{}') AS countries,
+            (
+              SELECT ri.problem_statement
+              FROM resource_interpretations ri
+              WHERE ri.resource_id = r.id
+              ORDER BY ri.generated_at DESC
+              LIMIT 1
+            ) AS interpretation_problem_statement
+     FROM resources r
+     WHERE r.active AND r.id = ANY($1::uuid[])
+     ORDER BY r.updated_at DESC`,
+    [resourceIds],
+  );
+  return rows.rows;
+}
+
 export async function countActiveResources(db: Queryable): Promise<number> {
   const row = await db.query<{ count: string }>(
     "SELECT count(*)::text AS count FROM resources WHERE active",
