@@ -31,33 +31,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
   const input = parsed.data;
-  const found = await searchWithEmbedding(pool(), {
-    query: input.query,
-    resourceTypes: input.resource_types,
-    problems: input.problems,
-    sectors: input.sectors,
-    technologies: input.technologies,
-    countries: input.countries,
-    continents: input.continents,
-    sources: input.sources,
-    evidenceStages: input.evidence_stages,
-    diverse: input.diverse,
-    sort: input.sort ?? "relevance",
-    limit: input.limit,
-    offset: input.offset,
-  });
-  log("info", "web_search", {
-    vector: found.vector,
-    relaxed: found.relaxed,
-    query_chars: input.query.length,
-    results: found.results.length,
-  });
-  const stats = await libraryStats(pool());
-  return NextResponse.json({
-    results: found.results,
-    filtered_total: found.filtered_total,
-    library_total: stats.canonical_resources ?? 0,
-    vector: found.vector,
-    relaxed: found.relaxed,
-  });
+  try {
+    const found = await searchWithEmbedding(pool(), {
+      query: input.query,
+      resourceTypes: input.resource_types,
+      problems: input.problems,
+      sectors: input.sectors,
+      technologies: input.technologies,
+      countries: input.countries,
+      continents: input.continents,
+      sources: input.sources,
+      evidenceStages: input.evidence_stages,
+      diverse: input.diverse,
+      sort: input.sort ?? "relevance",
+      limit: input.limit,
+      offset: input.offset,
+    });
+    log("info", "web_search", {
+      vector: found.vector,
+      relaxed: found.relaxed,
+      query_chars: input.query.length,
+      results: found.results.length,
+    });
+    const stats = await libraryStats(pool());
+    return NextResponse.json({
+      results: found.results,
+      filtered_total: found.filtered_total,
+      library_total: stats.canonical_resources ?? 0,
+      vector: found.vector,
+      relaxed: found.relaxed,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    log("error", "web_search_failed", { query_chars: input.query.length, message });
+    return NextResponse.json({ error: "search_failed", message }, { status: 500 });
+  }
 }

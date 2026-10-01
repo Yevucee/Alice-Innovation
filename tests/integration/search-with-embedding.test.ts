@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { closePool, getPool, searchWithEmbedding } from "../../packages/database/src/index.ts";
+import {
+  closePool,
+  getPool,
+  searchLibrary,
+  searchWithEmbedding,
+} from "../../packages/database/src/index.ts";
 import type { Queryable } from "../../packages/database/src/pool.ts";
 import { topResultsMatchPattern } from "../search-quality/relevance.ts";
 
@@ -34,6 +39,23 @@ const qualityQueries = JSON.parse(
   top_n_relevance?: number;
   relevance_pattern?: string;
 }>;
+
+test("searchLibrary with embedding and qualityBrowse does not hit text[]/vector cast", {
+  skip: !databaseUrl,
+}, async () => {
+  const pool = getPool();
+  const embedding = Array.from({ length: 1536 }, (_, index) => (index % 100) * 0.0001);
+  for (const qualityBrowse of [false, true] as const) {
+    const found = await searchLibrary(
+      pool,
+      { query: "water filter", limit: 10, offset: 0, qualityBrowse },
+      embedding,
+    );
+    assert.ok(found.filtered_total > 0, `qualityBrowse=${qualityBrowse} filtered_total`);
+    assert.ok(found.results.length > 0, `qualityBrowse=${qualityBrowse} results`);
+  }
+  await closePool();
+});
 
 test("search quality queries return results when embeddings are configured", {
   skip: !databaseUrl || !process.env.EMBEDDING_API_KEY,

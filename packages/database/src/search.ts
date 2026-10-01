@@ -15,8 +15,11 @@ import {
 } from "./search-match.js";
 import {
   FILTER_SQL,
+  appendSemanticQueryParams,
   filterParams,
   OR_TERM_MATCH_COUNT_SQL,
+  semanticDistancePredicateSql,
+  semanticOrderByDistanceSql,
   type SearchFilters,
 } from "./search-sql.js";
 
@@ -214,21 +217,17 @@ async function fetchSemanticRows(
     return { rows: [], vector: "unavailable" };
   }
   const maxDistance = semanticMaxDistance();
-  try {
-    const semantic = await db.query<IdRow>(
-      `SELECT r.id::text, NULL::text AS source_id
-       FROM resources r
-       WHERE r.embedding IS NOT NULL
-         AND ${FILTER_SQL}
-         AND (r.embedding <=> $11::vector) <= $12::float8
-       ORDER BY r.embedding <=> $11::vector
-       LIMIT ${candidateLimit}`,
-      [...params, `[${queryEmbedding.join(",")}]`, maxDistance],
-    );
-    return { rows: semantic.rows, vector: "used" };
-  } catch {
-    return { rows: [], vector: "unavailable" };
-  }
+  const semantic = await db.query<IdRow>(
+    `SELECT r.id::text, NULL::text AS source_id
+     FROM resources r
+     WHERE r.embedding IS NOT NULL
+       AND ${FILTER_SQL}
+       AND ${semanticDistancePredicateSql()}
+     ORDER BY ${semanticOrderByDistanceSql()}
+     LIMIT ${candidateLimit}`,
+    appendSemanticQueryParams(params, queryEmbedding, maxDistance),
+  );
+  return { rows: semantic.rows, vector: "used" };
 }
 
 async function queryHybridFusedHits(
