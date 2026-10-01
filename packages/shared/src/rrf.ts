@@ -13,9 +13,14 @@ export interface FusedHit {
 /**
  * Reciprocal Rank Fusion. Rank is 1-based. Default k follows the original paper.
  */
-export function reciprocalRankFusion(lists: Array<{ name: string; hits: RankedHit[] }>, k = 60): FusedHit[] {
+export function reciprocalRankFusion(
+  lists: Array<{ name: string; hits: RankedHit[] }>,
+  k = 60,
+  listWeights?: Partial<Record<string, number>>,
+): FusedHit[] {
   const scores = new Map<string, FusedHit>();
   for (const list of lists) {
+    const weight = listWeights?.[list.name] ?? 1;
     list.hits.forEach((hit, index) => {
       const rank = index + 1;
       const current = scores.get(hit.id) ?? {
@@ -24,7 +29,7 @@ export function reciprocalRankFusion(lists: Array<{ name: string; hits: RankedHi
         sourceId: hit.sourceId ?? null,
         lists: [],
       };
-      current.score += 1 / (k + rank);
+      current.score += weight * (1 / (k + rank));
       if (!current.sourceId && hit.sourceId) current.sourceId = hit.sourceId;
       current.lists.push(list.name);
       scores.set(hit.id, current);

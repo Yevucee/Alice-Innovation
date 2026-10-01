@@ -3,7 +3,9 @@
     "id": "rural-water-filtration",
     "query": "low cost water filtration for rural villages",
     "min_results": 20,
-    "note": "Natural-language query; hybrid semantic + lexical should fill the default page."
+    "top_n_relevance": 5,
+    "relevance_pattern": "water|filtr|purif|sanit|drink|wastewater|aqua",
+    "note": "Relaxed path should rank semantic water/filtration neighbours, not weak single-term OR hits."
   },
   {
     "id": "water-filter-keywords",
@@ -13,7 +15,9 @@
   {
     "id": "solar-rural",
     "query": "affordable solar for off-grid rural homes",
-    "min_results": 20
+    "min_results": 20,
+    "top_n_relevance": 5,
+    "relevance_pattern": "solar|photovoltaic|pv|off[- ]grid|renewable|energy"
   },
   {
     "id": "cold-chain-food",
@@ -28,7 +32,9 @@
   {
     "id": "irrigation-smallholder",
     "query": "drip irrigation smallholder",
-    "min_results": 20
+    "min_results": 20,
+    "top_n_relevance": 5,
+    "relevance_pattern": "irrig|drip|agri|farm|crop|smallholder|water"
   },
   {
     "id": "healthcare-access",

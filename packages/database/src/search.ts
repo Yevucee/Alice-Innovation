@@ -1,4 +1,3 @@
-import { continentNamesForFilter } from "@alice/taxonomy";
 import {
   capPerBucket,
   capPerSource,
@@ -9,30 +8,21 @@ import {
 import type { FusedHit } from "@alice/shared";
 import type { Queryable } from "./pool.js";
 import { dedupeFusedResourceHits } from "./search-dedupe.js";
+import {
+  countSearchMatches,
+  orLexicalMinTerms,
+  semanticMaxDistance,
+} from "./search-match.js";
+import {
+  FILTER_SQL,
+  filterParams,
+  OR_TERM_MATCH_COUNT_SQL,
+  type SearchFilters,
+} from "./search-sql.js";
+
+export type { SearchFilters };
 
 const SEMANTIC_CANDIDATE_LIMIT = 500;
-const FUSED_TOTAL_CAP = 500;
-
-export interface SearchFilters {
-  query: string;
-  resourceTypes?: string[];
-  countries?: string[];
-  continents?: string[];
-  sources?: string[];
-  sectors?: string[];
-  problems?: string[];
-  technologies?: string[];
-  evidenceStages?: string[];
-  limit: number;
-  offset: number;
-  /** When true, cap at one hit per source (diverse approaches). */
-  diverse?: boolean;
-  /** `source` = one per catalogue; `mechanism` = one per primary technology/sector bucket. */
-  diversity?: "source" | "mechanism";
-  sort?: "relevance" | "newest" | "maturity";
-  /** Homepage/discover sections: hide NEEDS_REVIEW and thin summaries. */
-  qualityBrowse?: boolean;
-}
 
 export interface CompactResource {
   resource_id: string;
@@ -59,82 +49,6 @@ export interface CompactResource {
 interface IdRow {
   id: string;
   source_id: string | null;
-}
-
-function arr(values: string[] | undefined): string[] | null {
-  if (!values || values.length === 0) return null;
-  return values;
-}
-
-const FILTER_SQL = `
-  r.active = true
-  AND ($2::text[] IS NULL OR r.resource_type = ANY($2))
-  AND ($3::text[] IS NULL OR r.evidence_stage = ANY($3))
-  AND ($4::text[] IS NULL OR EXISTS (
-    SELECT 1 FROM resource_source_links l
-    JOIN source_items si ON si.id = l.source_item_id
-    JOIN sources s ON s.id = si.source_id
-    WHERE l.resource_id = r.id AND s.slug = ANY($4)
-  ))
-  AND ($5::text[] IS NULL OR EXISTS (
-    SELECT 1 FROM resource_locations rl
-    JOIN locations loc ON loc.id = rl.location_id
-    WHERE rl.resource_id = r.id
-      AND (
-        upper(loc.country_code) = ANY(SELECT upper(unnest($5::text[])))
-        OR lower(loc.country_name) = ANY(SELECT lower(unnest($5::text[])))
-      )
-  ) OR upper(r.primary_country_code) = ANY(SELECT upper(unnest($5::text[]))))
-  AND ($9::text[] IS NULL OR EXISTS (
-    SELECT 1 FROM resource_locations rl
-    JOIN locations loc ON loc.id = rl.location_id
-    WHERE rl.resource_id = r.id
-      AND loc.continent IS NOT NULL
-      AND loc.continent = ANY($9::text[])
-  ) OR (
-    $9::text[] IS NOT NULL AND 'Africa' = ANY($9::text[]) AND EXISTS (
-      SELECT 1 FROM resource_source_links l_af
-      JOIN source_items si_af ON si_af.id = l_af.source_item_id
-      JOIN sources s_af ON s_af.id = si_af.source_id
-      WHERE l_af.resource_id = r.id AND s_af.enabled AND s_af.category = 'africa-innovation'
-    )
-  ))
-  AND ($6::text[] IS NULL OR EXISTS (
-    SELECT 1 FROM resource_sectors rs
-    JOIN sectors sec ON sec.id = rs.sector_id
-    WHERE rs.resource_id = r.id AND sec.slug = ANY($6)
-  ))
-  AND ($7::text[] IS NULL OR EXISTS (
-    SELECT 1 FROM resource_problems rp
-    JOIN problems p ON p.id = rp.problem_id
-    WHERE rp.resource_id = r.id AND p.slug = ANY($7)
-  ))
-  AND ($8::text[] IS NULL OR EXISTS (
-    SELECT 1 FROM resource_technologies rt
-    JOIN technologies t ON t.id = rt.technology_id
-    WHERE rt.resource_id = r.id AND t.slug = ANY($8)
-  ))
-  AND ($10::boolean IS NOT TRUE OR (
-    r.review_status NOT IN ('NEEDS_REVIEW', 'ARCHIVED')
-    AND char_length(trim(coalesce(r.source_summary, ''))) >= 40
-  ))
-`;
-
-function filterParams(filters: SearchFilters): unknown[] {
-  const countries = arr(filters.countries)?.map((value) => value.toLowerCase()) ?? null;
-  const continents = continentNamesForFilter(arr(filters.continents) ?? []);
-  return [
-    filters.query,
-    arr(filters.resourceTypes),
-    arr(filters.evidenceStages),
-    arr(filters.sources),
-    countries,
-    arr(filters.sectors),
-    arr(filters.problems),
-    arr(filters.technologies),
-    continents,
-    filters.qualityBrowse === true,
-  ];
 }
 
 async function mechanismBucketMap(db: Queryable, ids: string[]): Promise<Map<string, string>> {
@@ -228,7 +142,12 @@ export async function searchLibrary(
   const vector = hybrid.vector;
   const relaxed = hybrid.relaxed;
   const fusedHits = await dedupeFusedResourceHits(db, hybrid.hits);
-  const filteredTotal = Math.min(fusedHits.length, FUSED_TOTAL_CAP);
+  const filteredTotal = await countSearchMatches(
+    db,
+    filters,
+    queryEmbedding,
+    orLexicalMinTerms(relaxed, queryText),
+  );
 
   const capped = await capSearchHits(db, filters, fusedHits, queryEmbedding);
   let hydrated = await hydrate(db, capped);
@@ -264,23 +183,14 @@ async function fetchLexicalOr(
   db: Queryable,
   params: unknown[],
   limit: number,
+  minMatchedTerms: number,
 ): Promise<IdRow[]> {
   const orLexical = await db.query<IdRow>(
     `SELECT r.id::text, NULL::text AS source_id
      FROM resources r
      WHERE ${FILTER_SQL}
-       AND EXISTS (
-         SELECT 1
-         FROM regexp_split_to_table(lower(trim($1)), '\\s+') AS term(word)
-         WHERE length(word) >= 2
-           AND r.search_vector @@ plainto_tsquery('english', word)
-       )
-     ORDER BY (
-       SELECT count(*)::int
-       FROM regexp_split_to_table(lower(trim($1)), '\\s+') AS term(word)
-       WHERE length(word) >= 2
-         AND r.search_vector @@ plainto_tsquery('english', word)
-     ) DESC
+       AND ${OR_TERM_MATCH_COUNT_SQL} >= ${minMatchedTerms}
+     ORDER BY ${OR_TERM_MATCH_COUNT_SQL} DESC
      LIMIT ${limit}`,
     params,
   );
@@ -296,15 +206,17 @@ async function fetchSemanticRows(
   if (!queryEmbedding || queryEmbedding.length !== 1536) {
     return { rows: [], vector: "unavailable" };
   }
+  const maxDistance = semanticMaxDistance();
   try {
     const semantic = await db.query<IdRow>(
       `SELECT r.id::text, NULL::text AS source_id
        FROM resources r
        WHERE r.embedding IS NOT NULL
          AND ${FILTER_SQL}
+         AND (r.embedding <=> $11::vector) <= $12::float8
        ORDER BY r.embedding <=> $11::vector
        LIMIT ${candidateLimit}`,
-      [...params, `[${queryEmbedding.join(",")}]`],
+      [...params, `[${queryEmbedding.join(",")}]`, maxDistance],
     );
     return { rows: semantic.rows, vector: "used" };
   } catch {
@@ -318,10 +230,13 @@ async function queryHybridFusedHits(
   queryEmbedding: number[] | null,
   lexicalLimit: number,
 ): Promise<{ hits: FusedHit[]; vector: "used" | "unavailable"; relaxed: boolean }> {
+  const queryText = String(params[0] ?? "");
+  const fullText = await fetchLexicalWebsearch(db, params, lexicalLimit);
+  const relaxed = fullText.length === 0;
+  const minOrTerms = orLexicalMinTerms(relaxed, queryText);
   const semanticLimit = queryEmbedding ? SEMANTIC_CANDIDATE_LIMIT : 0;
-  const [fullText, orLexical, semantic] = await Promise.all([
-    fetchLexicalWebsearch(db, params, lexicalLimit),
-    fetchLexicalOr(db, params, lexicalLimit),
+  const [orLexical, semantic] = await Promise.all([
+    fetchLexicalOr(db, params, lexicalLimit, minOrTerms),
     fetchSemanticRows(db, params, queryEmbedding, semanticLimit),
   ]);
 
@@ -333,13 +248,15 @@ async function queryHybridFusedHits(
     lists.push({ name: "semantic", hits: semantic.rows });
   }
 
-  const fused = reciprocalRankFusion(lists);
+  const listWeights = relaxed
+    ? { semantic: 3.5, full_text: 1, or_lexical: 0.2 }
+    : { semantic: 1.25, full_text: 1, or_lexical: 0.65 };
+  const fused = reciprocalRankFusion(lists, 60, listWeights);
   const sources = await primarySourceMap(db, fused.map((hit) => hit.id));
   const withSource: FusedHit[] = fused.map((hit) => ({
     ...hit,
     sourceId: sources.get(hit.id) ?? null,
   }));
-  const relaxed = fullText.length === 0;
   return { hits: withSource, vector: semantic.vector, relaxed };
 }
 
@@ -396,10 +313,19 @@ export async function countFilteredResources(
     return Number(row.rows[0]?.count ?? 0);
   }
   const params = filterParams(filters);
-  const lexicalLimit = 200;
-  const hybrid = await queryHybridFusedHits(db, params, queryEmbedding, lexicalLimit);
-  const deduped = await dedupeFusedResourceHits(db, hybrid.hits);
-  return Math.min(deduped.length, FUSED_TOTAL_CAP);
+  const lexical = await db.query<{ n: string }>(
+    `SELECT count(*)::text AS n FROM resources r
+     WHERE r.active = true AND ${FILTER_SQL}
+       AND r.search_vector @@ websearch_to_tsquery('english', $1)`,
+    params,
+  );
+  const relaxed = Number(lexical.rows[0]?.n ?? 0) === 0;
+  return countSearchMatches(
+    db,
+    filters,
+    queryEmbedding,
+    orLexicalMinTerms(relaxed, query),
+  );
 }
 
 async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource[]> {
