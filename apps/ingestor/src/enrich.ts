@@ -1,6 +1,8 @@
 import {
   applyEnrichmentToResource,
+  countEnrichmentGaps,
   enrichmentInputHash,
+  formatEnrichmentGapNote,
   loadEnrichmentCandidates,
   parseEnrichmentMessageContent,
   readEnrichmentCache,
@@ -12,6 +14,7 @@ import {
 } from "@alice/database";
 import type { Queryable } from "@alice/database";
 import { log } from "@alice/shared";
+import { buildSupplementalEnrichmentText } from "./enrichment-context-fetch.js";
 
 export interface EnrichSettings {
   baseUrl: string;
@@ -21,6 +24,7 @@ export interface EnrichSettings {
 }
 
 export const ENRICHMENT_PAUSED_BUDGET_NOTE = "enrichment_paused_budget";
+export const ENRICHMENT_COST_CAP_NOTE = "enrichment_cost_cap_reached";
 
 export function enrichSettings(): EnrichSettings {
   return {
@@ -47,6 +51,33 @@ export function enrichConcurrency(): number {
   if (raw == null || raw === "") return 8;
   const parsed = Number(raw);
   return Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 16) : 8;
+}
+
+export function enrichMaxCostUsd(): number {
+  const raw = process.env.ENRICH_MAX_COST_USD;
+  if (raw == null || raw === "") return 3;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 3;
+}
+
+const ENRICHMENT_LLM_COST_PER_TOKEN = 0.0000005;
+
+export const ENRICHMENT_SYSTEM_PROMPT = `Extract JSON keys: country, city, stage, problem, sector, organisation_name.
+Use UNKNOWN when unclear. country must be a real country name when mentioned.
+stage must be one of: IDEA, PROTOTYPE, PILOT, DEPLOYED, MULTIPLE_DEPLOYMENTS, SCALED, UNKNOWN.
+
+Stage rubric:
+- IDEA: concept, research, pre-seed, no product in market, early grant only.
+- PROTOTYPE: MVP, beta, lab/demo, limited technical validation.
+- PILOT: piloting, trials, early customers, single-site deployment, accelerator graduate still testing.
+- DEPLOYED: commercial launch, paying customers, revenue, operating in production.
+- MULTIPLE_DEPLOYMENTS: repeated deployments in more than one site/market.
+- SCALED: broad rollout, many customers, multi-country, growth/series funding for scale.
+
+Signals: "piloting", "customers", "in N countries", awards/grants, funding stage (seed→IDEA/PROTOTYPE, Series A+→DEPLOYED/SCALED).`;
+
+function summaryIsThin(summary: string): boolean {
+  return summary.replace(/\s+/g, " ").trim().length < 120;
 }
 
 function resourceNeedsEnrichment(input: {
@@ -85,7 +116,7 @@ let parseFailureLogBudget = 3;
 
 async function callEnrichmentLlm(
   settings: EnrichSettings,
-  evidence: { title: string; summary: string; text: string },
+  evidence: { title: string; summary: string; text: string; supplementalText?: string },
   fetchImpl: typeof fetch,
 ): Promise<{
   payload: EnrichmentPayload | null;
@@ -113,11 +144,11 @@ async function callEnrichmentLlm(
           messages: [
             {
               role: "system",
-              content: "Extract JSON keys country, city, stage, problem, sector, organisation_name. Use UNKNOWN when unclear. country must be a real country name when mentioned.",
+              content: ENRICHMENT_SYSTEM_PROMPT,
             },
             {
               role: "user",
-              content: `${evidence.title}\n${evidence.summary}\n${evidence.text.slice(0, 1500)}`,
+              content: `${evidence.title}\n${evidence.summary}\n${evidence.text.slice(0, 1500)}${evidence.supplementalText ? `\n\n${evidence.supplementalText.slice(0, 8000)}` : ""}`,
             },
           ],
         }),
@@ -184,12 +215,13 @@ export async function enrichResourceOnIngest(
     hasOrganisation: boolean;
     reviewStatus: string;
   },
-  options?: { settings?: EnrichSettings; fetchImpl?: typeof fetch },
+  options?: { settings?: EnrichSettings; fetchImpl?: typeof fetch; skipSupplementalFetch?: boolean },
 ): Promise<{
   outcome: EnrichmentOutcome | "skipped" | "cached";
   applied: boolean;
   totalTokens: number;
   budgetPaused: boolean;
+  costCapReached?: boolean;
 }> {
   if (!enrichEnabled()) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
   if (evidence.reviewStatus === "NEEDS_REVIEW") return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
@@ -198,7 +230,44 @@ export async function enrichResourceOnIngest(
   const settings = options?.settings ?? enrichSettings();
   if (!settings.apiKey) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
 
-  const inputHash = enrichmentInputHash(evidence.title, evidence.summary, evidence.text);
+  const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
+  const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
+  const needsGapFill = !evidence.countryName?.trim() || evidence.evidenceStage === "UNKNOWN";
+  let supplementalText = "";
+  if (!options?.skipSupplementalFetch && (needsGapFill || summaryIsThin(evidence.summary))) {
+    const supplemental = await buildSupplementalEnrichmentText(db, resourceId, { userAgent, timeoutMs });
+    supplementalText = supplemental.supplemental;
+  }
+
+  const evidenceForApply = {
+    title: evidence.title,
+    summary: evidence.summary,
+    text: evidence.text,
+    supplementalText,
+  };
+
+  const inputHash = enrichmentInputHash(
+    evidence.title,
+    evidence.summary,
+    evidence.text,
+    supplementalText,
+  );
+
+  const deterministic = await applyEnrichmentToResource(db, resourceId, {}, evidenceForApply);
+  if (deterministic.changed) {
+    await recordResourceEnrichmentAttempt(db, resourceId, {
+      inputHash,
+      model: settings.model,
+      outcome: deterministic.outcome,
+    });
+    return {
+      outcome: deterministic.outcome,
+      applied: true,
+      totalTokens: 0,
+      budgetPaused: false,
+    };
+  }
+
   const cached = await readEnrichmentCache(db, inputHash);
   let payload: EnrichmentPayload | null = cached.hit ? cached.payload : null;
   let totalTokens = 0;
@@ -206,7 +275,7 @@ export async function enrichResourceOnIngest(
 
   if (!cached.hit) {
     const fetchImpl = options?.fetchImpl ?? fetch;
-    const llm = await callEnrichmentLlm(settings, evidence, fetchImpl);
+    const llm = await callEnrichmentLlm(settings, evidenceForApply, fetchImpl);
     modelUsed = llm.modelUsed;
     if (llm.budgetPaused) {
       return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: true };
@@ -217,7 +286,7 @@ export async function enrichResourceOnIngest(
   }
 
   if (!payload || Object.keys(payload).length === 0) {
-    const inferredOnly = await applyEnrichmentToResource(db, resourceId, {}, evidence);
+    const inferredOnly = await applyEnrichmentToResource(db, resourceId, {}, evidenceForApply);
     await recordResourceEnrichmentAttempt(db, resourceId, {
       inputHash,
       model: modelUsed,
@@ -231,7 +300,7 @@ export async function enrichResourceOnIngest(
     };
   }
 
-  const applyResult = await applyEnrichmentToResource(db, resourceId, payload, evidence);
+  const applyResult = await applyEnrichmentToResource(db, resourceId, payload, evidenceForApply);
   await recordResourceEnrichmentAttempt(db, resourceId, {
     inputHash,
     model: modelUsed,
@@ -287,6 +356,7 @@ export async function runEnrichmentBackfill(
   paused_budget: boolean;
 }> {
   parseFailureLogBudget = 3;
+  const gapsBefore = await countEnrichmentGaps(db);
   const candidates = await loadEnrichmentCandidates(db, input.limit, input.resourceIds ?? null);
   let attempted = 0;
   let applied = 0;
@@ -297,9 +367,12 @@ export async function runEnrichmentBackfill(
   let paused_budget = false;
   const enriched_resource_ids: string[] = [];
   const concurrency = enrichConcurrency();
-  const budget = { paused: false };
+  const budget = { paused: false, costCap: false };
+  const spendUsd = { value: 0 };
+  const maxCost = enrichMaxCostUsd();
 
   if (candidates.length === 0) {
+    const gapsAfter = await countEnrichmentGaps(db);
     await recordEnrichmentRun(db, {
       processed: 0,
       attempted: 0,
@@ -310,6 +383,7 @@ export async function runEnrichmentBackfill(
       failed: 0,
       total_tokens: 0,
       estimated_cost_usd: 0,
+      note: formatEnrichmentGapNote("gaps", gapsBefore, gapsAfter),
     });
     return {
       processed: 0,
@@ -336,7 +410,7 @@ export async function runEnrichmentBackfill(
   const orgById = new Map(orgFlags.rows.map((row) => [row.resource_id, row.exists]));
 
   const outcomes = await mapWithConcurrency(candidates, concurrency, async (candidate) => {
-    if (budget.paused) {
+    if (budget.paused || budget.costCap) {
       return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id };
     }
     try {
@@ -358,6 +432,11 @@ export async function runEnrichmentBackfill(
         budget.paused = true;
         log("info", "enrichment_paused_budget", {});
         return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id };
+      }
+      spendUsd.value += result.totalTokens * ENRICHMENT_LLM_COST_PER_TOKEN;
+      if (spendUsd.value >= maxCost) {
+        budget.costCap = true;
+        log("info", "enrichment_cost_cap_reached", { spend_usd: spendUsd.value, cap_usd: maxCost });
       }
       if (result.outcome === "skipped") {
         return { kind: "skipped" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
@@ -390,7 +469,10 @@ export async function runEnrichmentBackfill(
   }
 
   paused_budget = budget.paused;
-  const estimated_cost_usd = Number((total_tokens * 0.0000005).toFixed(6));
+  const gapsAfter = await countEnrichmentGaps(db);
+  const estimated_cost_usd = Number((total_tokens * ENRICHMENT_LLM_COST_PER_TOKEN).toFixed(6));
+  const gapNote = formatEnrichmentGapNote("gaps", gapsBefore, gapsAfter);
+  const capNote = budget.costCap ? ENRICHMENT_COST_CAP_NOTE : paused_budget ? ENRICHMENT_PAUSED_BUDGET_NOTE : undefined;
   await recordEnrichmentRun(db, {
     processed: candidates.length,
     attempted,
@@ -401,7 +483,7 @@ export async function runEnrichmentBackfill(
     failed,
     total_tokens,
     estimated_cost_usd,
-    note: paused_budget ? ENRICHMENT_PAUSED_BUDGET_NOTE : undefined,
+    note: [gapNote, capNote].filter(Boolean).join("; "),
   });
 
   return {
