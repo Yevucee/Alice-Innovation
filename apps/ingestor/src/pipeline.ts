@@ -1,6 +1,7 @@
 import {
   confirmDisappearances,
   getPool,
+  ingestDetailBootstrapDays,
   ingestDetailRefetchDays,
   listingContentHash,
   loadSourceItemListingStateMap,
@@ -17,6 +18,7 @@ import { robotsAllows } from "./robots.js";
 import { getAdapter } from "./adapters/registry.js";
 import { AccessBlockedError, type AdapterContext, type DiscoveredRef } from "./adapters/types.js";
 import { createHostPacedFetch, ingestDetailConcurrency, mapWithConcurrency } from "./detail-fetch.js";
+import { createIngestSourceLoopBudget } from "./ingest-loop-budget.js";
 import { processIngestItem } from "./item-pipeline.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
 
@@ -92,12 +94,25 @@ export async function runIngestion(
 
   const failedSources: string[] = [];
   const touchedResourceIds = new Set<string>();
+  const ingestLoopStartedAt = Date.now();
+  const sourceLoopBudget = createIngestSourceLoopBudget(ingestLoopStartedAt);
   try {
     const selected = options.sources.filter((source) => {
       if (options.only && options.only.length > 0) return options.only.includes(source.id);
       return source.enabled;
     });
+    let sourcesStarted = 0;
     for (const source of selected) {
+      if (sourceLoopBudget.exhausted()) {
+        log("info", "ingest_source_loop_time_budget", {
+          max_minutes: sourceLoopBudget.maxMinutes(),
+          elapsed_ms: Date.now() - ingestLoopStartedAt,
+          sources_started: sourcesStarted,
+          sources_remaining: selected.length - sourcesStarted,
+        });
+        break;
+      }
+      sourcesStarted += 1;
       const started = Date.now();
       try {
         const meta = await pool.query<{ last_successful_run: Date | null; id: string }>(
@@ -130,6 +145,7 @@ export async function runIngestion(
           enrich_attempted: 0,
           enrich_applied: 0,
           detail_skipped: 0,
+          detail_skipped_bootstrap: 0,
         };
         try {
           const adapter = getAdapter(source.adapter);
@@ -169,6 +185,7 @@ export async function runIngestion(
           let cursor = checkpoint;
           const progressEvery = ingestProgressEvery();
           const refetchDays = ingestDetailRefetchDays();
+          const bootstrapDays = ingestDetailBootstrapDays();
           const detailConcurrency = ingestDetailConcurrency();
           log("info", "source_started", {
             source_id: source.id,
@@ -178,22 +195,34 @@ export async function runIngestion(
             full: options.full,
             limit: options.limit,
             detail_refetch_days: refetchDays,
+            detail_bootstrap_days: bootstrapDays,
             detail_concurrency: detailConcurrency,
+            source_loop_budget_remaining_ms: sourceLoopBudget.remainingMs(),
           });
           let itemsProcessed = 0;
           const listingStateMap = options.dryRun
             ? new Map()
             : await loadSourceItemListingStateMap(pool, source.id);
           const failureSummaries: Array<{ url: string; reason: string }> = [];
+          let sourceTimeBudgetExhausted = false;
 
           const processRef = async (ref: DiscoveredRef): Promise<{ ref: DiscoveredRef; cursor: string }> => {
             const listingHash = listingContentHash(ref);
-            if (!options.dryRun && shouldSkipDetailFetch(lookupListingState(listingStateMap, ref), listingHash, refetchDays)) {
-              const touched = await touchSourceItemWithoutDetailFetch(pool, source.id, ref, runId, listingHash);
-              if (touched) {
-                counts.unchanged += 1;
-                counts.detail_skipped += 1;
-                return { ref, cursor: ref.url };
+            if (!options.dryRun) {
+              const skip = shouldSkipDetailFetch(
+                lookupListingState(listingStateMap, ref),
+                listingHash,
+                refetchDays,
+                bootstrapDays,
+              );
+              if (skip.skip) {
+                const touched = await touchSourceItemWithoutDetailFetch(pool, source.id, ref, runId, listingHash);
+                if (touched) {
+                  counts.unchanged += 1;
+                  counts.detail_skipped += 1;
+                  if (skip.reason === "bootstrap") counts.detail_skipped_bootstrap += 1;
+                  return { ref, cursor: ref.url };
+                }
               }
             }
             const page = await adapter.fetch(ref, detailCtx);
@@ -222,6 +251,18 @@ export async function runIngestion(
           };
 
           for (let offset = 0; offset < refs.length; offset += detailConcurrency) {
+            if (sourceLoopBudget.exhausted()) {
+              sourceTimeBudgetExhausted = true;
+              log("info", "ingest_source_time_budget", {
+                source_id: source.id,
+                run_id: runId,
+                max_minutes: sourceLoopBudget.maxMinutes(),
+                items_processed: itemsProcessed,
+                to_process: refs.length,
+                elapsed_ms: Date.now() - ingestLoopStartedAt,
+              });
+              break;
+            }
             const chunk = refs.slice(offset, offset + detailConcurrency);
             const chunkResults = await mapWithConcurrency(chunk, chunk.length, async (ref) => {
               try {
@@ -244,6 +285,7 @@ export async function runIngestion(
                   items_processed: itemsProcessed,
                   pages_fetched: counts.fetched,
                   detail_skipped: counts.detail_skipped,
+                  detail_skipped_bootstrap: counts.detail_skipped_bootstrap,
                   created: counts.created,
                   updated: counts.updated,
                   unchanged: counts.unchanged,
@@ -254,7 +296,7 @@ export async function runIngestion(
                 });
               }
             }
-            if (options.full && !options.dryRun) {
+            if (options.full && !options.dryRun && chunk.length > 0) {
               await writeCheckpoint(pool, source.id, chunk[chunk.length - 1].url);
             }
           }
@@ -266,15 +308,40 @@ export async function runIngestion(
               failures: failureSummaries,
             });
           }
-          if (options.full && !options.dryRun && options.limit === null && !checkpoint && adapter.fullCatalogue) {
+          if (options.full && !options.dryRun && options.limit === null && !checkpoint && adapter.fullCatalogue && !sourceTimeBudgetExhausted) {
             await confirmDisappearances(pool, source.id, catalogue);
           }
-          const status = counts.failed > 0 ? "PARTIAL_SUCCESS" : "SUCCESS";
-          await finishRun(runId, status, counts, Date.now() - started, null);
-          if (status === "SUCCESS" || counts.created + counts.updated + counts.unchanged > 0) {
+          let runErrorSummary: string | null = null;
+          if (sourceTimeBudgetExhausted) {
+            runErrorSummary = `source_loop_time_budget_minutes=${sourceLoopBudget.maxMinutes()}; items_processed=${itemsProcessed}; to_process=${refs.length}`;
+          }
+          let status = counts.failed > 0 ? "PARTIAL_SUCCESS" : "SUCCESS";
+          if (sourceTimeBudgetExhausted && itemsProcessed < refs.length) {
+            status = "PARTIAL_SUCCESS";
+          }
+          await finishRun(runId, status, counts, Date.now() - started, runErrorSummary);
+          if (!sourceTimeBudgetExhausted && (status === "SUCCESS" || counts.created + counts.updated + counts.unchanged > 0)) {
             await pool.query("UPDATE sources SET last_successful_run = now(), updated_at = now() WHERE slug = $1", [source.id]);
           }
-          log("info", "source_finished", { source_id: source.id, run_id: runId, ...counts, duration_ms: Date.now() - started });
+          log("info", "source_finished", {
+            source_id: source.id,
+            run_id: runId,
+            ...counts,
+            items_processed: itemsProcessed,
+            to_process: refs.length,
+            source_time_budget_exhausted: sourceTimeBudgetExhausted,
+            duration_ms: Date.now() - started,
+          });
+          if (sourceTimeBudgetExhausted) {
+            log("info", "ingest_source_loop_time_budget", {
+              max_minutes: sourceLoopBudget.maxMinutes(),
+              elapsed_ms: Date.now() - ingestLoopStartedAt,
+              stopped_at_source: source.id,
+              items_processed: itemsProcessed,
+              to_process: refs.length,
+            });
+            break;
+          }
         } catch (error) {
           failedSources.push(source.id);
           const message = error instanceof Error ? error.message : String(error);

@@ -14,6 +14,7 @@ export type { UpsertDraftOptions, UpsertResult } from "./ingest.js";
 export {
   listingContentHash,
   ingestDetailRefetchDays,
+  ingestDetailBootstrapDays,
   shouldSkipDetailFetch,
   loadSourceItemListingStateMap,
   lookupListingState,

@@ -27,18 +27,35 @@ export function ingestDetailRefetchDays(): number {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 7;
 }
 
+export function ingestDetailBootstrapDays(): number {
+  const parsed = Number(process.env.INGEST_DETAIL_BOOTSTRAP_DAYS ?? "30");
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 30;
+}
+
+export type DetailFetchSkipReason = "listing_unchanged" | "bootstrap";
+
 export function shouldSkipDetailFetch(
   row: SourceItemListingState | undefined,
   listingHash: string,
   refetchDays: number,
+  bootstrapDays: number,
   now = new Date(),
-): boolean {
-  if (refetchDays <= 0) return false;
-  if (!row?.resource_id || !row.last_fetched_at) return false;
-  if (row.listing_content_hash == null) return false;
-  if (row.listing_content_hash !== listingHash) return false;
+): { skip: boolean; reason?: DetailFetchSkipReason } {
+  if (!row?.resource_id || !row.last_fetched_at) return { skip: false };
+  const dayMs = 24 * 60 * 60 * 1000;
   const ageMs = now.getTime() - row.last_fetched_at.getTime();
-  return ageMs < refetchDays * 24 * 60 * 60 * 1000;
+
+  if (row.listing_content_hash != null && refetchDays > 0) {
+    if (row.listing_content_hash === listingHash && ageMs < refetchDays * dayMs) {
+      return { skip: true, reason: "listing_unchanged" };
+    }
+  }
+
+  if (row.listing_content_hash == null && bootstrapDays > 0 && ageMs < bootstrapDays * dayMs) {
+    return { skip: true, reason: "bootstrap" };
+  }
+
+  return { skip: false };
 }
 
 export async function loadSourceItemListingStateMap(
