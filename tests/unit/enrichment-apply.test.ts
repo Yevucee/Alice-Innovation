@@ -18,6 +18,13 @@ test("parseEnrichmentPayload keeps Ecuador", () => {
   assert.equal(parsed.payload?.country, "Ecuador");
 });
 
+test("parseEnrichmentPayload unwraps one-element JSON array", () => {
+  const parsed = parseEnrichmentPayload([{ country: "France", city: "UNKNOWN", stage: "PILOT" }]);
+  assert.equal(parsed.payload?.country, "France");
+  assert.equal(parsed.payload?.stage, "PILOT");
+  assert.equal(parsed.unwrapArray, true);
+});
+
 test("sourceExcerptDuplicatesSummary matches shared prefix", () => {
   const summary = "The Solar Cocoa Dryer uses solar heat to dry cocoa beans in rural Ecuador.";
   const excerpt = `${summary} Additional source details about installation and partners.`;

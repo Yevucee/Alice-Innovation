@@ -39,6 +39,17 @@ export function enrichEnabled(): boolean {
   return process.env.ENRICH_ENABLED !== "false";
 }
 
+function envFlag(name: string, defaultValue: boolean): boolean {
+  const raw = process.env[name];
+  if (raw == null || raw === "") return defaultValue;
+  return raw.toLowerCase() !== "false" && raw !== "0";
+}
+
+/** Per-item LLM + supplemental fetch during source ingest (default off; use post-ingest backfill). */
+export function enrichOnIngest(): boolean {
+  return envFlag("ENRICH_ON_INGEST", false);
+}
+
 export function enrichMaxPerRun(): number {
   const raw = process.env.ENRICH_MAX_PER_RUN;
   if (raw == null || raw === "") return 15_000;
@@ -58,6 +69,21 @@ export function enrichMaxCostUsd(): number {
   if (raw == null || raw === "") return 3;
   const parsed = Number(raw);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 3;
+}
+
+/** Wall-clock cap for post-ingest enrichment backfill (minutes). */
+export function enrichMaxMinutes(): number {
+  const raw = process.env.ENRICH_MAX_MINUTES;
+  if (raw == null || raw === "") return 90;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 90;
+}
+
+export function enrichProgressEvery(): number {
+  const raw = process.env.ENRICH_PROGRESS_EVERY;
+  if (raw == null || raw === "") return 50;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 }
 
 const ENRICHMENT_LLM_COST_PER_TOKEN = 0.0000005;
@@ -113,6 +139,16 @@ function modelError(status: number, bodyText: string): boolean {
 }
 
 let parseFailureLogBudget = 3;
+let enrichmentArrayUnwraps = 0;
+
+export function resetEnrichmentParseTelemetry(): void {
+  parseFailureLogBudget = 3;
+  enrichmentArrayUnwraps = 0;
+}
+
+export function enrichmentArrayUnwrapCount(): number {
+  return enrichmentArrayUnwraps;
+}
 
 async function callEnrichmentLlm(
   settings: EnrichSettings,
@@ -182,12 +218,14 @@ async function callEnrichmentLlm(
       }
       const content = body.choices?.[0]?.message?.content ?? "{}";
       const parsed = parseEnrichmentMessageContent(content);
-      if (!parsed.payload && parseFailureLogBudget > 0) {
+      if (parsed.unwrapArray) enrichmentArrayUnwraps += 1;
+      if (!parsed.payload && parsed.error !== "all_unknown" && parseFailureLogBudget > 0) {
         parseFailureLogBudget -= 1;
         log("warn", "enrich_llm_parse_failed", {
           model,
           error: parsed.error,
           raw_sample: parsed.rawSample,
+          unwrap_array: parsed.unwrapArray === true,
         });
       }
       return {
@@ -416,8 +454,10 @@ export async function runEnrichmentBackfill(
   estimated_cost_usd: number;
   enriched_resource_ids: string[];
   paused_budget: boolean;
+  time_budget_exhausted: boolean;
+  array_unwraps: number;
 }> {
-  parseFailureLogBudget = 3;
+  resetEnrichmentParseTelemetry();
   const gapsBefore = await countEnrichmentGaps(db);
   const candidates = await loadEnrichmentCandidates(db, input.limit, input.resourceIds ?? null);
   let attempted = 0;
@@ -465,6 +505,8 @@ export async function runEnrichmentBackfill(
       estimated_cost_usd: 0,
       enriched_resource_ids: [],
       paused_budget: false,
+      time_budget_exhausted: false,
+      array_unwraps: 0,
     };
   }
 
@@ -476,10 +518,36 @@ export async function runEnrichmentBackfill(
     [candidates.map((c) => c.id)],
   );
   const orgById = new Map(orgFlags.rows.map((row) => [row.resource_id, row.exists]));
+  const backfillStarted = Date.now();
+  const maxMs = enrichMaxMinutes() * 60_000;
+  const progressEvery = enrichProgressEvery();
+  let time_budget_exhausted = false;
+  let workersCompleted = 0;
 
   const outcomes = await mapWithConcurrency(candidates, concurrency, async (candidate) => {
-    if (budget.paused || budget.costCap) {
-      return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id, result: null };
+    if (budget.paused || budget.costCap || time_budget_exhausted) {
+      return {
+        kind: "skipped" as const,
+        totalTokens: 0,
+        resourceId: candidate.id,
+        result: null,
+        timeBudget: time_budget_exhausted,
+      };
+    }
+    if (Date.now() - backfillStarted >= maxMs) {
+      time_budget_exhausted = true;
+      log("info", "enrichment_time_budget_reached", {
+        elapsed_ms: Date.now() - backfillStarted,
+        max_minutes: enrichMaxMinutes(),
+        workers_completed: workersCompleted,
+      });
+      return {
+        kind: "skipped" as const,
+        totalTokens: 0,
+        resourceId: candidate.id,
+        result: null,
+        timeBudget: true,
+      };
     }
     try {
       const result = await enrichResourceOnIngest(
@@ -518,6 +586,16 @@ export async function runEnrichmentBackfill(
       return { kind: "no_data" as const, totalTokens: result.totalTokens, resourceId: candidate.id, result };
     } catch {
       return { kind: "failed" as const, totalTokens: 0, resourceId: candidate.id, result: null };
+    } finally {
+      workersCompleted += 1;
+      if (workersCompleted % progressEvery === 0) {
+        log("info", "enrich_backfill_progress", {
+          workers_completed: workersCompleted,
+          candidates: candidates.length,
+          elapsed_ms: Date.now() - backfillStarted,
+          max_minutes: enrichMaxMinutes(),
+        });
+      }
     }
   });
 
@@ -544,9 +622,12 @@ export async function runEnrichmentBackfill(
   paused_budget = budget.paused;
   const gapsAfter = await countEnrichmentGaps(db);
   const estimated_cost_usd = Number((total_tokens * ENRICHMENT_LLM_COST_PER_TOKEN).toFixed(6));
+  const array_unwraps = enrichmentArrayUnwrapCount();
   const gapNote = formatEnrichmentGapNote("gaps", gapsBefore, gapsAfter);
   const capNote = budget.costCap ? ENRICHMENT_COST_CAP_NOTE : paused_budget ? ENRICHMENT_PAUSED_BUDGET_NOTE : undefined;
   const statsNote = `supplemental_pages_fetched=${supplemental_pages_fetched}; country_applied=${country_applied}; stage_applied=${stage_applied}`;
+  const timeNote = time_budget_exhausted ? `enrichment_time_budget_minutes=${enrichMaxMinutes()}` : undefined;
+  const unwrapNote = array_unwraps > 0 ? `llm_array_unwraps=${array_unwraps}` : undefined;
   await recordEnrichmentRun(db, {
     processed: candidates.length,
     attempted,
@@ -560,7 +641,7 @@ export async function runEnrichmentBackfill(
     supplemental_pages_fetched,
     country_applied,
     stage_applied,
-    note: [gapNote, statsNote, capNote].filter(Boolean).join("; "),
+    note: [gapNote, statsNote, capNote, timeNote, unwrapNote].filter(Boolean).join("; "),
   });
 
   return {
@@ -575,5 +656,7 @@ export async function runEnrichmentBackfill(
     estimated_cost_usd,
     enriched_resource_ids,
     paused_budget,
+    time_budget_exhausted,
+    array_unwraps,
   };
 }

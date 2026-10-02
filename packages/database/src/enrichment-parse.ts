@@ -11,6 +11,17 @@ export interface EnrichmentPayload {
 
 const UNKNOWN = new Set(["unknown", "n/a", "na", "none", ""]);
 
+/** LLMs sometimes return a one-element JSON array instead of an object. */
+export function normalizeEnrichmentJsonRoot(raw: unknown): {
+  value: unknown;
+  unwrapArray?: boolean;
+} {
+  if (!Array.isArray(raw)) return { value: raw };
+  const first = raw.find((entry) => entry != null && typeof entry === "object" && !Array.isArray(entry));
+  if (first != null) return { value: first, unwrapArray: true };
+  return { value: null, unwrapArray: true };
+}
+
 export function normaliseEnrichmentField(value: unknown): string | undefined {
   if (value == null) return undefined;
   const trimmed = String(value).trim();
@@ -21,11 +32,17 @@ export function normaliseEnrichmentField(value: unknown): string | undefined {
 export function parseEnrichmentPayload(raw: unknown): {
   payload: EnrichmentPayload | null;
   error?: string;
+  unwrapArray?: boolean;
 } {
-  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
-    return { payload: null, error: "payload_not_object" };
+  const { value, unwrapArray } = normalizeEnrichmentJsonRoot(raw);
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    return {
+      payload: null,
+      error: unwrapArray ? "array_empty_or_invalid" : "payload_not_object",
+      unwrapArray,
+    };
   }
-  const record = raw as Record<string, unknown>;
+  const record = value as Record<string, unknown>;
   const payload: EnrichmentPayload = {
     country: normaliseEnrichmentField(record.country),
     city: normaliseEnrichmentField(record.city),
@@ -34,8 +51,12 @@ export function parseEnrichmentPayload(raw: unknown): {
     sector: normaliseEnrichmentField(record.sector),
     organisation_name: normaliseEnrichmentField(record.organisation_name),
   };
-  const hasAny = Object.values(payload).some((value) => value != null && value !== "");
-  return { payload: hasAny ? payload : null, error: hasAny ? undefined : "all_unknown" };
+  const hasAny = Object.values(payload).some((field) => field != null && field !== "");
+  return {
+    payload: hasAny ? payload : null,
+    error: hasAny ? undefined : "all_unknown",
+    unwrapArray,
+  };
 }
 
 export function resolveEnrichmentSectorSlug(
@@ -91,6 +112,7 @@ export function parseEnrichmentMessageContent(content: string): {
   payload: EnrichmentPayload | null;
   error?: string;
   rawSample: string;
+  unwrapArray?: boolean;
 } {
   const rawSample = content.slice(0, 400);
   try {
