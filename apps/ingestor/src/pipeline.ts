@@ -1,7 +1,13 @@
 import {
   confirmDisappearances,
   getPool,
+  ingestDetailRefetchDays,
+  listingContentHash,
+  loadSourceItemListingStateMap,
+  lookupListingState,
   readCheckpoint,
+  shouldSkipDetailFetch,
+  touchSourceItemWithoutDetailFetch,
   writeCheckpoint,
 } from "@alice/database";
 import { canonicaliseUrl, log } from "@alice/shared";
@@ -10,6 +16,7 @@ import { fetchText, HttpStatusError } from "./http.js";
 import { robotsAllows } from "./robots.js";
 import { getAdapter } from "./adapters/registry.js";
 import { AccessBlockedError, type AdapterContext, type DiscoveredRef } from "./adapters/types.js";
+import { createHostPacedFetch, ingestDetailConcurrency, mapWithConcurrency } from "./detail-fetch.js";
 import { processIngestItem } from "./item-pipeline.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
 
@@ -19,6 +26,16 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 function ingestProgressEvery(): number {
   const parsed = Number(process.env.INGEST_PROGRESS_EVERY ?? "25");
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
+}
+
+function failureReason(error: unknown): string {
+  const status = error instanceof HttpStatusError
+    ? error.status
+    : error instanceof AccessBlockedError
+      ? error.status
+      : null;
+  const message = error instanceof Error ? error.message : String(error);
+  return status != null ? `${status}: ${message}` : message;
 }
 
 function due(source: SourceRecord, lastSuccess: Date | null, now = new Date()): boolean {
@@ -112,6 +129,7 @@ export async function runIngestion(
           duplicates: 0,
           enrich_attempted: 0,
           enrich_applied: 0,
+          detail_skipped: 0,
         };
         try {
           const adapter = getAdapter(source.adapter);
@@ -130,12 +148,17 @@ export async function runIngestion(
             lastRequest = Date.now();
             return fetchText(url, { userAgent, timeoutMs });
           };
+          const detailFetch = createHostPacedFetch(source, userAgent, timeoutMs);
           const ctx: AdapterContext = {
             source,
             userAgent,
             timeoutMs,
             limit: options.limit,
             fetchText: pacedFetch,
+          };
+          const detailCtx: AdapterContext = {
+            ...ctx,
+            fetchText: detailFetch,
           };
           let refs = await adapter.discover(ctx);
           counts.discovered = refs.length;
@@ -145,6 +168,8 @@ export async function runIngestion(
           if (options.limit !== null) refs = refs.slice(0, options.limit);
           let cursor = checkpoint;
           const progressEvery = ingestProgressEvery();
+          const refetchDays = ingestDetailRefetchDays();
+          const detailConcurrency = ingestDetailConcurrency();
           log("info", "source_started", {
             source_id: source.id,
             run_id: runId,
@@ -152,34 +177,65 @@ export async function runIngestion(
             to_process: refs.length,
             full: options.full,
             limit: options.limit,
+            detail_refetch_days: refetchDays,
+            detail_concurrency: detailConcurrency,
           });
           let itemsProcessed = 0;
-          for (const ref of refs) {
-            try {
-              const page = await adapter.fetch(ref, ctx);
-              counts.fetched += 1;
-              const parsed = adapter.parse(page);
-              const draft = prepareIngestDraft(parsed, source);
-              if (options.dryRun) {
-                log("info", "dry_run_item", { source_id: source.id, title: draft.title, url: draft.canonicalUrl });
-                cursor = ref.url;
-                continue;
+          const listingStateMap = options.dryRun
+            ? new Map()
+            : await loadSourceItemListingStateMap(pool, source.id);
+          const failureSummaries: Array<{ url: string; reason: string }> = [];
+
+          const processRef = async (ref: DiscoveredRef): Promise<{ ref: DiscoveredRef; cursor: string }> => {
+            const listingHash = listingContentHash(ref);
+            if (!options.dryRun && shouldSkipDetailFetch(lookupListingState(listingStateMap, ref), listingHash, refetchDays)) {
+              const touched = await touchSourceItemWithoutDetailFetch(pool, source.id, ref, runId, listingHash);
+              if (touched) {
+                counts.unchanged += 1;
+                counts.detail_skipped += 1;
+                return { ref, cursor: ref.url };
               }
-              const processed = await processIngestItem(pool, source, parsed, runId);
-              const saved = processed.saved;
-              if (saved.outcome === "unchanged") counts.unchanged += 1;
-              else if (saved.outcome === "created") counts.created += 1;
-              else counts.updated += 1;
-              if (processed.steps.includes("enrich")) {
-                counts.enrich_attempted += 1;
-                counts.enrich_applied += 1;
-              } else if (processed.steps.includes("enrich_skipped")) {
-                counts.enrich_attempted += 1;
+            }
+            const page = await adapter.fetch(ref, detailCtx);
+            counts.fetched += 1;
+            const parsed = adapter.parse(page);
+            const draft = prepareIngestDraft(parsed, source);
+            if (options.dryRun) {
+              log("info", "dry_run_item", { source_id: source.id, title: draft.title, url: draft.canonicalUrl });
+              return { ref, cursor: ref.url };
+            }
+            const processed = await processIngestItem(pool, source, parsed, runId, { listingContentHash: listingHash });
+            const saved = processed.saved;
+            if (saved.outcome === "unchanged") counts.unchanged += 1;
+            else if (saved.outcome === "created") counts.created += 1;
+            else counts.updated += 1;
+            if (processed.steps.includes("enrich")) {
+              counts.enrich_attempted += 1;
+              counts.enrich_applied += 1;
+            } else if (processed.steps.includes("enrich_skipped")) {
+              counts.enrich_attempted += 1;
+            }
+            if (saved.outcome !== "unchanged") {
+              touchedResourceIds.add(saved.resourceId);
+            }
+            return { ref, cursor: ref.url };
+          };
+
+          for (let offset = 0; offset < refs.length; offset += detailConcurrency) {
+            const chunk = refs.slice(offset, offset + detailConcurrency);
+            const chunkResults = await mapWithConcurrency(chunk, chunk.length, async (ref) => {
+              try {
+                return await processRef(ref);
+              } catch (error) {
+                counts.failed += 1;
+                const reason = failureReason(error);
+                failureSummaries.push({ url: ref.url, reason });
+                await recordError(source.id, runId, ref, error);
+                return { ref, cursor: ref.url };
               }
-              if (saved.outcome !== "unchanged") {
-                touchedResourceIds.add(saved.resourceId);
-              }
-              cursor = ref.url;
+            });
+            for (const result of chunkResults) {
+              cursor = result.cursor;
               itemsProcessed += 1;
               if (itemsProcessed % progressEvery === 0) {
                 log("info", "ingest_source_progress", {
@@ -187,6 +243,7 @@ export async function runIngestion(
                   run_id: runId,
                   items_processed: itemsProcessed,
                   pages_fetched: counts.fetched,
+                  detail_skipped: counts.detail_skipped,
                   created: counts.created,
                   updated: counts.updated,
                   unchanged: counts.unchanged,
@@ -196,11 +253,18 @@ export async function runIngestion(
                   elapsed_ms: Date.now() - started,
                 });
               }
-              if (options.full && !options.dryRun) await writeCheckpoint(pool, source.id, cursor);
-            } catch (error) {
-              counts.failed += 1;
-              await recordError(source.id, runId, ref, error);
             }
+            if (options.full && !options.dryRun) {
+              await writeCheckpoint(pool, source.id, chunk[chunk.length - 1].url);
+            }
+          }
+          if (failureSummaries.length > 0) {
+            log("info", "source_failed_items_summary", {
+              source_id: source.id,
+              run_id: runId,
+              count: failureSummaries.length,
+              failures: failureSummaries,
+            });
           }
           if (options.full && !options.dryRun && options.limit === null && !checkpoint && adapter.fullCatalogue) {
             await confirmDisappearances(pool, source.id, catalogue);

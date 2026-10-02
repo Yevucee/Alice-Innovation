@@ -35,6 +35,14 @@ Ordered steps:
 
 One advisory lock prevents overlapping runs.
 
+### Incremental detail fetch
+
+After discovery, each item compares a **listing snapshot hash** (`canonical URL` + `externalId` + optional `listingHtml` from the adapter) to `source_items.listing_content_hash`. When the hash matches, the row has a linked resource, and `last_fetched_at` is within **`INGEST_DETAIL_REFETCH_DAYS`** (default **7**), the ingestor **skips the detail HTTP fetch**, touches `last_seen_at`, and counts `detail_skipped` (progress logs show `pages_fetched` ≪ `items_processed` on steady-state runs). Detail pages are fetched with **`INGEST_DETAIL_CONCURRENCY`** (default **4**) and per-host rate limits from `sources.limits.requests_per_minute`.
+
+On ingestor start, any `ingestion_runs` row still **`RUNNING`** with `started_at` before this process start is marked **`INTERRUPTED`** so Admin does not show stale runs after deploy/kill.
+
+Failed item URLs for a source are logged once in **`source_failed_items_summary`** at source end.
+
 ## Post-ingest maintenance (every ingest run)
 
 After all sources finish, the ingestor runs (failures are logged; ingest status is not failed):
