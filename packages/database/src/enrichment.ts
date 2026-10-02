@@ -3,6 +3,7 @@ import { countryCodeFor, inferCountryFromText, AFRICA_SOURCE_GEO_DEFAULTS } from
 import type { EnrichmentPayload } from "./enrichment-parse.js";
 import { parseEnrichmentPayload, resolveEnrichmentProblemSlug, resolveEnrichmentSectorSlug } from "./enrichment-parse.js";
 import type { Queryable } from "./pool.js";
+import { supplementalTextFromPageCache } from "./enrichment-context.js";
 import { linkResourceTaxonomy } from "./taxonomy-links.js";
 import { linkResourceCountryLocation } from "./resource-location.js";
 import { isLegalFormOrganisationName, resolveOrganisationId } from "./data-repair.js";
@@ -65,17 +66,42 @@ export async function loadEnrichmentCandidates(
          )
        )
        AND ($2::uuid[] IS NULL OR r.id = ANY($2::uuid[]))
-     ORDER BY r.updated_at DESC
+     ORDER BY
+       (CASE WHEN r.primary_country_name IS NULL OR trim(r.primary_country_name) = '' THEN 0 ELSE 1 END),
+       (CASE WHEN r.evidence_stage = 'UNKNOWN' THEN 0 ELSE 1 END),
+       r.enrichment_attempted_at NULLS FIRST,
+       r.updated_at DESC
      LIMIT $1`,
-    [limit, resourceIds && resourceIds.length > 0 ? resourceIds : null],
+    [Math.max(limit * 4, limit), resourceIds && resourceIds.length > 0 ? resourceIds : null],
   );
-  return rows.rows.filter((row) => {
-    const missingGap =
-      !row.primary_country_name?.trim() || row.evidence_stage === "UNKNOWN";
-    if (missingGap) return true;
-    const currentHash = enrichmentInputHash(row.title, row.source_summary, row.extracted_index_text);
-    return row.enrichment_input_hash == null || row.enrichment_input_hash !== currentHash;
-  });
+
+  const selected: EnrichmentCandidate[] = [];
+  for (const row of rows.rows) {
+    if (selected.length >= limit) break;
+    const missingCountry = !row.primary_country_name?.trim();
+    const missingStage = row.evidence_stage === "UNKNOWN";
+    const missingGap = missingCountry || missingStage;
+
+    const cached = await supplementalTextFromPageCache(db, row.id);
+    const expectedHash = enrichmentInputHash(
+      row.title,
+      row.source_summary,
+      row.extracted_index_text,
+      cached.supplemental,
+    );
+
+    if (missingGap) {
+      if (row.enrichment_input_hash === expectedHash && cached.hasCachedPages) continue;
+      selected.push(row);
+      continue;
+    }
+
+    const baseHash = enrichmentInputHash(row.title, row.source_summary, row.extracted_index_text);
+    if (row.enrichment_input_hash == null || row.enrichment_input_hash !== baseHash) {
+      selected.push(row);
+    }
+  }
+  return selected;
 }
 
 export function enrichmentInputHash(
@@ -320,14 +346,18 @@ export async function recordEnrichmentRun(
     failed: number;
     total_tokens: number;
     estimated_cost_usd: number;
+    supplemental_pages_fetched?: number;
+    country_applied?: number;
+    stage_applied?: number;
     note?: string;
   },
 ): Promise<void> {
   await db.query(
     `INSERT INTO enrichment_backfill_runs (
        processed, attempted, applied, no_data, enriched, skipped, failed,
-       total_tokens, estimated_cost_usd, completed_at, note
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), $10)`,
+       total_tokens, estimated_cost_usd, supplemental_pages_fetched, country_applied, stage_applied,
+       completed_at, note
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now(), $13)`,
     [
       summary.processed,
       summary.attempted,
@@ -338,6 +368,9 @@ export async function recordEnrichmentRun(
       summary.failed,
       summary.total_tokens,
       summary.estimated_cost_usd,
+      summary.supplemental_pages_fetched ?? 0,
+      summary.country_applied ?? 0,
+      summary.stage_applied ?? 0,
       summary.note ?? null,
     ],
   );
@@ -373,7 +406,7 @@ export async function enrichmentAdminStatus(db: Queryable): Promise<{
   );
   const last = await db.query(
     `SELECT id::text, completed_at, processed, attempted, applied, no_data, enriched, skipped, failed,
-            total_tokens, estimated_cost_usd, note
+            total_tokens, estimated_cost_usd, supplemental_pages_fetched, country_applied, stage_applied, note
      FROM enrichment_backfill_runs ORDER BY started_at DESC LIMIT 1`,
   );
   const lastRow = last.rows[0] ?? null;

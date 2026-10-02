@@ -70,3 +70,29 @@ export async function writeEnrichmentPageCache(
     [url, input.statusCode, input.extractedText],
   );
 }
+
+/** Build supplemental text from cached page fetches only (no network). */
+export async function supplementalTextFromPageCache(
+  db: Queryable,
+  resourceId: string,
+): Promise<{ supplemental: string; hasCachedPages: boolean }> {
+  const ctx = await loadResourceEnrichmentContext(db, resourceId);
+  if (!ctx) return { supplemental: "", hasCachedPages: false };
+  const parts: string[] = [];
+  let hasCachedPages = false;
+  if (ctx.source_url) {
+    const cached = await readEnrichmentPageCache(db, ctx.source_url);
+    if (cached?.extracted_text && cached.extracted_text.length > 80) {
+      hasCachedPages = true;
+      parts.push(`Source page:\n${cached.extracted_text}`);
+    }
+  }
+  if (ctx.org_website && ctx.org_website !== ctx.source_url) {
+    const cached = await readEnrichmentPageCache(db, ctx.org_website);
+    if (cached?.extracted_text && cached.extracted_text.length > 80) {
+      hasCachedPages = true;
+      parts.push(`Organisation site:\n${cached.extracted_text}`);
+    }
+  }
+  return { supplemental: parts.join("\n\n").slice(0, 20_000), hasCachedPages };
+}

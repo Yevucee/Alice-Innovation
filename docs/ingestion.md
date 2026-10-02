@@ -40,7 +40,7 @@ One advisory lock prevents overlapping runs.
 After all sources finish, the ingestor runs (failures are logged; ingest status is not failed):
 
 1. **Quality audit** — `QUALITY_AUDIT_ON_INGEST` (default true): scans **all active** resources each run → sets `NEEDS_REVIEW`
-2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` (default **15000**) pending rows, parallel (`ENRICH_CONCURRENCY`, default 8), content-hash cache, pauses cleanly on OpenRouter budget errors (`enrichment_paused_budget`) or per-run spend cap `ENRICH_MAX_COST_USD` (default **$3**, note `enrichment_cost_cap_reached`). Each run logs `gaps: missing_country X→Y; missing_stage A→B` in `enrichment_backfill_runs.note`.
+2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` (default **15000**) pending rows, parallel (`ENRICH_CONCURRENCY`, default 8), content-hash cache **including supplemental page text** when `enrichment_page_cache` has body text; rows missing country/stage are retried after supplemental fetch even when an earlier attempt used an empty supplemental hash. Each run logs `gaps: …`, `supplemental_pages_fetched`, `country_applied`, `stage_applied`, and cost in `enrichment_backfill_runs` (cap `ENRICH_MAX_COST_USD`, default **$3**).
 3. **Embedding backfill** — re-embeds enriched rows in the same run (hash cleared on apply), then catalogue backfill
 
 Manual scripts: `npm run audit:data-quality` (CSV dry-run by default), `npm run enrich:batch`, `npm run adapter:sample-dry-run -- --source=<id>` (discover/parse up to 10 items per source without DB writes).
@@ -80,6 +80,20 @@ Fixtures for parser regressions: `tests/fixtures/*` and `tests/unit/africa-parse
 - **Post-ingest**: `IMAGE_BACKFILL_ON_INGEST` (default true) backfills missing images for resources touched in the run (`IMAGE_BACKFILL_MAX_PER_RUN`, default 150)
 
 Production one-shot: `npm run ingest:production-backfill-images:remote` (runs sample ingests + coverage before/after).
+
+## Post-deploy job queue (Railway Run now)
+
+Migration `010_post_deploy_jobs.sql` seeds one-time jobs in `post_deploy_jobs`. After each normal ingest (`Run now` on **alice-ingestor**), post-ingest runs **at most one step** of the earliest pending job (`POST_DEPLOY_JOBS_ON_INGEST`, default true). Failures are logged and never fail the ingest run.
+
+| Order | job_key | Purpose |
+| --- | --- | --- |
+| 1 | `scraper_reingest_202510` | Re-ingest fixed sources (limit 40, then capped full passes per source) |
+| 2 | `cohort_quality_audit_202510` | One-time `runQualityAudit` with `apply=true` for legacy cohort junk |
+| 3 | `bulk_image_backfill_202510` | Listing-card + validated page image backfill in capped batches |
+
+Re-ingest source list: `su-launchlab`, `kenya-climate-innovation-centre`, `global-startup-awards-africa`, `norrsken-100`, `norrsken-accelerator`, `oceanhub-africa`, `africa-tech-festival-startup-hub`.
+
+Tune caps with `POST_DEPLOY_REINGEST_ITEMS_PER_RUN`, `POST_DEPLOY_FULL_PASSES_PER_SOURCE`, `POST_DEPLOY_IMAGE_BACKFILL_PER_RUN`. When all jobs are `completed`, only the usual post-ingest maintenance runs.
 
 ## Quality review
 

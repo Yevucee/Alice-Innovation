@@ -222,21 +222,66 @@ export async function enrichResourceOnIngest(
   totalTokens: number;
   budgetPaused: boolean;
   costCapReached?: boolean;
+  supplementalPagesFetched: number;
+  countryApplied: boolean;
+  stageApplied: boolean;
 }> {
-  if (!enrichEnabled()) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
-  if (evidence.reviewStatus === "NEEDS_REVIEW") return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
-  if (!resourceNeedsEnrichment(evidence)) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
+  if (!enrichEnabled()) {
+    return {
+      outcome: "skipped",
+      applied: false,
+      totalTokens: 0,
+      budgetPaused: false,
+      supplementalPagesFetched: 0,
+      countryApplied: false,
+      stageApplied: false,
+    };
+  }
+  if (evidence.reviewStatus === "NEEDS_REVIEW") {
+    return {
+      outcome: "skipped",
+      applied: false,
+      totalTokens: 0,
+      budgetPaused: false,
+      supplementalPagesFetched: 0,
+      countryApplied: false,
+      stageApplied: false,
+    };
+  }
+  if (!resourceNeedsEnrichment(evidence)) {
+    return {
+      outcome: "skipped",
+      applied: false,
+      totalTokens: 0,
+      budgetPaused: false,
+      supplementalPagesFetched: 0,
+      countryApplied: false,
+      stageApplied: false,
+    };
+  }
 
   const settings = options?.settings ?? enrichSettings();
-  if (!settings.apiKey) return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: false };
+  if (!settings.apiKey) {
+    return {
+      outcome: "skipped",
+      applied: false,
+      totalTokens: 0,
+      budgetPaused: false,
+      supplementalPagesFetched: 0,
+      countryApplied: false,
+      stageApplied: false,
+    };
+  }
 
   const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
   const needsGapFill = !evidence.countryName?.trim() || evidence.evidenceStage === "UNKNOWN";
   let supplementalText = "";
+  let supplementalPagesFetched = 0;
   if (!options?.skipSupplementalFetch && (needsGapFill || summaryIsThin(evidence.summary))) {
     const supplemental = await buildSupplementalEnrichmentText(db, resourceId, { userAgent, timeoutMs });
     supplementalText = supplemental.supplemental;
+    supplementalPagesFetched = supplemental.pagesFetched;
   }
 
   const evidenceForApply = {
@@ -265,6 +310,9 @@ export async function enrichResourceOnIngest(
       applied: true,
       totalTokens: 0,
       budgetPaused: false,
+      supplementalPagesFetched,
+      countryApplied: deterministic.fields.includes("country"),
+      stageApplied: deterministic.fields.includes("stage"),
     };
   }
 
@@ -278,7 +326,15 @@ export async function enrichResourceOnIngest(
     const llm = await callEnrichmentLlm(settings, evidenceForApply, fetchImpl);
     modelUsed = llm.modelUsed;
     if (llm.budgetPaused) {
-      return { outcome: "skipped", applied: false, totalTokens: 0, budgetPaused: true };
+      return {
+        outcome: "skipped",
+        applied: false,
+        totalTokens: 0,
+        budgetPaused: true,
+        supplementalPagesFetched,
+        countryApplied: false,
+        stageApplied: false,
+      };
     }
     payload = llm.payload;
     totalTokens = llm.totalTokens;
@@ -297,6 +353,9 @@ export async function enrichResourceOnIngest(
       applied: inferredOnly.changed,
       totalTokens,
       budgetPaused: false,
+      supplementalPagesFetched,
+      countryApplied: inferredOnly.fields.includes("country"),
+      stageApplied: inferredOnly.fields.includes("stage"),
     };
   }
 
@@ -312,6 +371,9 @@ export async function enrichResourceOnIngest(
     applied: applyResult.changed,
     totalTokens,
     budgetPaused: false,
+    supplementalPagesFetched,
+    countryApplied: applyResult.fields.includes("country"),
+    stageApplied: applyResult.fields.includes("stage"),
   };
 }
 
@@ -365,6 +427,9 @@ export async function runEnrichmentBackfill(
   let failed = 0;
   let total_tokens = 0;
   let paused_budget = false;
+  let supplemental_pages_fetched = 0;
+  let country_applied = 0;
+  let stage_applied = 0;
   const enriched_resource_ids: string[] = [];
   const concurrency = enrichConcurrency();
   const budget = { paused: false, costCap: false };
@@ -384,6 +449,9 @@ export async function runEnrichmentBackfill(
       total_tokens: 0,
       estimated_cost_usd: 0,
       note: formatEnrichmentGapNote("gaps", gapsBefore, gapsAfter),
+      supplemental_pages_fetched: 0,
+      country_applied: 0,
+      stage_applied: 0,
     });
     return {
       processed: 0,
@@ -411,7 +479,7 @@ export async function runEnrichmentBackfill(
 
   const outcomes = await mapWithConcurrency(candidates, concurrency, async (candidate) => {
     if (budget.paused || budget.costCap) {
-      return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id };
+      return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id, result: null };
     }
     try {
       const result = await enrichResourceOnIngest(
@@ -431,7 +499,7 @@ export async function runEnrichmentBackfill(
       if (result.budgetPaused) {
         budget.paused = true;
         log("info", "enrichment_paused_budget", {});
-        return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id };
+        return { kind: "skipped" as const, totalTokens: 0, resourceId: candidate.id, result };
       }
       spendUsd.value += result.totalTokens * ENRICHMENT_LLM_COST_PER_TOKEN;
       if (spendUsd.value >= maxCost) {
@@ -439,22 +507,27 @@ export async function runEnrichmentBackfill(
         log("info", "enrichment_cost_cap_reached", { spend_usd: spendUsd.value, cap_usd: maxCost });
       }
       if (result.outcome === "skipped") {
-        return { kind: "skipped" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
+        return { kind: "skipped" as const, totalTokens: result.totalTokens, resourceId: candidate.id, result };
       }
       if (result.outcome === "failed") {
-        return { kind: "failed" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
+        return { kind: "failed" as const, totalTokens: result.totalTokens, resourceId: candidate.id, result };
       }
       if (result.applied) {
-        return { kind: "applied" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
+        return { kind: "applied" as const, totalTokens: result.totalTokens, resourceId: candidate.id, result };
       }
-      return { kind: "no_data" as const, totalTokens: result.totalTokens, resourceId: candidate.id };
+      return { kind: "no_data" as const, totalTokens: result.totalTokens, resourceId: candidate.id, result };
     } catch {
-      return { kind: "failed" as const, totalTokens: 0, resourceId: candidate.id };
+      return { kind: "failed" as const, totalTokens: 0, resourceId: candidate.id, result: null };
     }
   });
 
   for (const outcome of outcomes) {
     total_tokens += outcome.totalTokens;
+    if (outcome.result) {
+      supplemental_pages_fetched += outcome.result.supplementalPagesFetched;
+      if (outcome.result.countryApplied) country_applied += 1;
+      if (outcome.result.stageApplied) stage_applied += 1;
+    }
     if (outcome.kind === "applied") {
       attempted += 1;
       applied += 1;
@@ -473,6 +546,7 @@ export async function runEnrichmentBackfill(
   const estimated_cost_usd = Number((total_tokens * ENRICHMENT_LLM_COST_PER_TOKEN).toFixed(6));
   const gapNote = formatEnrichmentGapNote("gaps", gapsBefore, gapsAfter);
   const capNote = budget.costCap ? ENRICHMENT_COST_CAP_NOTE : paused_budget ? ENRICHMENT_PAUSED_BUDGET_NOTE : undefined;
+  const statsNote = `supplemental_pages_fetched=${supplemental_pages_fetched}; country_applied=${country_applied}; stage_applied=${stage_applied}`;
   await recordEnrichmentRun(db, {
     processed: candidates.length,
     attempted,
@@ -483,7 +557,10 @@ export async function runEnrichmentBackfill(
     failed,
     total_tokens,
     estimated_cost_usd,
-    note: [gapNote, capNote].filter(Boolean).join("; "),
+    supplemental_pages_fetched,
+    country_applied,
+    stage_applied,
+    note: [gapNote, statsNote, capNote].filter(Boolean).join("; "),
   });
 
   return {
