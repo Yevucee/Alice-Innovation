@@ -1,6 +1,10 @@
 import { load } from "cheerio";
 import { htmlToText, type NormalisedDraft, type ResourceType } from "@alice/shared";
 import { buildDraft } from "./draft.js";
+import {
+  isBoilerplateCatalogueTitle,
+  resolveCatalogueTitle,
+} from "./catalogue-parse-helpers.js";
 import { createHtmlCatalogueAdapter } from "./html-catalogue.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
 
@@ -8,7 +12,26 @@ function slugify(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-/** Parse cohort/finalist blocks from a single article or challenge page. */
+function listingItemUrl(collection: string, slug: string): string {
+  const url = new URL(collection);
+  url.searchParams.set("item", slug);
+  return url.toString();
+}
+
+function listingFetch(ref: DiscoveredRef): Promise<FetchedPage> {
+  if (!ref.listingHtml) throw new Error("listingHtml missing on ref");
+  return Promise.resolve({
+    url: ref.url,
+    finalUrl: ref.url,
+    status: 200,
+    html: ref.listingHtml,
+    etag: null,
+    lastModified: null,
+    listingOnly: true,
+  });
+}
+
+/** Structured cohort cards (Webflow/CMS blocks), not raw h2/li/p page noise. */
 export function createCohortPageAdapter(config: {
   id: string;
   resourceType: ResourceType;
@@ -23,44 +46,58 @@ export function createCohortPageAdapter(config: {
       if (!collection) return [];
       const page = await ctx.fetchText(collection);
       const $ = load(page.body);
-      const refs: DiscoveredRef[] = [];
-      $("h2, h3, h4, li, p").each((_, element) => {
-        const text = $(element).text().replace(/\s+/g, " ").trim();
-        if (text.length < 12 || text.length > 220) return;
-        if (!/[A-Za-z]{3,}/.test(text)) return;
-        const slug = slugify(text.slice(0, 80));
+      const refs = new Map<string, DiscoveredRef>();
+
+      const push = (title: string, html: string, externalKey?: string) => {
+        if (isBoilerplateCatalogueTitle(title)) return;
+        const slug = slugify(title.slice(0, 80));
         if (slug.length < 4) return;
-        refs.push({
-          url: `${collection.replace(/\/$/, "")}#${slug}`,
-          externalId: `${config.id}-${slug}`,
-          listingHtml: `<div class="cohort-item">${$(element).html() ?? text}</div>`,
+        const externalId = externalKey ?? `${config.id}-${slug}`;
+        refs.set(externalId, {
+          url: listingItemUrl(collection, slug),
+          externalId,
+          listingHtml: `<div class="cohort-item" data-programme="${config.programme}">${html}</div>`,
         });
-      });
-      const unique = new Map<string, DiscoveredRef>();
-      for (const ref of refs) unique.set(ref.externalId!, ref);
-      return [...unique.values()].slice(0, ctx.limit ?? 500);
-    },
-    async fetch(ref) {
-      return {
-        url: ref.url,
-        finalUrl: ref.url,
-        status: 200,
-        html: ref.listingHtml ?? "",
-        etag: null,
-        lastModified: null,
-        listingOnly: true,
       };
+
+      $(".w-dyn-item, .portfolio-item, .cohort-item, article").each((_, element) => {
+        const block = $(element);
+        const title = block.find("[fs-list-field='name'], [fs-list-field='Name'], h2, h3, h4, strong").first().text().replace(/\s+/g, " ").trim()
+          || block.find("a[href]").first().text().replace(/\s+/g, " ").trim();
+        if (!title) return;
+        push(title, block.html() ?? title);
+      });
+
+      $("table tbody tr").each((_, row) => {
+        const cells = $(row).find("td, th");
+        const title = cells.first().text().replace(/\s+/g, " ").trim();
+        const detail = cells.eq(1).text().replace(/\s+/g, " ").trim();
+        if (!title || title.length > 120) return;
+        if (detail.length < 8 && title.length < 8) return;
+        push(title, `<p>${detail || title}</p>`);
+      });
+
+      return [...refs.values()].slice(0, ctx.limit ?? 500);
     },
+    fetch: listingFetch,
     parse(page: FetchedPage): NormalisedDraft {
       const $ = load(page.html);
-      const title = $(".cohort-item").text().trim().slice(0, 200);
-      if (!title) throw new Error(`${config.id} cohort item has no title: ${page.url}`);
+      const block = $(".cohort-item").first();
+      const title = block.find("[fs-list-field='name'], [fs-list-field='Name'], h2, h3, h4, strong").first().text().replace(/\s+/g, " ").trim()
+        || block.text().split("\n").map((line) => line.trim()).find((line) => line.length > 2)
+        || "";
+      const cleaned = title.replace(/\s+/g, " ").trim().slice(0, 200);
+      if (!cleaned || isBoilerplateCatalogueTitle(cleaned)) {
+        throw new Error(`${config.id} cohort item has no title: ${page.url}`);
+      }
+      const body = htmlToText(block.html() ?? cleaned).slice(0, 4000);
+      const summary = body.length >= 40 ? body.slice(0, 500) : cleaned;
       return buildDraft({
-        title,
+        title: cleaned,
         url: page.url,
-        externalId: slugify(title),
-        summary: title,
-        text: title,
+        externalId: slugify(cleaned),
+        summary,
+        text: body || summary,
         resourceType: config.resourceType,
         evidenceBasis: "PROGRAMME_SELECTED",
         evidenceStage: "UNKNOWN",
@@ -87,6 +124,7 @@ async function discoverLaunchLab(ctx: AdapterContext): Promise<DiscoveredRef[]> 
     if (!src || src.startsWith("javascript:")) continue;
     try {
       const url = new URL(src, collection).toString();
+      if (!/portfolio|startup|venture|launchlab|notion|airtable|spreadsheet/i.test(url)) continue;
       refs.set(url, { url, externalId: slugify(url) });
     } catch {
       /* ignore */
@@ -101,12 +139,19 @@ const launchLabAdapter: SourceAdapter = {
   discover: discoverLaunchLab,
   fetch: defaultFetch,
   parse(page) {
-    const title = load(page.html)("title").text().trim() || page.url;
+    const $ = load(page.html);
+    const title = resolveCatalogueTitle($, page.html) || $("h1").first().text().trim();
+    if (!title || isBoilerplateCatalogueTitle(title)) {
+      throw new Error(`su-launchlab iframe page has no title: ${page.url}`);
+    }
+    const summary = $("meta[property='og:description']").attr("content")?.trim()
+      || htmlToText($("main, article, p").first().html() ?? "").slice(0, 500)
+      || title;
     return buildDraft({
       title,
       url: page.finalUrl || page.url,
       externalId: slugify(page.url),
-      summary: title,
+      summary,
       text: htmlToText(page.html).slice(0, 2000),
       resourceType: "ORGANISATION",
       evidenceBasis: "PROGRAMME_SELECTED",
@@ -129,50 +174,8 @@ export const africaSecondPassAdapters: SourceAdapter[] = [
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
   createCohortPageAdapter({
-    id: "kosmos-innovation-centre-ghana",
-    programme: "Kosmos Innovation Center Ghana",
-    resourceType: "SOLUTION",
-    year: 2025,
-  }),
-  createCohortPageAdapter({
-    id: "africa-tech-summit-showcase",
-    programme: "Africa Tech Summit Investment Showcase",
-    resourceType: "ORGANISATION",
-  }),
-  createCohortPageAdapter({
-    id: "mest-africa-challenge",
-    programme: "MEST Africa Challenge",
-    resourceType: "ORGANISATION",
-    year: 2025,
-  }),
-  createCohortPageAdapter({
-    id: "milken-motsepe-innovation-prize",
-    programme: "Milken-Motsepe Innovation Prize",
-    resourceType: "SOLUTION",
-  }),
-  createCohortPageAdapter({
     id: "global-startup-awards-africa",
     programme: "Global Startup Awards Africa",
-    resourceType: "ORGANISATION",
-  }),
-  createCohortPageAdapter({
-    id: "flat6labs-africa",
-    programme: "Flat6Labs Africa",
-    resourceType: "ORGANISATION",
-  }),
-  createCohortPageAdapter({
-    id: "growthafrica",
-    programme: "GrowthAfrica",
-    resourceType: "ORGANISATION",
-  }),
-  createCohortPageAdapter({
-    id: "africarena",
-    programme: "AfricArena",
-    resourceType: "ORGANISATION",
-  }),
-  createCohortPageAdapter({
-    id: "africa-fintech-summit-alpha-expo",
-    programme: "Africa Fintech Summit Alpha Expo",
     resourceType: "ORGANISATION",
   }),
 ];

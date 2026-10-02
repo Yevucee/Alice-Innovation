@@ -43,7 +43,32 @@ After all sources finish, the ingestor runs (failures are logged; ingest status 
 2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` (default **15000**) pending rows, parallel (`ENRICH_CONCURRENCY`, default 8), content-hash cache, pauses cleanly on OpenRouter budget errors (`enrichment_paused_budget`) or per-run spend cap `ENRICH_MAX_COST_USD` (default **$3**, note `enrichment_cost_cap_reached`). Each run logs `gaps: missing_country X→Y; missing_stage A→B` in `enrichment_backfill_runs.note`.
 3. **Embedding backfill** — re-embeds enriched rows in the same run (hash cleared on apply), then catalogue backfill
 
-Manual scripts: `npm run audit:data-quality` (CSV dry-run by default), `npm run enrich:batch`.
+Manual scripts: `npm run audit:data-quality` (CSV dry-run by default), `npm run enrich:batch`, `npm run adapter:sample-dry-run -- --source=<id>` (discover/parse up to 10 items per source without DB writes).
+
+## Africa scraper quality (Oct 2026)
+
+Structured catalogue parsers live in `apps/ingestor/src/adapters/catalogue-parse-helpers.ts` (shared title resolution: visible `h1` → JSON-LD → Open Graph → document title). Cohort second-pass adapters use Webflow/CMS cards (`.w-dyn-item`, table rows) instead of raw `h2`/`li`/`p` noise.
+
+**Second-pass ingest** (`ingest:africa-second-pass:remote`) currently targets only:
+
+- `su-launchlab` (iframe portfolio pages; `resolveCatalogueTitle`)
+- `kenya-climate-innovation-centre` (HTML catalogue + sitemap)
+- `global-startup-awards-africa` (structured cohort cards on `/former-winners`)
+
+**Disabled until a structured parser exists** (still registered; placeholder adapter if forced with `--source`):
+
+- `kosmos-innovation-centre-ghana`
+- `africa-tech-summit-showcase`
+- `mest-africa-challenge`
+- `milken-motsepe-innovation-prize`
+- `flat6labs-africa`
+- `growthafrica`
+- `africarena`
+- `africa-fintech-summit-alpha-expo`
+
+Legacy cohort junk (`rawMetadata.cohort_source`, title equals summary, boilerplate titles) is flagged `NEEDS_REVIEW` via the quality gate and post-ingest quality audit.
+
+Fixtures for parser regressions: `tests/fixtures/*` and `tests/unit/africa-parser-quality.test.ts`.
 
 ## Quality review
 

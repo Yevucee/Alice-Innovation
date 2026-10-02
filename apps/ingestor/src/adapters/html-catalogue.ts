@@ -1,6 +1,7 @@
 import { load } from "cheerio";
 import { htmlToText, type NormalisedDraft, type ResourceType } from "@alice/shared";
 import { buildDraft, ogImageFromPage } from "./draft.js";
+import { resolveCatalogueTitle } from "./catalogue-parse-helpers.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
 
 export interface WordPressRestDiscovery {
@@ -99,11 +100,7 @@ export function parseHtmlCatalogueListing(
 
 export function parseHtmlCataloguePage(page: FetchedPage, config: HtmlCatalogueConfig): NormalisedDraft {
   const $ = load(page.html);
-  let title = $("meta[property='og:title']").attr("content")?.trim()
-    || $("title").text().trim();
-  if (config.titleSuffixStrip) {
-    title = title.replace(config.titleSuffixStrip, "").trim();
-  }
+  let title = resolveCatalogueTitle($, page.html, config.titleSuffixStrip);
   if (!title) throw new Error(`${config.id} page has no title: ${page.url}`);
 
   const summary = $("meta[property='og:description']").attr("content")?.replace(/&#xA0;/g, " ").trim()

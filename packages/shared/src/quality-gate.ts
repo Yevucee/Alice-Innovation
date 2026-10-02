@@ -52,6 +52,15 @@ function uniqueBodyLength(draft: NormalisedDraft): number {
   return summary.length;
 }
 
+function looksLikeBoilerplateCohortTitle(title: string): boolean {
+  const trimmed = title.replace(/\s+/g, " ").trim();
+  if (trimmed.length < 3) return true;
+  if (/^(home|about|contact|menu|search|privacy|terms|subscribe|read more|share|portfolio|insights|news|blog)$/i.test(trimmed)) {
+    return true;
+  }
+  return false;
+}
+
 function looksTruncatedTitle(title: string): boolean {
   const trimmed = title.trim();
   if (trimmed.length < 4) return true;
@@ -101,6 +110,16 @@ export function evaluateDraftQuality(draft: NormalisedDraft): QualityGateResult 
   if (draft.rawMetadata?.cohort_source === true || draft.rawMetadata?.listing_only === true) {
     if (uniqueBodyLength(draft) < MIN_BODY_CHARS) {
       reasons.push("listing_only_thin");
+    }
+  }
+  if (draft.rawMetadata?.cohort_source === true) {
+    const summary = draft.sourceSummary.trim();
+    const title = draft.title.trim();
+    if (summary && title && summary === title) {
+      reasons.push("cohort_title_equals_summary");
+    }
+    if (BLOCKLIST_TITLES.has(titleKey) || looksLikeBoilerplateCohortTitle(title)) {
+      reasons.push("cohort_boilerplate_title");
     }
   }
 

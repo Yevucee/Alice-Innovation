@@ -945,13 +945,13 @@ sources:
       preferred_method: api
       sitemap: null
       rss: null
-      notes: "WP REST /wp-json/wp/v2/hub — same catalogue as hub-discovery AfriLabs adapter."
+      notes: WP REST /wp-json/wp/v2/hub — same catalogue as hub-discovery AfriLabs adapter.
     limits:
       requests_per_minute: 10
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "Run limit ingest after hub-discovery; full pass is ~500+ hub pages."
+      notes: Run limit ingest after hub-discovery; full pass is ~500+ hub pages.
   - id: undp-timbuktoo
     name: UNDP timbuktoo
     category: africa-innovation
@@ -1004,7 +1004,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Homepage portfolio section. Cohort listing adapter registered; enable + ingest when ready."
+      notes: Homepage portfolio section. Cohort listing adapter registered; enable + ingest when ready.
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -1774,7 +1774,7 @@ sources:
       preferred_method: sitemap
       sitemap: https://atlasofthefuture.org/sitemap_index.xml
       rss: null
-      notes: "Discover via Yoast project-sitemap only; /project/ index is 404. Item pages /project/{slug}/ are server-rendered."
+      notes: Discover via Yoast project-sitemap only; /project/ index is 404. Item pages /project/{slug}/ are server-rendered.
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -2188,11 +2188,11 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "Run full ingest via global backfill queue (not Africa-only filter)."
+      notes: Run full ingest via global backfill queue (not Africa-only filter).
   - id: seedstars-africa
     name: Seedstars portfolio (Africa filter, legacy)
     category: africa-innovation
-    description: "Superseded by global seedstars source. Kept for historical ingest runs only."
+    description: Superseded by global seedstars source. Kept for historical ingest runs only.
     homepage: https://www.seedstars.com/
     collection_url: https://www.seedstars.com/funds/portfolio/
     enabled: false
@@ -2559,7 +2559,7 @@ sources:
     description: "PARTIAL second-pass Africa source. PARTIAL cohort source: challenge and finalist announcements on news/blog paths."
     homepage: https://kosmosinnovationcenter.com/
     collection_url: https://kosmosinnovationcenter.com/news/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2583,14 +2583,14 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
   - id: africa-tech-summit-showcase
     name: Africa Tech Summit Investment Showcase
     category: africa-innovation
     description: PARTIAL second-pass Africa source. PARTIAL annual showcase cohorts published as articles.
     homepage: https://africatechsummit.com/
     collection_url: https://africatechsummit.com/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2614,14 +2614,14 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
   - id: mest-africa-challenge
     name: MEST Africa Challenge
     category: africa-innovation
     description: PARTIAL second-pass Africa source. PARTIAL prize-cycle source for pan-African finalists.
     homepage: https://meltwater.org/mest/
     collection_url: https://meltwater.org/mest/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2645,14 +2645,14 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: collection on meltwater.org (Sep 2026). Not a full finalist database."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
   - id: milken-motsepe-innovation-prize
     name: Milken-Motsepe Innovation Prize
     category: africa-innovation
     description: PARTIAL second-pass Africa source. PARTIAL prize-cycle source.
     homepage: https://milkenmotsepeprize.org/
     collection_url: https://milkenmotsepeprize.org/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2676,7 +2676,7 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
   - id: global-startup-awards-africa
     name: Global Startup Awards Africa
     category: africa-innovation
@@ -2714,7 +2714,7 @@ sources:
     description: "PARTIAL second-pass Africa source. PARTIAL: Egypt/Tunisia/Morocco programme portfolios still being consolidated."
     homepage: https://flat6labs.com/
     collection_url: https://flat6labs.com/insights/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2738,14 +2738,14 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: insights cohort only until a verified portfolio URL exists."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
   - id: growthafrica
     name: GrowthAfrica ventures
     category: africa-innovation
     description: "PARTIAL second-pass Africa source. PARTIAL: portfolio page uses CubePortfolio JS; server HTML may be incomplete."
     homepage: https://growthafrica.com/
     collection_url: https://growthafrica.com/investors/portfolio-our-ventures/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2769,14 +2769,14 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
   - id: africarena
     name: AfricArena
     category: africa-innovation
     description: PARTIAL second-pass Africa source. PARTIAL event showcase source for African startup finalists.
     homepage: https://www.africarena.com/
     collection_url: https://www.africarena.com/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2800,14 +2800,14 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
   - id: africa-fintech-summit-alpha-expo
     name: Africa Fintech Summit Alpha Expo
     category: africa-innovation
     description: PARTIAL second-pass Africa source. PARTIAL fintech summit exhibitor/alpha expo listings.
     homepage: https://africafintechsummit.com/
     collection_url: https://africafintechsummit.com/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2831,4 +2831,4 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "PARTIAL: second-pass enabled (Sep 2026). Run ingest:africa-second-pass:remote after seed."
+      notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."

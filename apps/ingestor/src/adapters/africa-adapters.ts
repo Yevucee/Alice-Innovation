@@ -1,6 +1,12 @@
 import { load } from "cheerio";
 import { htmlToText, type NormalisedDraft } from "@alice/shared";
 import { buildDraft } from "./draft.js";
+import {
+  isBoilerplateCatalogueTitle,
+  pickGitexCohortTitle,
+  pickNorrsken100Title,
+  resolveCatalogueTitle,
+} from "./catalogue-parse-helpers.js";
 import { listingCardImageUrl } from "./listing-images.js";
 import { createHtmlCatalogueAdapter, parseHtmlCataloguePage } from "./html-catalogue.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
@@ -182,8 +188,12 @@ async function discoverNorrskenAccordion(ctx: AdapterContext, baseUrl: string): 
 
 export function parseNorrsken100Item(page: FetchedPage): NormalisedDraft {
   const $ = load(page.html);
-  const title = $("h2, h3, h4").first().text().trim();
-  const summary = $("p").first().text().trim() || title;
+  const title = pickNorrsken100Title($);
+  const summary = $("[fs-list-field='description'], [fs-list-field='sector'], p")
+    .first()
+    .text()
+    .replace(/\s+/g, " ")
+    .trim() || title;
   if (!title) throw new Error(`norrsken-100 item has no title: ${page.url}`);
   return buildDraft({
     title,
@@ -207,19 +217,32 @@ async function discoverNorrsken100(ctx: AdapterContext): Promise<DiscoveredRef[]
   const page = await ctx.fetchText(collection);
   const $ = load(page.body);
   const refs: DiscoveredRef[] = [];
-  const skip = new Set(["NORRSKEN/100", "The list", "Welcome"]);
-  $("h2, h3").each((_, element) => {
-    const title = $(element).text().trim();
-    if (!title || skip.has(title) || title.length < 2) return;
+  $(".w-dyn-item, [role='listitem']").each((_, element) => {
+    const item = $(element);
+    const fragment = load(`<div>${item.html() ?? ""}</div>`);
+    const title = pickNorrsken100Title(fragment);
+    if (!title) return;
     const slug = slugify(title);
-    const parent = $(element).closest('[role="listitem"], .w-dyn-item').first();
-    const fragment = parent.length ? parent : $(element);
     refs.push({
       url: listingItemUrl(collection, slug),
       externalId: slug,
-      listingHtml: $.html(fragment),
+      listingHtml: `<div class="norrsken-100-item">${item.html() ?? ""}</div>`,
     });
   });
+  if (refs.length === 0) {
+    $("h2, h3").each((_, element) => {
+      const title = $(element).text().replace(/\s+/g, " ").trim();
+      if (!title || isBoilerplateCatalogueTitle(title) || /^norrsken\b/i.test(title)) return;
+      const slug = slugify(title);
+      const parent = $(element).closest('[role="listitem"], .w-dyn-item').first();
+      const fragment = parent.length ? parent : $(element).parent();
+      refs.push({
+        url: listingItemUrl(collection, slug),
+        externalId: slug,
+        listingHtml: `<div class="norrsken-100-item">${fragment.html() ?? ""}</div>`,
+      });
+    });
+  }
   return refs;
 }
 
@@ -351,8 +374,8 @@ const htmlAfricaCatalogues: SourceAdapter[] = [
   createHtmlCatalogueAdapter({
     id: "oceanhub-africa",
     siteOrigin: "https://oceanhub.africa",
-    pathPattern: /^\/[^/]+\/?$/i,
-    excludePathPattern: /^\/(category|wp-content|wp-json|feed|about|our-work|we-support|we-connect|we-invest|we-consult|contact|career-opportunities|deal-book)(\/|$)/i,
+    pathPattern: /^\/(?!category|wp-content|wp-json|feed|about|our-work|we-support|we-connect|we-invest|we-consult|contact|career-opportunities|deal-book|startup-portfolio)[a-z0-9-]+\/?$/i,
+    excludePathPattern: /^\/(category|tag|author|page)(\/|$)/i,
     wordpressRest: { origin: "https://oceanhub.africa", postType: "posts", categories: 152, perPage: 100 },
     resourceType: "SOLUTION",
     evidenceBasis: "PROGRAMME_SELECTED",
@@ -369,16 +392,16 @@ const gitexSupernovaAdapter: SourceAdapter = {
     const $ = load(page.body);
     const refs: DiscoveredRef[] = [];
     $("h2, h3, h4").each((_, element) => {
-      const heading = $(element).text().trim();
-      if (!heading || heading.length < 3) return;
       const block = $(element).parent();
-      const text = htmlToText(block.html() ?? "").slice(0, 2000);
-      if (!/winner|finalist|semifinalist/i.test(text) && !/sector|country/i.test(text)) return;
-      const slug = slugify(heading);
+      const text = htmlToText(block.html() ?? "");
+      if (!/winner|finalist|semifinalist|startup|sector|country/i.test(text)) return;
+      const title = pickGitexCohortTitle($, block);
+      if (!title) return;
+      const slug = slugify(title);
       refs.push({
         url: listingItemUrl(collection, `gitex-2026-${slug}`),
         externalId: `gitex-2026-${slug}`,
-        listingHtml: $.html(block),
+        listingHtml: `<div class="gitex-cohort">${block.html() ?? ""}</div>`,
       });
     });
     return refs;
@@ -386,8 +409,9 @@ const gitexSupernovaAdapter: SourceAdapter = {
   fetch: listingFetch,
   parse(page) {
     const $ = load(page.html);
-    const title = $("h2, h3, h4").first().text().trim();
-    const text = htmlToText(page.html).slice(0, 4000);
+    const block = $(".gitex-cohort").first().length ? $(".gitex-cohort").first() : $("body");
+    const title = pickGitexCohortTitle($, block);
+    const text = htmlToText(block.html() ?? "").slice(0, 4000);
     if (!title) throw new Error(`gitex-africa-supernova block has no title: ${page.url}`);
     return buildDraft({
       title,
@@ -492,12 +516,16 @@ const africaTechFestivalAdapter: SourceAdapter = {
   fetch: defaultFetch,
   parse(page) {
     const $ = load(page.html);
-    const titleFromMeta = $("title").text().split("|")[0]?.trim();
-    const title = $("h1").first().text().trim() || titleFromMeta || "";
-    const summary = $("meta[name='description']").attr("content")?.trim()
+    const title =
+      resolveCatalogueTitle($, page.html)
+      || $("h1").first().text().replace(/\s+/g, " ").trim();
+    const summary = $("meta[property='og:description']").attr("content")?.trim()
+      || $("meta[name='description']").attr("content")?.trim()
       || $("p").first().text().trim()
       || title;
-    if (!title) throw new Error(`africa-tech-festival profile has no title: ${page.url}`);
+    if (!title || isBoilerplateCatalogueTitle(title)) {
+      throw new Error(`africa-tech-festival profile has no title: ${page.url}`);
+    }
     return buildDraft({
       title,
       url: page.finalUrl || page.url,

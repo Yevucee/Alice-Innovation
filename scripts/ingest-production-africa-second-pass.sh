@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 echo "Preflight collection URLs for second-pass sources..."
 npx tsx scripts/preflight-source-urls.ts --sources="$(
-  echo su-launchlab,kenya-climate-innovation-centre,kosmos-innovation-centre-ghana,africa-tech-summit-showcase,mest-africa-challenge,milken-motsepe-innovation-prize,global-startup-awards-africa,flat6labs-africa,growthafrica,africarena,africa-fintech-summit-alpha-expo
+  echo su-launchlab,kenya-climate-innovation-centre,global-startup-awards-africa
 )" || {
   echo "Second-pass preflight failed — fix config/sources.yaml collection_url before ingesting."
   exit 1
@@ -14,15 +14,7 @@ npx tsx scripts/preflight-source-urls.ts --sources="$(
 SECOND_PASS_SOURCES=(
   su-launchlab
   kenya-climate-innovation-centre
-  kosmos-innovation-centre-ghana
-  africa-tech-summit-showcase
-  mest-africa-challenge
-  milken-motsepe-innovation-prize
   global-startup-awards-africa
-  flat6labs-africa
-  growthafrica
-  africarena
-  africa-fintech-summit-alpha-expo
 )
 
 ingest_one() {
