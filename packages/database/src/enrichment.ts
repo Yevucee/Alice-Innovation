@@ -1,11 +1,13 @@
 import { contentHash } from "@alice/shared";
-import { countryCodeFor, inferCountryFromText } from "@alice/taxonomy";
+import { countryCodeFor, inferCountryFromText, AFRICA_SOURCE_GEO_DEFAULTS } from "@alice/taxonomy";
 import type { EnrichmentPayload } from "./enrichment-parse.js";
 import { parseEnrichmentPayload, resolveEnrichmentProblemSlug, resolveEnrichmentSectorSlug } from "./enrichment-parse.js";
 import type { Queryable } from "./pool.js";
 import { linkResourceTaxonomy } from "./taxonomy-links.js";
 import { linkResourceCountryLocation } from "./resource-location.js";
 import { isLegalFormOrganisationName, resolveOrganisationId } from "./data-repair.js";
+import { loadResourceEnrichmentContext, type ResourceEnrichmentContext } from "./enrichment-context.js";
+import { inferStageFromText, stageFromAdapterMetadata } from "./enrichment-stage.js";
 
 export type { EnrichmentPayload };
 export {
@@ -52,12 +54,14 @@ export async function loadEnrichmentCandidates(
      FROM resources r
      WHERE r.active
        AND r.review_status <> 'NEEDS_REVIEW'
-       AND r.enrichment_attempted_at IS NULL
        AND (
-         r.primary_country_name IS NULL OR r.primary_country_name = ''
+         r.primary_country_name IS NULL OR trim(r.primary_country_name) = ''
          OR r.evidence_stage = 'UNKNOWN'
-         OR NOT EXISTS (
-           SELECT 1 FROM resource_organisations ro WHERE ro.resource_id = r.id
+         OR (
+           r.enrichment_attempted_at IS NULL
+           AND NOT EXISTS (
+             SELECT 1 FROM resource_organisations ro WHERE ro.resource_id = r.id
+           )
          )
        )
        AND ($2::uuid[] IS NULL OR r.id = ANY($2::uuid[]))
@@ -66,13 +70,21 @@ export async function loadEnrichmentCandidates(
     [limit, resourceIds && resourceIds.length > 0 ? resourceIds : null],
   );
   return rows.rows.filter((row) => {
+    const missingGap =
+      !row.primary_country_name?.trim() || row.evidence_stage === "UNKNOWN";
+    if (missingGap) return true;
     const currentHash = enrichmentInputHash(row.title, row.source_summary, row.extracted_index_text);
     return row.enrichment_input_hash == null || row.enrichment_input_hash !== currentHash;
   });
 }
 
-export function enrichmentInputHash(title: string, summary: string, text: string): string {
-  return contentHash([title, summary, text.slice(0, 1500)]);
+export function enrichmentInputHash(
+  title: string,
+  summary: string,
+  text: string,
+  supplementalText = "",
+): string {
+  return contentHash([title, summary, text.slice(0, 1500), supplementalText.slice(0, 8000)]);
 }
 
 export async function readEnrichmentCache(
@@ -111,25 +123,86 @@ async function ensureOrganisation(db: Queryable, name: string, country: string |
 
 function enrichPayloadFromEvidence(
   payload: EnrichmentPayload,
-  evidence: { title: string; summary: string; text: string },
+  evidence: { title: string; summary: string; text: string; supplementalText?: string },
+  context?: ResourceEnrichmentContext | null,
 ): EnrichmentPayload {
-  if (payload.country?.trim()) return payload;
-  const inferred = inferCountryFromText(`${evidence.title}\n${evidence.summary}\n${evidence.text}`);
-  if (!inferred.countryName) return payload;
-  return {
-    ...payload,
-    country: inferred.countryName,
-    city: payload.city ?? inferred.city ?? undefined,
-  };
+  let merged = { ...payload };
+  const haystack = [
+    evidence.title,
+    evidence.summary,
+    evidence.text,
+    evidence.supplementalText ?? "",
+    context?.org_country ?? "",
+    context?.raw_metadata?.headquarters ?? "",
+  ].join("\n");
+
+  if (!merged.country?.trim() && context?.org_country?.trim()) {
+    merged = { ...merged, country: context.org_country.trim() };
+  }
+  if (!merged.country?.trim()) {
+    const fromPhone = inferCountryFromPhone(haystack);
+    if (fromPhone) merged = { ...merged, country: fromPhone };
+  }
+  if (!merged.country?.trim() && context?.source_slug) {
+    const geoDefault = AFRICA_SOURCE_GEO_DEFAULTS[context.source_slug];
+    if (geoDefault?.countryName) {
+      merged = { ...merged, country: geoDefault.countryName };
+    }
+  }
+  if (!merged.country?.trim()) {
+    const inferred = inferCountryFromText(haystack);
+    if (inferred.countryName) {
+      merged = {
+        ...merged,
+        country: inferred.countryName,
+        city: merged.city ?? inferred.city ?? undefined,
+      };
+    }
+  }
+
+  if (!merged.stage?.trim() || merged.stage.toUpperCase() === "UNKNOWN") {
+    const fromMeta = stageFromAdapterMetadata(context?.source_slug ?? null, context?.raw_metadata);
+    if (fromMeta && fromMeta !== "UNKNOWN") {
+      merged = { ...merged, stage: fromMeta };
+    } else {
+      const fromText = inferStageFromText(haystack);
+      if (fromText) merged = { ...merged, stage: fromText };
+    }
+  }
+
+  return merged;
+}
+
+const PHONE_DIAL_TO_COUNTRY: Record<string, string> = {
+  "254": "Kenya",
+  "255": "Tanzania",
+  "256": "Uganda",
+  "234": "Nigeria",
+  "233": "Ghana",
+  "27": "South Africa",
+  "20": "Egypt",
+  "212": "Morocco",
+  "251": "Ethiopia",
+  "250": "Rwanda",
+  "221": "Senegal",
+  "225": "Côte d'Ivoire",
+};
+
+function inferCountryFromPhone(text: string): string | null {
+  const match = text.match(/(?:tel:|phone:|call\s)?\+(\d{1,3})[\s.-]?\d/);
+  if (!match) return null;
+  const dial = match[1];
+  return PHONE_DIAL_TO_COUNTRY[dial] ?? null;
 }
 
 export async function applyEnrichmentToResource(
   db: Queryable,
   resourceId: string,
   payload: EnrichmentPayload,
-  evidence?: { title: string; summary: string; text: string },
+  evidence?: { title: string; summary: string; text: string; supplementalText?: string },
 ): Promise<ApplyEnrichmentResult> {
-  const merged = evidence ? enrichPayloadFromEvidence(payload, evidence) : payload;
+  const context = await loadResourceEnrichmentContext(db, resourceId);
+  const merged = evidence ? enrichPayloadFromEvidence(payload, evidence, context) : payload;
   const fields: string[] = [];
   const country = merged.country?.trim();
   const countryCode = country ? countryCodeFor(country) : null;

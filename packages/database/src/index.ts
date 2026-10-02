@@ -64,6 +64,22 @@ export {
   type ApplyEnrichmentResult,
 } from "./enrichment.js";
 export {
+  countEnrichmentGaps,
+  formatEnrichmentGapNote,
+} from "./enrichment-gaps.js";
+export type { EnrichmentGapCounts } from "./enrichment-gaps.js";
+export {
+  loadResourceEnrichmentContext,
+  readEnrichmentPageCache,
+  writeEnrichmentPageCache,
+} from "./enrichment-context.js";
+export type { ResourceEnrichmentContext } from "./enrichment-context.js";
+export {
+  inferStageFromText,
+  normaliseEnrichmentStageLabel,
+  stageFromAdapterMetadata,
+} from "./enrichment-stage.js";
+export {
   correctMisassignedWaterSectorTags,
   invalidateStaleEnrichmentEmbeddings,
   isJunkPersonName,

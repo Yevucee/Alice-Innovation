@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   enrichMaxPerRun,
+  enrichMaxCostUsd,
   isEnrichmentBudgetError,
 } from "../../apps/ingestor/src/enrich.ts";
 
@@ -10,6 +11,13 @@ test("enrichMaxPerRun defaults to 15000", () => {
   delete process.env.ENRICH_MAX_PER_RUN;
   assert.equal(enrichMaxPerRun(), 15_000);
   if (prev !== undefined) process.env.ENRICH_MAX_PER_RUN = prev;
+});
+
+test("enrichMaxCostUsd defaults to 3", () => {
+  const prev = process.env.ENRICH_MAX_COST_USD;
+  delete process.env.ENRICH_MAX_COST_USD;
+  assert.equal(enrichMaxCostUsd(), 3);
+  if (prev !== undefined) process.env.ENRICH_MAX_COST_USD = prev;
 });
 
 test("isEnrichmentBudgetError detects OpenRouter budget responses", () => {

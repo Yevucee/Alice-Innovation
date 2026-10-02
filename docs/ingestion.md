@@ -16,7 +16,7 @@ Ordered steps:
 2. **Prepare** — `prepareIngestDraft` (`geo-defaults` + `inferCountryFromText`)
 3. **Quality gate** — `evaluateDraftQuality` → may set `NEEDS_REVIEW`; skips org/person links when flagged
 4. **Upsert** — `upsertDraft` (resources + source_items; no deletes)
-5. **LLM enrichment** — cached by content hash; writes country + `resource_locations`, stage, org, taxonomy links; records `enrichment_attempted_at` so empty LLM responses are not re-billed unless content changes
+5. **LLM enrichment** — cached by content hash (includes optional supplemental page text); fetches source `source_items.url` and primary org website when summaries are thin or country/stage are missing (robots-aware, `enrichment_page_cache`, ~1 req/s per host); writes country + `resource_locations`, stage, org, taxonomy links; records `enrichment_attempted_at` so empty LLM responses are not re-billed unless content changes
 6. **Taxonomy link** — `inferTaxonomyFromText` + `linkResourceTaxonomy`
 7. **Embedding** — `buildEmbeddingText` (includes enriched fields) + `saveEmbedding`
 8. **Classifier** (optional) — `classifyResource` when `CLASSIFIER_ENABLED=true`
@@ -40,7 +40,7 @@ One advisory lock prevents overlapping runs.
 After all sources finish, the ingestor runs (failures are logged; ingest status is not failed):
 
 1. **Quality audit** — `QUALITY_AUDIT_ON_INGEST` (default true): scans **all active** resources each run → sets `NEEDS_REVIEW`
-2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` (default **15000**) pending rows, parallel (`ENRICH_CONCURRENCY`, default 8), content-hash cache, pauses cleanly on OpenRouter budget errors (`enrichment_paused_budget`)
+2. **Enrichment backfill** — `ENRICH_BACKFILL_ON_INGEST` (default true): up to `ENRICH_MAX_PER_RUN` (default **15000**) pending rows, parallel (`ENRICH_CONCURRENCY`, default 8), content-hash cache, pauses cleanly on OpenRouter budget errors (`enrichment_paused_budget`) or per-run spend cap `ENRICH_MAX_COST_USD` (default **$3**, note `enrichment_cost_cap_reached`). Each run logs `gaps: missing_country X→Y; missing_stage A→B` in `enrichment_backfill_runs.note`.
 3. **Embedding backfill** — re-embeds enriched rows in the same run (hash cleared on apply), then catalogue backfill
 
 Manual scripts: `npm run audit:data-quality` (CSV dry-run by default), `npm run enrich:batch`.

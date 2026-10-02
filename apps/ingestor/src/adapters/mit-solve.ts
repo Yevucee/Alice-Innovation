@@ -22,6 +22,9 @@ export function parseMitSolve(page: FetchedPage): NormalisedDraft {
   );
   const organisation = organisationEntry?.[1] ?? null;
   const headquarters = [...answers.entries()].find(([question]) => question.includes("headquartered"))?.[1] ?? null;
+  const stageAnswer = [...answers.entries()].find(([question]) =>
+    /stage of (your )?solution|deployment|maturity|operational status/i.test(question),
+  )?.[1] ?? null;
   const person = $(".font-bold")
     .filter((_, element) => $(element).text().trim().toLowerCase() === "team leader")
     .first()
@@ -50,7 +53,7 @@ export function parseMitSolve(page: FetchedPage): NormalisedDraft {
     imageUrl: ogImageFromPage(page.html, page.finalUrl || page.url),
     evidenceBasis: "PROGRAMME_SELECTED",
     evidenceStage: "UNKNOWN",
-    rawMetadata: { headquarters, listing_only: page.listingOnly },
+    rawMetadata: { headquarters, stage: stageAnswer, listing_only: page.listingOnly },
     etag: page.etag,
     lastModified: page.lastModified,
   });
