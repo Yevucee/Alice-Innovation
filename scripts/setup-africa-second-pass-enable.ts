@@ -6,15 +6,7 @@ const REGISTRY_PATH = "config/sources.yaml";
 const ENABLE_SECOND_PASS = new Set([
   "su-launchlab",
   "kenya-climate-innovation-centre",
-  "kosmos-innovation-centre-ghana",
-  "africa-tech-summit-showcase",
-  "mest-africa-challenge",
-  "milken-motsepe-innovation-prize",
   "global-startup-awards-africa",
-  "flat6labs-africa",
-  "growthafrica",
-  "africarena",
-  "africa-fintech-summit-alpha-expo",
 ]);
 
 const raw = readFileSync(REGISTRY_PATH, "utf8");

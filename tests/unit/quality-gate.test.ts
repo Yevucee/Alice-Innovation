@@ -49,3 +49,15 @@ test("quality gate flags suspicious person names", () => {
   assert.ok(person.reasons.includes("suspicious_person_name"));
   assert.equal(person.skipOrgPersonLinks, true);
 });
+
+test("quality gate flags legacy cohort junk", () => {
+  const cohort = evaluateDraftQuality(draft({
+    title: "Home",
+    sourceSummary: "Home",
+    extractedText: "Home",
+    rawMetadata: { cohort_source: true, listing_only: true },
+  }));
+  assert.ok(cohort.reasons.includes("cohort_title_equals_summary"));
+  assert.ok(cohort.reasons.includes("cohort_boilerplate_title"));
+  assert.ok(cohort.reasons.includes("listing_only_thin"));
+});
