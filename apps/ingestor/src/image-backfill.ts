@@ -8,6 +8,7 @@ export interface ImageBackfillRow {
   id: string;
   canonical_url: string;
   source_slug: string;
+  external_id: string;
 }
 
 export async function loadSourceItemsMissingImages(
@@ -18,6 +19,7 @@ export async function loadSourceItemsMissingImages(
   const result = await db.query<ImageBackfillRow>(
     `SELECT si.id::text,
             si.canonical_url,
+            si.external_id,
             s.slug AS source_slug
      FROM source_items si
      JOIN sources s ON s.id = si.source_id

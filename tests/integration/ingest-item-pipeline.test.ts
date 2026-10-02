@@ -45,7 +45,15 @@ test("processIngestItem runs gate, enrich, embed, taxonomy in order", {
   const result = await processIngestItem(pool, source, parsed, runId, {
     enrichFn: async (...args) => {
       enrichCalled = true;
-      return { applied: false, totalTokens: 0, budgetPaused: false, outcome: "skipped" as const };
+      return {
+        applied: false,
+        totalTokens: 0,
+        budgetPaused: false,
+        outcome: "skipped" as const,
+        supplementalPagesFetched: 0,
+        countryApplied: false,
+        stageApplied: false,
+      };
     },
     embedTextsFn: async (texts) => {
       embedCalled = true;

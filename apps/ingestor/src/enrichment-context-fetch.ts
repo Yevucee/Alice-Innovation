@@ -50,20 +50,20 @@ export async function fetchEnrichmentPageText(
   db: Queryable,
   url: string,
   options: { userAgent: string; timeoutMs: number; useCache?: boolean },
-): Promise<string> {
-  if (!url?.trim()) return "";
+): Promise<{ text: string; networkFetch: boolean }> {
+  if (!url?.trim()) return { text: "", networkFetch: false };
   const normalized = url.trim();
   if (options.useCache !== false) {
     const cached = await readEnrichmentPageCache(db, normalized);
     if (cached?.extracted_text && cached.extracted_text.length > 80) {
-      return cached.extracted_text;
+      return { text: cached.extracted_text, networkFetch: false };
     }
   }
   await throttleHost(normalized);
   const allowed = await robotsPermits(normalized, options.userAgent, options.timeoutMs);
   if (!allowed) {
     log("info", "enrichment_fetch_robots_blocked", { url: normalized });
-    return "";
+    return { text: "", networkFetch: false };
   }
   try {
     const page = await fetchText(normalized, {
@@ -73,13 +73,13 @@ export async function fetchEnrichmentPageText(
     });
     const text = extractMainText(page.body);
     await writeEnrichmentPageCache(db, normalized, { statusCode: page.status, extractedText: text });
-    return text;
+    return { text, networkFetch: true };
   } catch (error) {
     log("warn", "enrichment_fetch_failed", {
       url: normalized,
       message: error instanceof Error ? error.message : String(error),
     });
-    return "";
+    return { text: "", networkFetch: false };
   }
 }
 
@@ -87,21 +87,25 @@ export async function buildSupplementalEnrichmentText(
   db: Queryable,
   resourceId: string,
   options: { userAgent: string; timeoutMs: number },
-): Promise<{ supplemental: string; sourceUrl: string | null; orgWebsite: string | null }> {
+): Promise<{ supplemental: string; sourceUrl: string | null; orgWebsite: string | null; pagesFetched: number }> {
   const ctx = await loadResourceEnrichmentContext(db, resourceId);
-  if (!ctx) return { supplemental: "", sourceUrl: null, orgWebsite: null };
+  if (!ctx) return { supplemental: "", sourceUrl: null, orgWebsite: null, pagesFetched: 0 };
   const parts: string[] = [];
+  let pagesFetched = 0;
   if (ctx.source_url) {
     const sourceText = await fetchEnrichmentPageText(db, ctx.source_url, options);
-    if (sourceText.length > 80) parts.push(`Source page:\n${sourceText}`);
+    if (sourceText.networkFetch) pagesFetched += 1;
+    if (sourceText.text.length > 80) parts.push(`Source page:\n${sourceText.text}`);
   }
   if (ctx.org_website && ctx.org_website !== ctx.source_url) {
     const orgText = await fetchEnrichmentPageText(db, ctx.org_website, options);
-    if (orgText.length > 80) parts.push(`Organisation site:\n${orgText}`);
+    if (orgText.networkFetch) pagesFetched += 1;
+    if (orgText.text.length > 80) parts.push(`Organisation site:\n${orgText.text}`);
   }
   return {
     supplemental: parts.join("\n\n").slice(0, 20_000),
     sourceUrl: ctx.source_url,
     orgWebsite: ctx.org_website,
+    pagesFetched,
   };
 }

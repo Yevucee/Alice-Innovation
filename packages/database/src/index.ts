@@ -72,8 +72,19 @@ export {
   loadResourceEnrichmentContext,
   readEnrichmentPageCache,
   writeEnrichmentPageCache,
+  supplementalTextFromPageCache,
 } from "./enrichment-context.js";
 export type { ResourceEnrichmentContext } from "./enrichment-context.js";
+export {
+  completePostDeployJob,
+  getActivePostDeployJob,
+  listPostDeployJobs,
+  markPostDeployJobInProgress,
+  notePostDeployJobError,
+  updatePostDeployJobProgress,
+  type PostDeployJobRow,
+  type PostDeployJobStatus,
+} from "./post-deploy-jobs.js";
 export {
   inferStageFromText,
   normaliseEnrichmentStageLabel,

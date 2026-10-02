@@ -5,6 +5,7 @@ import { runPostIngestCatalogueRepairs, resolvePriorityReembedResourceIds } from
 import { runPostIngestEmbeddingBackfill } from "./embedding-backfill.js";
 import { enrichMaxPerRun, runEnrichmentBackfill } from "./enrich.js";
 import { runPostIngestImageBackfill } from "./image-backfill.js";
+import { runPostDeployJobsStep } from "./post-deploy-jobs.js";
 
 function envFlag(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
@@ -24,6 +25,14 @@ export async function runPostIngestMaintenance(
   db: Queryable,
   input: { touchedResourceIds: string[] },
 ): Promise<void> {
+  try {
+    await runPostDeployJobsStep(db);
+  } catch (error) {
+    log("warn", "post_deploy_jobs_failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
   try {
     await runPostIngestImageBackfill(db, input.touchedResourceIds);
   } catch (error) {
