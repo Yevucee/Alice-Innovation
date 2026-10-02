@@ -14,7 +14,7 @@ import type { SourceRecord } from "@alice/source-registry";
 import type pg from "pg";
 import { classifyResource } from "./classifier.js";
 import { embedTexts, embeddingSettings, embeddingVersion } from "./embeddings.js";
-import { enrichResourceOnIngest } from "./enrich.js";
+import { enrichOnIngest, enrichResourceOnIngest } from "./enrich.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
 
 export interface ProcessIngestItemResult {
@@ -120,18 +120,24 @@ export async function processIngestItem(
     `SELECT EXISTS (SELECT 1 FROM resource_organisations WHERE resource_id = $1::uuid) AS exists`,
     [saved.resourceId],
   );
-  const enrichFn = deps.enrichFn ?? enrichResourceOnIngest;
-  const enrichResult = await enrichFn(db, saved.resourceId, {
-    title: draft.title,
-    summary: draft.sourceSummary,
-    text: draft.extractedText,
-    countryName: draft.countryName,
-    evidenceStage: draft.evidenceStage,
-    hasOrganisation: orgRow.rows[0]?.exists === true,
-    reviewStatus,
-  });
-  if (enrichResult.applied) steps.push("enrich");
-  else steps.push("enrich_skipped");
+  let enriched = false;
+  if (enrichOnIngest()) {
+    const enrichFn = deps.enrichFn ?? enrichResourceOnIngest;
+    const enrichResult = await enrichFn(db, saved.resourceId, {
+      title: draft.title,
+      summary: draft.sourceSummary,
+      text: draft.extractedText,
+      countryName: draft.countryName,
+      evidenceStage: draft.evidenceStage,
+      hasOrganisation: orgRow.rows[0]?.exists === true,
+      reviewStatus,
+    });
+    enriched = enrichResult.applied;
+    if (enrichResult.applied) steps.push("enrich");
+    else steps.push("enrich_skipped");
+  } else {
+    steps.push("enrich_deferred");
+  }
 
   const taxonomy = inferTaxonomyFromText({
     title: draft.title,
@@ -198,7 +204,7 @@ export async function processIngestItem(
   return {
     saved,
     qualityFlagged: quality.needsReview,
-    enriched: enrichResult.applied,
+    enriched,
     embedded,
     steps,
   };

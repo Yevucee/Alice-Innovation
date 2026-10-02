@@ -92,6 +92,8 @@ export async function runPostIngestMaintenance(
         total_tokens: summary.total_tokens,
         estimated_cost_usd: summary.estimated_cost_usd,
         paused_budget: summary.paused_budget,
+        time_budget_exhausted: summary.time_budget_exhausted,
+        array_unwraps: summary.array_unwraps,
       });
     } catch (error) {
       log("warn", "post_ingest_enrichment_backfill_failed", {

@@ -42,6 +42,9 @@ test("processIngestItem runs gate, enrich, embed, taxonomy in order", {
     SELECT id, 'RUNNING' FROM sources WHERE slug = 'mit-solve' RETURNING id::text`);
   const runId = run.rows[0]?.id as string;
 
+  const prevEnrichOnIngest = process.env.ENRICH_ON_INGEST;
+  process.env.ENRICH_ON_INGEST = "true";
+
   const result = await processIngestItem(pool, source, parsed, runId, {
     enrichFn: async (...args) => {
       enrichCalled = true;
@@ -68,6 +71,9 @@ test("processIngestItem runs gate, enrich, embed, taxonomy in order", {
   assert.ok(steps.indexOf("taxonomy") < steps.indexOf("embed"));
   assert.equal(enrichCalled, true);
   assert.equal(embedCalled, true);
+
+  if (prevEnrichOnIngest === undefined) delete process.env.ENRICH_ON_INGEST;
+  else process.env.ENRICH_ON_INGEST = prevEnrichOnIngest;
 
   await closePool();
 });

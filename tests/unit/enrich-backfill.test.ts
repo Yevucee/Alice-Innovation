@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   enrichMaxPerRun,
   enrichMaxCostUsd,
+  enrichOnIngest,
   isEnrichmentBudgetError,
 } from "../../apps/ingestor/src/enrich.ts";
 
@@ -18,6 +19,13 @@ test("enrichMaxCostUsd defaults to 3", () => {
   delete process.env.ENRICH_MAX_COST_USD;
   assert.equal(enrichMaxCostUsd(), 3);
   if (prev !== undefined) process.env.ENRICH_MAX_COST_USD = prev;
+});
+
+test("enrichOnIngest defaults to false", () => {
+  const prev = process.env.ENRICH_ON_INGEST;
+  delete process.env.ENRICH_ON_INGEST;
+  assert.equal(enrichOnIngest(), false);
+  if (prev !== undefined) process.env.ENRICH_ON_INGEST = prev;
 });
 
 test("isEnrichmentBudgetError detects OpenRouter budget responses", () => {

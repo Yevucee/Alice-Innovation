@@ -16,6 +16,11 @@ import { prepareIngestDraft } from "./prepare-draft.js";
 const LOCK_KEY = 84261001;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function ingestProgressEvery(): number {
+  const parsed = Number(process.env.INGEST_PROGRESS_EVERY ?? "25");
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 25;
+}
+
 function due(source: SourceRecord, lastSuccess: Date | null, now = new Date()): boolean {
   if (!source.enabled || source.update_class === "MANUAL") return false;
   if (!lastSuccess) return true;
@@ -105,6 +110,8 @@ export async function runIngestion(
           unchanged: 0,
           failed: 0,
           duplicates: 0,
+          enrich_attempted: 0,
+          enrich_applied: 0,
         };
         try {
           const adapter = getAdapter(source.adapter);
@@ -137,6 +144,16 @@ export async function runIngestion(
           if (checkpoint) refs = refs.filter((ref) => ref.url > checkpoint);
           if (options.limit !== null) refs = refs.slice(0, options.limit);
           let cursor = checkpoint;
+          const progressEvery = ingestProgressEvery();
+          log("info", "source_started", {
+            source_id: source.id,
+            run_id: runId,
+            discovered: counts.discovered,
+            to_process: refs.length,
+            full: options.full,
+            limit: options.limit,
+          });
+          let itemsProcessed = 0;
           for (const ref of refs) {
             try {
               const page = await adapter.fetch(ref, ctx);
@@ -153,10 +170,32 @@ export async function runIngestion(
               if (saved.outcome === "unchanged") counts.unchanged += 1;
               else if (saved.outcome === "created") counts.created += 1;
               else counts.updated += 1;
+              if (processed.steps.includes("enrich")) {
+                counts.enrich_attempted += 1;
+                counts.enrich_applied += 1;
+              } else if (processed.steps.includes("enrich_skipped")) {
+                counts.enrich_attempted += 1;
+              }
               if (saved.outcome !== "unchanged") {
                 touchedResourceIds.add(saved.resourceId);
               }
               cursor = ref.url;
+              itemsProcessed += 1;
+              if (itemsProcessed % progressEvery === 0) {
+                log("info", "ingest_source_progress", {
+                  source_id: source.id,
+                  run_id: runId,
+                  items_processed: itemsProcessed,
+                  pages_fetched: counts.fetched,
+                  created: counts.created,
+                  updated: counts.updated,
+                  unchanged: counts.unchanged,
+                  failed: counts.failed,
+                  enrich_attempted: counts.enrich_attempted,
+                  enrich_applied: counts.enrich_applied,
+                  elapsed_ms: Date.now() - started,
+                });
+              }
               if (options.full && !options.dryRun) await writeCheckpoint(pool, source.id, cursor);
             } catch (error) {
               counts.failed += 1;
