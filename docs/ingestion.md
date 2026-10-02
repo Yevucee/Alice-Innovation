@@ -70,6 +70,17 @@ Legacy cohort junk (`rawMetadata.cohort_source`, title equals summary, boilerpla
 
 Fixtures for parser regressions: `tests/fixtures/*` and `tests/unit/africa-parser-quality.test.ts`.
 
+## Card images / thumbnails
+
+`source_items.image_url` powers search cards. Parsers set `draft.imageUrl` via `resolvePageImageUrl` (Open Graph, Twitter card, JSON-LD `logo`/`image`, then main/article `<img>`). Listing-only adapters use `listingCardImageUrl`.
+
+- **Coverage report**: `npm run check:image-coverage` (active `source_items` and resources with any linked thumbnail)
+- **Backfill**: `npm run backfill-images-from-db -- --source <slug> [--limit N] [--validate]` re-fetches canonical URLs; `--validate` runs a HEAD probe (`IMAGE_MIN_BYTES`, default 256)
+- **Listing cards**: `npm run backfill:listing-card-images -- --source <slug>`
+- **Post-ingest**: `IMAGE_BACKFILL_ON_INGEST` (default true) backfills missing images for resources touched in the run (`IMAGE_BACKFILL_MAX_PER_RUN`, default 150)
+
+Production one-shot: `npm run ingest:production-backfill-images:remote` (runs sample ingests + coverage before/after).
+
 ## Quality review
 
 `resources.review_status` includes `NEEDS_REVIEW`. Homepage “Recently added” / “From Africa” use `qualityBrowse` filters (exclude `NEEDS_REVIEW`, require summary length).

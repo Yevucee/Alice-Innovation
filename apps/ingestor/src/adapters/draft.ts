@@ -39,8 +39,62 @@ export function ogImageFromPage(html: string, pageUrl: string): string | null {
     || $("meta[property='twitter:image']").attr("content");
   const fromMeta = absoluteImageUrl(pageUrl, candidate);
   if (fromMeta) return fromMeta;
+
+  for (const jsonLd of jsonLdImageCandidates(html)) {
+    const resolved = absoluteImageUrl(pageUrl, jsonLd);
+    if (resolved) return resolved;
+  }
+
   const articleImg = $("article img[src], main img[src], .entry-content img[src]").first().attr("src");
   return absoluteImageUrl(pageUrl, articleImg);
+}
+
+/** og/twitter meta, JSON-LD logo/image, then first article/main img. */
+export function resolvePageImageUrl(html: string, pageUrl: string): string | null {
+  return ogImageFromPage(html, pageUrl);
+}
+
+function jsonLdImageCandidates(html: string): string[] {
+  const urls: string[] = [];
+  for (const match of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      collectJsonLdImages(JSON.parse(match[1]) as unknown, urls);
+    } catch {
+      /* ignore */
+    }
+  }
+  return urls;
+}
+
+function collectJsonLdImages(node: unknown, out: string[]): void {
+  if (!node) return;
+  if (Array.isArray(node)) {
+    for (const entry of node) collectJsonLdImages(entry, out);
+    return;
+  }
+  if (typeof node !== "object") return;
+  const record = node as Record<string, unknown>;
+  for (const key of ["image", "logo", "thumbnailUrl", "contentUrl"]) {
+    pushJsonLdImage(record[key], out);
+  }
+  if (record["@graph"]) collectJsonLdImages(record["@graph"], out);
+  if (record.mainEntity) collectJsonLdImages(record.mainEntity, out);
+}
+
+function pushJsonLdImage(value: unknown, out: string[]): void {
+  if (typeof value === "string" && value.trim()) {
+    out.push(value.trim());
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const entry of value) pushJsonLdImage(entry, out);
+    return;
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.url === "string" && record.url.trim()) out.push(record.url.trim());
+    else if (typeof record.contentUrl === "string" && record.contentUrl.trim()) out.push(record.contentUrl.trim());
+  }
 }
 
 export function buildDraft(input: {

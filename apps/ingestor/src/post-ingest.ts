@@ -4,6 +4,7 @@ import { log } from "@alice/shared";
 import { runPostIngestCatalogueRepairs, resolvePriorityReembedResourceIds } from "./catalogue-repair.js";
 import { runPostIngestEmbeddingBackfill } from "./embedding-backfill.js";
 import { enrichMaxPerRun, runEnrichmentBackfill } from "./enrich.js";
+import { runPostIngestImageBackfill } from "./image-backfill.js";
 
 function envFlag(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
@@ -23,7 +24,13 @@ export async function runPostIngestMaintenance(
   db: Queryable,
   input: { touchedResourceIds: string[] },
 ): Promise<void> {
-  void input.touchedResourceIds;
+  try {
+    await runPostIngestImageBackfill(db, input.touchedResourceIds);
+  } catch (error) {
+    log("warn", "post_ingest_image_backfill_failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   let catalogueNote = "";
   try {
