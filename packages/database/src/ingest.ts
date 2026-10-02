@@ -229,7 +229,12 @@ export async function upsertDraft(
          http_last_modified = EXCLUDED.http_last_modified,
          raw_metadata_json = EXCLUDED.raw_metadata_json,
          extracted_text = EXCLUDED.extracted_text,
-         image_url = EXCLUDED.image_url,
+         image_url = CASE
+           WHEN EXCLUDED.image_url IS NOT NULL AND btrim(EXCLUDED.image_url) <> '' AND left(btrim(EXCLUDED.image_url), 5) <> 'data:'
+             THEN btrim(EXCLUDED.image_url)
+           WHEN source_items.image_url LIKE 'data:%' THEN NULL
+           ELSE source_items.image_url
+         END,
          active = true,
          miss_count = 0,
          last_seen_at = now(),

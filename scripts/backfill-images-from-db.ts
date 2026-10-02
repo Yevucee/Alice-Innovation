@@ -1,9 +1,10 @@
 import { closePool, getPool } from "@alice/database";
 import { loadDotEnv, log } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
-import { getAdapter } from "../apps/ingestor/src/adapters/registry.js";
-import { fetchText } from "../apps/ingestor/src/http.js";
-import type { AdapterContext } from "../apps/ingestor/src/adapters/types.js";
+import {
+  backfillSourceItemImages,
+  loadSourceItemsMissingImages,
+} from "../apps/ingestor/src/image-backfill.js";
 
 loadDotEnv();
 process.env.SERVICE_NAME = "alice-ingestor";
@@ -23,26 +24,23 @@ function argNumber(flag: string): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+function argFlag(flag: string): boolean {
+  return process.argv.includes(flag);
+}
 
 async function main(): Promise<void> {
   const sourceSlug = argValues("--source")[0];
   if (!sourceSlug) {
-    console.error("Usage: tsx scripts/backfill-images-from-db.ts --source <slug> [--limit N]");
+    console.error("Usage: tsx scripts/backfill-images-from-db.ts --source <slug> [--limit N] [--validate]");
     process.exitCode = 1;
     return;
   }
   const limit = argNumber("--limit");
+  const validateRemote = argFlag("--validate");
   const sources = loadSources();
   const source = sources.find((entry) => entry.id === sourceSlug);
   if (!source) {
     console.error(`Unknown source: ${sourceSlug}`);
-    process.exitCode = 1;
-    return;
-  }
-  const adapter = getAdapter(source.adapter);
-  if (!adapter) {
-    console.error(`No adapter for ${source.adapter}`);
     process.exitCode = 1;
     return;
   }
@@ -51,61 +49,16 @@ async function main(): Promise<void> {
   const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
   const minInterval = Math.ceil(60000 / Math.max(1, source.limits.requests_per_minute));
-  let lastRequest = 0;
-  const pacedFetch = async (url: string) => {
-    const wait = minInterval - (Date.now() - lastRequest);
-    if (wait > 0) await sleep(wait);
-    lastRequest = Date.now();
-    return fetchText(url, { userAgent, timeoutMs });
-  };
-  const ctx: AdapterContext = {
-    source,
+
+  const rows = await loadSourceItemsMissingImages(pool, { sourceSlug, limit });
+  const summary = await backfillSourceItemImages(pool, rows, {
     userAgent,
     timeoutMs,
-    limit: null,
-    fetchText: pacedFetch,
-  };
+    validateRemote,
+    minIntervalMs: minInterval,
+  });
 
-  const rows = await pool.query<{ id: string; canonical_url: string; external_id: string }>(
-    `SELECT si.id::text, si.canonical_url, si.external_id
-     FROM source_items si
-     JOIN sources s ON s.id = si.source_id
-     WHERE s.slug = $1
-       AND si.active = true
-       AND (si.image_url IS NULL OR btrim(si.image_url) = '' OR si.image_url LIKE 'data:%')
-     ORDER BY si.updated_at DESC
-     LIMIT $2`,
-    [sourceSlug, limit],
-  );
-
-  let updated = 0;
-  let skipped = 0;
-  let failed = 0;
-  for (const row of rows.rows) {
-    try {
-      const page = await adapter.fetch({ url: row.canonical_url, externalId: row.external_id }, ctx);
-      const draft = adapter.parse(page);
-      const imageUrl = draft.imageUrl?.trim();
-      if (!imageUrl || imageUrl.startsWith("data:")) {
-        skipped += 1;
-        continue;
-      }
-      await pool.query(
-        `UPDATE source_items SET image_url = $2, updated_at = now(), last_fetched_at = now() WHERE id = $1`,
-        [row.id, imageUrl],
-      );
-      updated += 1;
-    } catch (error) {
-      failed += 1;
-      log("warn", "image_backfill_item_failed", {
-        source: sourceSlug,
-        url: row.canonical_url,
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  log("info", "image_backfill_complete", { source: sourceSlug, limit, candidates: rows.rows.length, updated, skipped, failed });
+  log("info", "image_backfill_complete", { source: sourceSlug, validateRemote, ...summary });
   await closePool();
 }
 
