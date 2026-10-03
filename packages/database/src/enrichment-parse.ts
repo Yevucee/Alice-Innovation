@@ -108,6 +108,15 @@ export function slugFromEnrichmentLabel(label: string, kind: "sector" | "problem
   return hits[0] ?? null;
 }
 
+/** Models sometimes emit invalid JSON with bare UNKNOWN / N/A tokens (unquoted). */
+export function repairEnrichmentJsonContent(content: string): string {
+  let trimmed = content.trim();
+  if (trimmed.startsWith("```")) {
+    trimmed = trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+  }
+  return trimmed.replace(/:\s*(UNKNOWN|N\/A|NA|NONE)\b/gi, ': "UNKNOWN"');
+}
+
 export function parseEnrichmentMessageContent(content: string): {
   payload: EnrichmentPayload | null;
   error?: string;
@@ -115,8 +124,9 @@ export function parseEnrichmentMessageContent(content: string): {
   unwrapArray?: boolean;
 } {
   const rawSample = content.slice(0, 400);
+  const repaired = repairEnrichmentJsonContent(content);
   try {
-    const parsed = JSON.parse(content) as unknown;
+    const parsed = JSON.parse(repaired) as unknown;
     const result = parseEnrichmentPayload(parsed);
     return { ...result, rawSample };
   } catch {
