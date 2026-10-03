@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseEnrichmentPayload } from "../../packages/database/src/enrichment-parse.ts";
+import { parseEnrichmentPayload, parseEnrichmentMessageContent } from "../../packages/database/src/enrichment-parse.ts";
 import { sourceExcerptDuplicatesSummary } from "../../apps/web/src/lib/format.ts";
 
 test("parseEnrichmentPayload rejects all-UNKNOWN fields", () => {
@@ -23,6 +23,15 @@ test("parseEnrichmentPayload unwraps one-element JSON array", () => {
   assert.equal(parsed.payload?.country, "France");
   assert.equal(parsed.payload?.stage, "PILOT");
   assert.equal(parsed.unwrapArray, true);
+});
+
+test("parseEnrichmentMessageContent repairs bare UNKNOWN tokens", () => {
+  const parsed = parseEnrichmentMessageContent(
+    '{"country":"France","city":UNKNOWN,"stage":"PILOT","problem":UNKNOWN}',
+  );
+  assert.equal(parsed.payload?.country, "France");
+  assert.equal(parsed.payload?.stage, "PILOT");
+  assert.equal(parsed.error, undefined);
 });
 
 test("sourceExcerptDuplicatesSummary matches shared prefix", () => {

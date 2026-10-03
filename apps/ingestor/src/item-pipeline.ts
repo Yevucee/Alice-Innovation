@@ -28,6 +28,7 @@ export interface ProcessIngestItemResult {
 export interface ProcessIngestItemDeps {
   embedTextsFn?: (texts: string[]) => Promise<number[][] | null>;
   enrichFn?: typeof enrichResourceOnIngest;
+  listingContentHash?: string;
 }
 
 async function loadEmbeddingRow(db: Queryable, resourceId: string) {
@@ -103,6 +104,7 @@ export async function processIngestItem(
     reviewStatus,
     skipOrgPersonLinks: quality.skipOrgPersonLinks,
     qualityReasons: quality.reasons,
+    listingContentHash: deps.listingContentHash,
   });
   steps.push("upsert");
 

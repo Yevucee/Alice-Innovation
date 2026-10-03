@@ -15,6 +15,7 @@ export interface UpsertDraftOptions {
   reviewStatus?: "AUTO_INGESTED" | "NEEDS_REVIEW";
   skipOrgPersonLinks?: boolean;
   qualityReasons?: string[];
+  listingContentHash?: string;
 }
 
 const EXTRACT_LIMIT = 1500;
@@ -80,6 +81,7 @@ export async function upsertDraft(
 ): Promise<UpsertResult> {
   const reviewStatus = options.reviewStatus ?? "AUTO_INGESTED";
   const skipOrgPersonLinks = options.skipOrgPersonLinks === true;
+  const listingContentHash = options.listingContentHash ?? null;
   const metadata = {
     ...draft.rawMetadata,
     ...(options.qualityReasons?.length ? { quality_reasons: options.qualityReasons } : {}),
@@ -120,6 +122,7 @@ export async function upsertDraft(
          SET last_seen_at = now(), last_fetched_at = now(), miss_count = 0, active = true,
              ingestion_run_id = $2, http_etag = COALESCE($3, http_etag),
              http_last_modified = COALESCE($4, http_last_modified),
+             listing_content_hash = COALESCE($6, listing_content_hash),
              image_url = CASE
                WHEN $5::text IS NOT NULL AND btrim($5::text) <> '' AND left(btrim($5::text), 5) <> 'data:'
                  THEN btrim($5::text)
@@ -128,7 +131,7 @@ export async function upsertDraft(
              END,
              updated_at = now()
          WHERE id = $1`,
-        [row.id, runId, draft.etag, draft.lastModified, incomingImage],
+        [row.id, runId, draft.etag, draft.lastModified, incomingImage, listingContentHash],
       );
       await client.query("COMMIT");
       const resourceId = row.resource_id as string;
@@ -211,12 +214,12 @@ export async function upsertDraft(
     const item = await client.query<{ id: string }>(
       `INSERT INTO source_items (
          source_id, external_id, canonical_url, original_url, title, source_description,
-         published_at, content_hash, http_etag, http_last_modified, raw_metadata_json,
+         published_at, content_hash, listing_content_hash, http_etag, http_last_modified, raw_metadata_json,
          extracted_text, language, image_url, active, miss_count, ingestion_run_id, resource_id, last_fetched_at
        ) VALUES (
          $1,$2,$3,$4,$5,$6,
-         $7,$8,$9,$10,$11::jsonb,
-         $12,$13,$14,true,0,$15,$16,now()
+         $7,$8,$9,$10,$11,$12::jsonb,
+         $13,$14,$15,true,0,$16,$17,now()
        )
        ON CONFLICT (source_id, external_id) DO UPDATE SET
          canonical_url = EXCLUDED.canonical_url,
@@ -225,6 +228,7 @@ export async function upsertDraft(
          source_description = EXCLUDED.source_description,
          published_at = COALESCE(EXCLUDED.published_at, source_items.published_at),
          content_hash = EXCLUDED.content_hash,
+         listing_content_hash = COALESCE(EXCLUDED.listing_content_hash, source_items.listing_content_hash),
          http_etag = EXCLUDED.http_etag,
          http_last_modified = EXCLUDED.http_last_modified,
          raw_metadata_json = EXCLUDED.raw_metadata_json,
@@ -252,6 +256,7 @@ export async function upsertDraft(
         summary,
         draftWithMeta.publishedAt,
         hash,
+        listingContentHash,
         draftWithMeta.etag,
         draftWithMeta.lastModified,
         JSON.stringify(metadata),

@@ -6,10 +6,40 @@ import {
   writeEnrichmentPageCache,
 } from "@alice/database";
 import { log } from "@alice/shared";
-import { fetchText } from "./http.js";
+import { fetchText, HttpStatusError } from "./http.js";
 import { robotsAllows } from "./robots.js";
 
 const hostLastFetch = new Map<string, number>();
+const host403Streak = new Map<string, number>();
+const hostsBlockedForRun = new Set<string>();
+
+export function resetSupplementalFetchHostPolicy(): void {
+  host403Streak.clear();
+  hostsBlockedForRun.clear();
+}
+
+export function isSupplementalHostBlocked(host: string): boolean {
+  return hostsBlockedForRun.has(host);
+}
+
+/** Returns true once the host is blocked for the rest of the run (after 3 consecutive 403s). */
+export function recordSupplementalFetch403(host: string): boolean {
+  const streak = (host403Streak.get(host) ?? 0) + 1;
+  host403Streak.set(host, streak);
+  if (streak >= 3 && !hostsBlockedForRun.has(host)) {
+    hostsBlockedForRun.add(host);
+    log("info", "enrichment_supplemental_host_blocked", {
+      host,
+      consecutive_403: streak,
+      blocked_hosts: [...hostsBlockedForRun],
+    });
+  }
+  return hostsBlockedForRun.has(host);
+}
+
+function noteSupplementalFetchSuccess(host: string): void {
+  host403Streak.set(host, 0);
+}
 
 function minIntervalMs(): number {
   const raw = process.env.ENRICH_FETCH_MIN_INTERVAL_MS;
@@ -53,6 +83,10 @@ export async function fetchEnrichmentPageText(
 ): Promise<{ text: string; networkFetch: boolean }> {
   if (!url?.trim()) return { text: "", networkFetch: false };
   const normalized = url.trim();
+  const host = new URL(normalized).host;
+  if (isSupplementalHostBlocked(host)) {
+    return { text: "", networkFetch: false };
+  }
   if (options.useCache !== false) {
     const cached = await readEnrichmentPageCache(db, normalized);
     if (cached?.extracted_text && cached.extracted_text.length > 80) {
@@ -71,10 +105,23 @@ export async function fetchEnrichmentPageText(
       timeoutMs: options.timeoutMs,
       maxAttempts: 2,
     });
+    noteSupplementalFetchSuccess(host);
     const text = extractMainText(page.body);
     await writeEnrichmentPageCache(db, normalized, { statusCode: page.status, extractedText: text });
     return { text, networkFetch: true };
   } catch (error) {
+    if (error instanceof HttpStatusError && error.status === 403) {
+      const blocked = recordSupplementalFetch403(host);
+      if (!blocked) {
+        log("warn", "enrichment_fetch_failed", {
+          url: normalized,
+          status: 403,
+          host,
+          consecutive_403: host403Streak.get(host),
+        });
+      }
+      return { text: "", networkFetch: false };
+    }
     log("warn", "enrichment_fetch_failed", {
       url: normalized,
       message: error instanceof Error ? error.message : String(error),

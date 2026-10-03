@@ -11,6 +11,17 @@ export {
   writeCheckpoint,
 } from "./ingest.js";
 export type { UpsertDraftOptions, UpsertResult } from "./ingest.js";
+export {
+  listingContentHash,
+  ingestDetailRefetchDays,
+  ingestDetailBootstrapDays,
+  shouldSkipDetailFetch,
+  loadSourceItemListingStateMap,
+  lookupListingState,
+  touchSourceItemWithoutDetailFetch,
+  markInterruptedIngestionRuns,
+} from "./ingest-detail.js";
+export type { ListingRef, SourceItemListingState } from "./ingest-detail.js";
 export { linkResourceTaxonomy } from "./taxonomy-links.js";
 export {
   searchLibrary,
