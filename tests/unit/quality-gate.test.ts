@@ -50,6 +50,15 @@ test("quality gate flags suspicious person names", () => {
   assert.equal(person.skipOrgPersonLinks, true);
 });
 
+test("quality gate flags invalid org from ingest metadata", () => {
+  const invalidOrg = evaluateDraftQuality(draft({
+    organisationName: null,
+    rawMetadata: { quality_reasons: ["invalid_org_name"], rejected_organisation_name: "MIT Solve" },
+  }));
+  assert.ok(invalidOrg.reasons.includes("invalid_org_name"));
+  assert.equal(invalidOrg.skipOrgPersonLinks, true);
+});
+
 test("quality gate flags legacy cohort junk", () => {
   const cohort = evaluateDraftQuality(draft({
     title: "Home",

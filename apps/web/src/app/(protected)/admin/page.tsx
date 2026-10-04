@@ -46,6 +46,32 @@ export default async function AdminPage() {
           <p className="mt-2 text-muted">
             Resources flagged NEEDS_REVIEW: {quality.needs_review.toLocaleString()}
           </p>
+          {quality.review_breakdown ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 text-xs text-muted">
+              <div>
+                <p className="font-medium text-ink">By source (top)</p>
+                <ul className="mt-1 space-y-1">
+                  {quality.review_breakdown.by_source.map((row) => (
+                    <li key={row.source_slug}>
+                      {row.source_slug}: {row.count.toLocaleString()}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-ink">By reason</p>
+                <ul className="mt-1 space-y-1">
+                  {Object.entries(quality.review_breakdown.by_reason)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([code, count]) => (
+                      <li key={code}>
+                        {code.replace(/_/g, " ")}: {count.toLocaleString()}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+          ) : null}
           {quality.last_run ? (
             <p className="mt-2 text-xs text-muted">
               Last audit flagged {String(quality.last_run.flagged)} of {String(quality.last_run.scanned)} scanned

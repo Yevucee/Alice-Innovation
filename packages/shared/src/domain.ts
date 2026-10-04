@@ -5,11 +5,15 @@ export const RESOURCE_TYPES = [
   "PERSON",
   "ORGANISATION",
   "CASE_STUDY",
+  "ARTICLE",
   "METHOD",
   "RESEARCH",
   "TOOL",
   "PROGRAMME",
 ] as const;
+
+/** Innovation catalogue types (excludes editorial ARTICLE). */
+export const INNOVATION_RESOURCE_TYPES = RESOURCE_TYPES.filter((t) => t !== "ARTICLE");
 
 export const EVIDENCE_STAGES = [
   "UNKNOWN",
