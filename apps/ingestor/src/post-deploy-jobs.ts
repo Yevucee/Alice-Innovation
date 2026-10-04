@@ -4,11 +4,13 @@ import {
   markPostDeployJobInProgress,
   notePostDeployJobError,
   runQualityAudit,
+  runDataQualityRepairBatch,
+  runEmbeddingBackfillForResourceIds,
   updatePostDeployJobProgress,
   type Queryable,
 } from "@alice/database";
 import { loadSources } from "@alice/source-registry";
-import { log } from "@alice/shared";
+import { embedTextsDetailed, embeddingSettings, embeddingVersion, log } from "@alice/shared";
 import {
   backfillSourceItemImages,
   loadSourceItemsMissingImages,
@@ -267,6 +269,114 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
   };
 }
 
+type DataQualityProgress = {
+  dq_offset: number;
+  dq_retype_done: boolean;
+  pending_reembed_ids: string[];
+  totals: Record<string, number>;
+};
+
+function defaultDataQualityProgress(): DataQualityProgress {
+  return {
+    dq_offset: 0,
+    dq_retype_done: false,
+    pending_reembed_ids: [],
+    totals: {},
+  };
+}
+
+function bumpTotal(totals: Record<string, number>, key: string, delta: number): void {
+  totals[key] = (totals[key] ?? 0) + delta;
+}
+
+async function reembedResourceIds(
+  db: Queryable,
+  resourceIds: string[],
+): Promise<{ embedded: number; failed: number; skipped: boolean }> {
+  if (resourceIds.length === 0) return { embedded: 0, failed: 0, skipped: false };
+  const settings = embeddingSettings();
+  if (!settings.apiKey) {
+    log("warn", "post_deploy_dq_reembed_skipped", { reason: "EMBEDDING_API_KEY not set", count: resourceIds.length });
+    return { embedded: 0, failed: 0, skipped: true };
+  }
+  const version = embeddingVersion(settings);
+  const embedBatch = async (texts: string[]) => {
+    const result = await embedTextsDetailed(texts, { maxAttempts: 4 });
+    return {
+      vectors: result.vectors,
+      usage: result.usage ? { total_tokens: result.usage.total_tokens } : undefined,
+      status: result.status,
+      retryable: result.retryable,
+    };
+  };
+  const summary = await runEmbeddingBackfillForResourceIds(db, resourceIds, {
+    embedBatch,
+    model: settings.model,
+    version,
+    throwOnConsecutiveFailures: false,
+  });
+  return { embedded: summary.embedded, failed: summary.failed, skipped: false };
+}
+
+async function runDataQualityRepairStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const state: DataQualityProgress = {
+    ...defaultDataQualityProgress(),
+    ...(progress as Partial<DataQualityProgress>),
+    totals: { ...defaultDataQualityProgress().totals, ...((progress.totals as Record<string, number>) ?? {}) },
+  };
+
+  const batch = await runDataQualityRepairBatch(db, {
+    offset: state.dq_offset,
+    retypeApoliticalDone: state.dq_retype_done,
+  });
+
+  const totals = { ...state.totals };
+  bumpTotal(totals, "scanned", batch.scanned);
+  bumpTotal(totals, "orgs_rejected", batch.orgs_rejected);
+  bumpTotal(totals, "org_links_removed", batch.org_links_removed);
+  bumpTotal(totals, "orphan_orgs_deleted", batch.orphan_orgs_deleted);
+  bumpTotal(totals, "summaries_repaired", batch.summaries_repaired);
+  bumpTotal(totals, "titles_repaired", batch.titles_repaired);
+  bumpTotal(totals, "resources_retyped", batch.resources_retyped);
+  bumpTotal(totals, "countries_normalised", batch.countries_normalised);
+  bumpTotal(totals, "resources_updated", batch.resources_updated);
+
+  const pending = [...new Set([...state.pending_reembed_ids, ...batch.reembed_resource_ids])];
+  let reembed = { embedded: 0, failed: 0, skipped: false };
+
+  if (batch.complete && pending.length > 0) {
+    reembed = await reembedResourceIds(db, pending);
+    bumpTotal(totals, "reembedded", reembed.embedded);
+    bumpTotal(totals, "reembed_failed", reembed.failed);
+    if (!reembed.skipped) {
+      pending.length = 0;
+    }
+  }
+
+  const next: DataQualityProgress = {
+    dq_offset: batch.next_offset,
+    dq_retype_done: true,
+    pending_reembed_ids: pending,
+    totals,
+  };
+
+  const repairComplete = batch.complete && (pending.length === 0 || reembed.skipped);
+
+  return {
+    ...next,
+    complete: repairComplete,
+    last_batch: {
+      offset: batch.offset,
+      scanned: batch.scanned,
+      resources_updated: batch.resources_updated,
+    },
+    reembed_last: reembed,
+  };
+}
+
 export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
   if (!postDeployJobsEnabled()) {
     log("info", "post_deploy_jobs_skipped", { reason: "POST_DEPLOY_JOBS_ON_INGEST=false" });
@@ -317,6 +427,12 @@ export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
           page_backfill_updated: nextProgress.page_backfill_updated,
           global_backfill_updated: nextProgress.global_backfill_updated,
         };
+        break;
+      }
+      case "data_quality_repair_202510": {
+        nextProgress = await runDataQualityRepairStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = { ...(nextProgress.totals as Record<string, unknown>), reembed_last: nextProgress.reembed_last };
         break;
       }
       default:

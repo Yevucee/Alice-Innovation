@@ -20,6 +20,7 @@ export const QUALITY_BROWSE_BLOCKLIST_TITLES = [
 
 /** Appended inside FILTER_SQL when qualityBrowse is true (after summary length check). */
 export const QUALITY_BROWSE_EXTRA_SQL = `
+    AND r.resource_type <> 'ARTICLE'
     AND GREATEST(
       char_length(trim(coalesce(r.source_summary, ''))),
       char_length(trim(coalesce(r.extracted_index_text, '')))

@@ -1,6 +1,6 @@
 export { canonicaliseUrl } from "./url.js";
 export { sha256, contentHash } from "./hash.js";
-export { htmlToText, truncate, normaliseName } from "./text.js";
+export { htmlToText, truncate, truncateAtWordBoundary, normaliseName } from "./text.js";
 export { classifyDuplicate, nearDuplicateKey } from "./dedupe.js";
 export { evaluateDraftQuality } from "./quality-gate.js";
 export type { QualityGateResult } from "./quality-gate.js";
@@ -34,6 +34,7 @@ export {
 export type { EmbeddingSettings, EmbeddingUsage, EmbedTextsResult } from "./embeddings.js";
 export {
   RESOURCE_TYPES,
+  INNOVATION_RESOURCE_TYPES,
   EVIDENCE_STAGES,
   EVIDENCE_BASES,
   REVIEW_STATUSES,
@@ -43,3 +44,15 @@ export {
   asResourceType,
 } from "./domain.js";
 export type { EvidenceBasis, EvidenceStage, NormalisedDraft, ResourceType } from "./domain.js";
+export {
+  isInvalidOrganisationName,
+  sanitiseOrganisationName,
+} from "./org-name-validator.js";
+export type { OrganisationNameContext } from "./org-name-validator.js";
+export {
+  isSlugLikeSummary,
+  summaryEqualsTitle,
+  repairSourceSummary,
+  mergeColonSplitTitle,
+  normaliseCountryDisplayName,
+} from "./summary-repair.js";

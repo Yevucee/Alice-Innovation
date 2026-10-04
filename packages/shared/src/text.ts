@@ -16,9 +16,18 @@ export function htmlToText(html: string): string {
 }
 
 export function truncate(value: string, max: number): string {
+  return truncateAtWordBoundary(value, max);
+}
+
+/** Truncate at last word boundary before max; never mid-word. */
+export function truncateAtWordBoundary(value: string, max: number): string {
   const clean = value.replace(/\s+/g, " ").trim();
   if (clean.length <= max) return clean;
-  return `${clean.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
+  if (max <= 1) return "…";
+  const slice = clean.slice(0, max - 1);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > Math.floor(max * 0.5) ? slice.slice(0, lastSpace) : slice;
+  return `${cut.trimEnd()}…`;
 }
 
 export function normaliseName(value: string): string {

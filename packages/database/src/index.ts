@@ -102,6 +102,14 @@ export {
   stageFromAdapterMetadata,
 } from "./enrichment-stage.js";
 export {
+  runDataQualityRepairBatch,
+  retypeApoliticalArticles,
+  qualityReviewBreakdown,
+  type DataQualityRepairCounts,
+  type DataQualityRepairBatchResult,
+} from "./data-quality-repair.js";
+export { EXCLUDE_ARTICLE_RESOURCE_SQL } from "./innovation-resource-filter.js";
+export {
   correctMisassignedWaterSectorTags,
   invalidateStaleEnrichmentEmbeddings,
   isJunkPersonName,

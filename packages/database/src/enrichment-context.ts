@@ -3,6 +3,7 @@ import type { Queryable } from "./pool.js";
 export interface ResourceEnrichmentContext {
   resource_id: string;
   source_slug: string | null;
+  source_name: string | null;
   source_url: string | null;
   org_name: string | null;
   org_country: string | null;
@@ -17,6 +18,7 @@ export async function loadResourceEnrichmentContext(
   const row = await db.query<{
     resource_id: string;
     source_slug: string | null;
+    source_name: string | null;
     source_url: string | null;
     org_name: string | null;
     org_country: string | null;
@@ -25,6 +27,7 @@ export async function loadResourceEnrichmentContext(
   }>(
     `SELECT r.id::text AS resource_id,
             s.slug AS source_slug,
+            s.name AS source_name,
             si.canonical_url AS source_url,
             o.name AS org_name,
             o.country AS org_country,

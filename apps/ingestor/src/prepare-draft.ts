@@ -3,6 +3,7 @@ import { sanitizeIngestTitle } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
 import { continentForCountryCode, inferCountryFromText } from "@alice/taxonomy";
 import { applyGeographyDefaults } from "./geo-defaults.js";
+import { applyDraftDataQuality } from "./apply-draft-quality.js";
 
 /** Geography defaults, then conservative country inference from title/body text. */
 export function prepareIngestDraft(draft: NormalisedDraft, source: SourceRecord): NormalisedDraft {
@@ -10,6 +11,7 @@ export function prepareIngestDraft(draft: NormalisedDraft, source: SourceRecord)
     { ...draft, title: sanitizeIngestTitle(draft.title) },
     source,
   );
+  prepared = applyDraftDataQuality(prepared, source);
   if (prepared.countryName) return prepared;
 
   const haystack = [prepared.title, prepared.sourceSummary, prepared.extractedText].filter(Boolean).join("\n");

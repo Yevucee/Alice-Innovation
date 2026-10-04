@@ -1,4 +1,4 @@
-import { contentHash } from "@alice/shared";
+import { contentHash, isInvalidOrganisationName, normaliseCountryDisplayName } from "@alice/shared";
 import { countryCodeFor, inferCountryFromText, AFRICA_SOURCE_GEO_DEFAULTS } from "@alice/taxonomy";
 import type { EnrichmentPayload } from "./enrichment-parse.js";
 import { parseEnrichmentPayload, resolveEnrichmentProblemSlug, resolveEnrichmentSectorSlug } from "./enrichment-parse.js";
@@ -54,6 +54,7 @@ export async function loadEnrichmentCandidates(
             r.enrichment_input_hash
      FROM resources r
      WHERE r.active
+       AND r.resource_type <> 'ARTICLE'
        AND r.review_status <> 'NEEDS_REVIEW'
        AND (
          r.primary_country_name IS NULL OR trim(r.primary_country_name) = ''
@@ -230,7 +231,8 @@ export async function applyEnrichmentToResource(
   const context = await loadResourceEnrichmentContext(db, resourceId);
   const merged = evidence ? enrichPayloadFromEvidence(payload, evidence, context) : payload;
   const fields: string[] = [];
-  const country = merged.country?.trim();
+  const countryRaw = merged.country?.trim();
+  const country = countryRaw ? normaliseCountryDisplayName(countryRaw) ?? countryRaw : null;
   const countryCode = country ? countryCodeFor(country) : null;
   const stage = merged.stage?.trim().toUpperCase().replace(/\s+/g, "_");
   const allowedStages = new Set(["IDEA", "PROTOTYPE", "PILOT", "DEPLOYED", "MULTIPLE_DEPLOYMENTS", "SCALED", "UNKNOWN"]);
@@ -264,7 +266,22 @@ export async function applyEnrichmentToResource(
   }
 
   const orgName = merged.organisation_name?.trim();
-  if (orgName && !isLegalFormOrganisationName(orgName)) {
+  let titleForOrg = evidence?.title?.trim() ?? "";
+  if (!titleForOrg) {
+    const titleRow = await db.query<{ title: string }>(
+      `SELECT canonical_title AS title FROM resources WHERE id = $1::uuid`,
+      [resourceId],
+    );
+    titleForOrg = titleRow.rows[0]?.title ?? "";
+  }
+  if (
+    orgName &&
+    !isLegalFormOrganisationName(orgName) &&
+    !isInvalidOrganisationName(orgName, {
+      resourceTitle: titleForOrg,
+      sourceName: context?.source_name ?? null,
+    })
+  ) {
     try {
       const organisationId = await ensureOrganisation(db, orgName, country ?? null);
       const linked = await db.query(
@@ -384,7 +401,7 @@ export async function enrichmentAdminStatus(db: Queryable): Promise<{
   paused_budget: boolean;
   last_run: Record<string, unknown> | null;
 }> {
-  const base = `FROM resources r WHERE r.active AND r.review_status <> 'NEEDS_REVIEW'`;
+  const base = `FROM resources r WHERE r.active AND r.resource_type <> 'ARTICLE' AND r.review_status <> 'NEEDS_REVIEW'`;
   const pending = await db.query<{ count: string }>(
     `SELECT count(*)::text AS count ${base} AND r.enrichment_attempted_at IS NULL
      AND (

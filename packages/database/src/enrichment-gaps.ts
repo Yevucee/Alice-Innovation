@@ -7,7 +7,7 @@ export interface EnrichmentGapCounts {
 }
 
 export async function countEnrichmentGaps(db: Queryable): Promise<EnrichmentGapCounts> {
-  const base = `FROM resources r WHERE r.active AND r.review_status <> 'NEEDS_REVIEW'`;
+  const base = `FROM resources r WHERE r.active AND r.resource_type <> 'ARTICLE' AND r.review_status <> 'NEEDS_REVIEW'`;
   const missingCountry = await db.query<{ count: string }>(
     `SELECT count(*)::text AS count ${base}
      AND (r.primary_country_name IS NULL OR trim(r.primary_country_name) = '')`,

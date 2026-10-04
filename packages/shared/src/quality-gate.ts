@@ -107,6 +107,10 @@ export function evaluateDraftQuality(draft: NormalisedDraft): QualityGateResult 
   if (suspiciousOrgName(draft.organisationName)) {
     reasons.push("legal_form_org_name");
   }
+  const qualityReasons = draft.rawMetadata?.quality_reasons;
+  if (Array.isArray(qualityReasons) && qualityReasons.includes("invalid_org_name")) {
+    reasons.push("invalid_org_name");
+  }
   if (draft.rawMetadata?.cohort_source === true || draft.rawMetadata?.listing_only === true) {
     if (uniqueBodyLength(draft) < MIN_BODY_CHARS) {
       reasons.push("listing_only_thin");
@@ -124,9 +128,10 @@ export function evaluateDraftQuality(draft: NormalisedDraft): QualityGateResult 
   }
 
   const needsReview = reasons.length > 0;
+  const invalidOrg = reasons.includes("invalid_org_name") || reasons.includes("legal_form_org_name");
   return {
     needsReview,
     reasons,
-    skipOrgPersonLinks: needsReview || suspiciousPersonName(draft.personName) || suspiciousOrgName(draft.organisationName),
+    skipOrgPersonLinks: needsReview || suspiciousPersonName(draft.personName) || invalidOrg,
   };
 }

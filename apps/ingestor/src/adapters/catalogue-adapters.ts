@@ -117,7 +117,7 @@ export const catalogueAdapters: SourceAdapter[] = [
     siteOrigin: "https://apolitical.co",
     pathPattern: /^\/(en\/)?articles\/[^/]+\/?$/i,
     excludePathPattern: /^\/(en\/)?articles\/new\/?$/i,
-    resourceType: "CASE_STUDY",
+    resourceType: "ARTICLE",
     evidenceBasis: "EDITORIALLY_CURATED",
   }),
   createHtmlCatalogueAdapter({

@@ -1,6 +1,7 @@
 import type { NormalisedDraft } from "@alice/shared";
 import { evaluateDraftQuality } from "@alice/shared";
 import type { Queryable } from "./pool.js";
+import { qualityReviewBreakdown } from "./data-quality-repair.js";
 
 export interface QualityAuditRow {
   entity_type: "resource" | "person" | "organisation";
@@ -230,6 +231,7 @@ export function summariseReasonCounts(rows: QualityAuditRow[]): Record<string, n
 export async function qualityAdminStatus(db: Queryable): Promise<{
   needs_review: number;
   last_run: Record<string, unknown> | null;
+  review_breakdown: Awaited<ReturnType<typeof qualityReviewBreakdown>>;
 }> {
   const needs = await db.query<{ count: string }>(
     `SELECT count(*)::text AS count FROM resources WHERE active AND review_status = 'NEEDS_REVIEW'`,
@@ -238,8 +240,10 @@ export async function qualityAdminStatus(db: Queryable): Promise<{
     `SELECT id::text, started_at, completed_at, flagged, scanned, dry_run, reason_counts
      FROM quality_audit_runs ORDER BY started_at DESC LIMIT 1`,
   );
+  const review_breakdown = await qualityReviewBreakdown(db);
   return {
     needs_review: Number(needs.rows[0]?.count ?? 0),
     last_run: last.rows[0] ?? null,
+    review_breakdown,
   };
 }
