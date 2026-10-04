@@ -89,6 +89,7 @@ export type { ResourceEnrichmentContext } from "./enrichment-context.js";
 export {
   completePostDeployJob,
   getActivePostDeployJob,
+  listActivePostDeployJobs,
   listPostDeployJobs,
   markPostDeployJobInProgress,
   notePostDeployJobError,

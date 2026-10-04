@@ -12,7 +12,7 @@ Processes write one JSON object per line: `time`, `severity`, `service`, `event`
 
 A session advisory lock stops a second ingestor from starting while one is running. The second process logs `ingest_skipped` and exits 0 **without** running post-ingest maintenance (enrichment, re-embed, org repair), so overlapping cron/manual runs do not record spurious zero-count backfills.
 
-After deploy **#46** (migration `010_post_deploy_jobs`), each **Run now** on **alice-ingestor** also advances one step of the seeded post-deploy job queue (scraper re-ingest → cohort quality audit → bulk image backfill). Progress is stored in `post_deploy_jobs`; failures are logged only. No Railway shell required. Disable with `POST_DEPLOY_JOBS_ON_INGEST=false` once all three jobs show `completed`.
+After deploy **#46** (migration `010_post_deploy_jobs`), each **Run now** on **alice-ingestor** advances the post-deploy queue within a time budget (`POST_DEPLOY_JOBS_MAX_MINUTES`, default 30): **data quality repair** → cohort audit → image backfill → scraper re-ingest (order from migration `013`). Progress is stored in `post_deploy_jobs`; failures are logged only. Disable with `POST_DEPLOY_JOBS_ON_INGEST=false` once all jobs show `completed`.
 
 ## Access
 
