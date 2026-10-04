@@ -23,16 +23,21 @@ export async function listPostDeployJobs(db: Queryable): Promise<PostDeployJobRo
   return rows.rows;
 }
 
-/** Next job that is pending or in_progress, respecting sort order. */
-export async function getActivePostDeployJob(db: Queryable): Promise<PostDeployJobRow | null> {
+/** All jobs that are pending or in_progress, in sort order. */
+export async function listActivePostDeployJobs(db: Queryable): Promise<PostDeployJobRow[]> {
   const rows = await db.query<PostDeployJobRow>(
     `SELECT job_key, description, status, sort_order, progress, result, last_error, started_at, completed_at
      FROM post_deploy_jobs
      WHERE status IN ('pending', 'in_progress')
-     ORDER BY sort_order ASC
-     LIMIT 1`,
+     ORDER BY sort_order ASC`,
   );
-  return rows.rows[0] ?? null;
+  return rows.rows;
+}
+
+/** Next job that is pending or in_progress, respecting sort order. */
+export async function getActivePostDeployJob(db: Queryable): Promise<PostDeployJobRow | null> {
+  const rows = await listActivePostDeployJobs(db);
+  return rows[0] ?? null;
 }
 
 export async function markPostDeployJobInProgress(

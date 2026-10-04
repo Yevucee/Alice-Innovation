@@ -1,12 +1,13 @@
 import {
   completePostDeployJob,
-  getActivePostDeployJob,
+  listActivePostDeployJobs,
   markPostDeployJobInProgress,
   notePostDeployJobError,
   runQualityAudit,
   runDataQualityRepairBatch,
   runEmbeddingBackfillForResourceIds,
   updatePostDeployJobProgress,
+  type PostDeployJobRow,
   type Queryable,
 } from "@alice/database";
 import { loadSources } from "@alice/source-registry";
@@ -51,6 +52,11 @@ function reingestItemsPerRun(): number {
 function imageBackfillPerRun(): number {
   const parsed = Number(process.env.POST_DEPLOY_IMAGE_BACKFILL_PER_RUN ?? "80");
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 80;
+}
+
+function postDeployJobsMaxMinutes(): number {
+  const parsed = Number(process.env.POST_DEPLOY_JOBS_MAX_MINUTES ?? "30");
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 30;
 }
 
 type ReingestProgress = {
@@ -377,18 +383,10 @@ async function runDataQualityRepairStep(
   };
 }
 
-export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
-  if (!postDeployJobsEnabled()) {
-    log("info", "post_deploy_jobs_skipped", { reason: "POST_DEPLOY_JOBS_ON_INGEST=false" });
-    return;
-  }
-
-  const job = await getActivePostDeployJob(db);
-  if (!job) {
-    log("info", "post_deploy_jobs_none_pending");
-    return;
-  }
-
+async function executePostDeployJobStep(
+  db: Queryable,
+  job: PostDeployJobRow,
+): Promise<void> {
   const progress = { ...(job.progress ?? {}) };
   await markPostDeployJobInProgress(db, job.job_key, progress);
 
@@ -452,5 +450,49 @@ export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
     const message = error instanceof Error ? error.message : String(error);
     await notePostDeployJobError(db, job.job_key, message, progress);
     log("warn", "post_deploy_job_step_failed", { job_key: job.job_key, message });
+  }
+}
+
+export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
+  if (!postDeployJobsEnabled()) {
+    log("info", "post_deploy_jobs_skipped", { reason: "POST_DEPLOY_JOBS_ON_INGEST=false" });
+    return;
+  }
+
+  const deadlineMs = Date.now() + postDeployJobsMaxMinutes() * 60 * 1000;
+  let rounds = 0;
+  let steps = 0;
+
+  try {
+    while (Date.now() < deadlineMs) {
+      const jobs = await listActivePostDeployJobs(db);
+      if (jobs.length === 0) {
+        if (steps === 0) {
+          log("info", "post_deploy_jobs_none_pending");
+        }
+        break;
+      }
+
+      for (const job of jobs) {
+        if (Date.now() >= deadlineMs) break;
+        await executePostDeployJobStep(db, job);
+        steps += 1;
+      }
+      rounds += 1;
+    }
+
+    if (steps > 0) {
+      log("info", "post_deploy_jobs_run_complete", {
+        rounds,
+        steps,
+        max_minutes: postDeployJobsMaxMinutes(),
+      });
+    }
+  } catch (error) {
+    log("warn", "post_deploy_jobs_run_failed", {
+      message: error instanceof Error ? error.message : String(error),
+      rounds,
+      steps,
+    });
   }
 }

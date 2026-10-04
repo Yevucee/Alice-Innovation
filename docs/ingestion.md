@@ -93,7 +93,9 @@ Production one-shot: `npm run ingest:production-backfill-images:remote` (runs sa
 
 ## Post-deploy job queue (Railway Run now)
 
-Migration `010_post_deploy_jobs.sql` seeds one-time jobs in `post_deploy_jobs`. After each normal ingest (`Run now` on **alice-ingestor**), post-ingest runs **at most one step** of the earliest pending job (`POST_DEPLOY_JOBS_ON_INGEST`, default true). Failures are logged and never fail the ingest run.
+Migration `010_post_deploy_jobs.sql` seeds one-time jobs in `post_deploy_jobs`. Migration `013_post_deploy_job_order.sql` sets priority: **data quality repair** → cohort audit → image backfill → scraper re-ingest.
+
+After each normal ingest (`Run now` on **alice-ingestor**), post-ingest runs **one step of every pending job per round**, repeating rounds until `POST_DEPLOY_JOBS_MAX_MINUTES` (default **30**) is used or all jobs complete (`POST_DEPLOY_JOBS_ON_INGEST`, default true). Failures are logged and never fail the ingest run.
 
 | Order | job_key | Purpose |
 | --- | --- | --- |
