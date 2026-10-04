@@ -82,6 +82,7 @@ export async function upsertDraft(
   const reviewStatus = options.reviewStatus ?? "AUTO_INGESTED";
   const skipOrgPersonLinks = options.skipOrgPersonLinks === true;
   const listingContentHash = options.listingContentHash ?? null;
+  const reviewReasonCodes = reviewStatus === "NEEDS_REVIEW" ? (options.qualityReasons ?? []) : [];
   const metadata = {
     ...draft.rawMetadata,
     ...(options.qualityReasons?.length ? { quality_reasons: options.qualityReasons } : {}),
@@ -160,8 +161,8 @@ export async function upsertDraft(
         `INSERT INTO resources (
            resource_type, canonical_title, source_summary, extracted_index_text,
            evidence_stage, evidence_basis, maturity_stage, cost_level, commercial_status,
-           language, primary_country_code, primary_country_name, review_status
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+           language, primary_country_code, primary_country_name, review_status, review_reason_codes
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
          RETURNING id::text`,
         [
           draftWithMeta.resourceType,
@@ -177,6 +178,7 @@ export async function upsertDraft(
           draftWithMeta.countryCode,
           draftWithMeta.countryName,
           reviewStatus,
+          reviewReasonCodes,
         ],
       );
       resourceId = created.rows[0].id;
@@ -193,6 +195,10 @@ export async function upsertDraft(
            primary_country_code = COALESCE($8, primary_country_code),
            primary_country_name = COALESCE($9, primary_country_name),
            review_status = CASE WHEN $10 = 'NEEDS_REVIEW' THEN 'NEEDS_REVIEW' ELSE review_status END,
+           review_reason_codes = CASE
+             WHEN $10 = 'NEEDS_REVIEW' AND cardinality($11::text[]) > 0 THEN $11
+             ELSE review_reason_codes
+           END,
            active = true,
            updated_at = now()
          WHERE id = $1`,
@@ -207,6 +213,7 @@ export async function upsertDraft(
           draftWithMeta.countryCode,
           draftWithMeta.countryName,
           reviewStatus,
+          reviewReasonCodes,
         ],
       );
     }

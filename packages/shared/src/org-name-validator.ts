@@ -14,6 +14,11 @@ function normalisedKey(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+/** True when the org name is the same as the resource title (not treated as invalid). */
+export function organisationNameMatchesResourceTitle(name: string, title: string): boolean {
+  return normalisedKey(name) === normalisedKey(title);
+}
+
 /** Reject MIT Solve-style free-text registration answers stored as organisation names. */
 export function isInvalidOrganisationName(
   name: string | null | undefined,
@@ -22,7 +27,6 @@ export function isInvalidOrganisationName(
   if (!name?.trim()) return false;
   const trimmed = name.trim();
   if (trimmed.length < 2) return true;
-  if (normalisedKey(trimmed) === normalisedKey(ctx.resourceTitle)) return true;
   if (ctx.sourceName && normalisedKey(trimmed) === normalisedKey(ctx.sourceName)) return true;
   if (/[.!?]$/.test(trimmed) && wordCount(trimmed) >= 4) return true;
   if (wordCount(trimmed) > 8) return true;

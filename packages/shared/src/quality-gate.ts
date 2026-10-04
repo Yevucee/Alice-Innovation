@@ -1,4 +1,5 @@
 import type { NormalisedDraft } from "./domain.js";
+import { isInvalidOrganisationName } from "./org-name-validator.js";
 import { normaliseName } from "./text.js";
 
 export interface QualityGateResult {
@@ -106,6 +107,14 @@ export function evaluateDraftQuality(draft: NormalisedDraft): QualityGateResult 
   }
   if (suspiciousOrgName(draft.organisationName)) {
     reasons.push("legal_form_org_name");
+  }
+  const sourceName =
+    typeof draft.rawMetadata?.source_name === "string" ? draft.rawMetadata.source_name : null;
+  if (
+    draft.organisationName
+    && isInvalidOrganisationName(draft.organisationName, { resourceTitle: draft.title, sourceName })
+  ) {
+    reasons.push("invalid_org_name");
   }
   const qualityReasons = draft.rawMetadata?.quality_reasons;
   if (Array.isArray(qualityReasons) && qualityReasons.includes("invalid_org_name")) {

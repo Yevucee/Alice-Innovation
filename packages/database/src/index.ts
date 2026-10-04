@@ -55,6 +55,8 @@ export {
   runQualityAudit,
   auditDraftShape,
   qualityAdminStatus,
+  qualityReviewBreakdown,
+  backfillReviewReasonCodesBatch,
   summariseReasonCounts,
   type QualityAuditRow,
   type QualityAuditSummary,
@@ -105,10 +107,13 @@ export {
 export {
   runDataQualityRepairBatch,
   retypeApoliticalArticles,
-  qualityReviewBreakdown,
   type DataQualityRepairCounts,
   type DataQualityRepairBatchResult,
 } from "./data-quality-repair.js";
+export {
+  runRestoreTitleMatchedOrganisationsBatch,
+  type RestoreTitleMatchedOrgsBatchResult,
+} from "./org-title-restore.js";
 export { EXCLUDE_ARTICLE_RESOURCE_SQL } from "./innovation-resource-filter.js";
 export {
   correctMisassignedWaterSectorTags,

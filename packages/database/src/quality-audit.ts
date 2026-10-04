@@ -1,7 +1,6 @@
 import type { NormalisedDraft } from "@alice/shared";
 import { evaluateDraftQuality } from "@alice/shared";
 import type { Queryable } from "./pool.js";
-import { qualityReviewBreakdown } from "./data-quality-repair.js";
 
 export interface QualityAuditRow {
   entity_type: "resource" | "person" | "organisation";
@@ -135,7 +134,6 @@ export async function runQualityAudit(
   const resources = await loadResourcesForQualityAudit(db, input.resourceIds ?? null, limit);
   const reason_counts: Record<string, number> = {};
   const rows: QualityAuditRow[] = [];
-  const toFlag: string[] = [];
 
   for (const resource of resources) {
     if (resource.review_status === "NEEDS_REVIEW" || resource.review_status === "ARCHIVED") {
@@ -160,7 +158,6 @@ export async function runQualityAudit(
       reason_codes: reasons,
       proposed_action: "NEEDS_REVIEW",
     });
-    toFlag.push(resource.id);
   }
 
   const people = await db.query<{ id: string; name: string }>(
@@ -198,12 +195,18 @@ export async function runQualityAudit(
     });
   }
 
-  if (input.apply && !input.dryRun && toFlag.length > 0) {
-    await db.query(
-      `UPDATE resources SET review_status = 'NEEDS_REVIEW', updated_at = now()
-       WHERE id = ANY($1::uuid[]) AND review_status NOT IN ('ARCHIVED', 'ALICE_PICK', 'REVIEWED')`,
-      [toFlag],
-    );
+  if (input.apply && !input.dryRun) {
+    for (const row of rows.filter((entry) => entry.entity_type === "resource")) {
+      await db.query(
+        `UPDATE resources
+         SET review_status = 'NEEDS_REVIEW',
+             review_reason_codes = $2::text[],
+             updated_at = now()
+         WHERE id = $1::uuid
+           AND review_status NOT IN ('ARCHIVED', 'ALICE_PICK', 'REVIEWED')`,
+        [row.id, row.reason_codes],
+      );
+    }
   }
 
   await db.query(
@@ -226,6 +229,164 @@ export function summariseReasonCounts(rows: QualityAuditRow[]): Record<string, n
     for (const code of row.reason_codes) bump(counts, code);
   }
   return counts;
+}
+
+const REVIEW_BACKFILL_BATCH = 250;
+
+export async function backfillReviewReasonCodesBatch(
+  db: Queryable,
+  input: { offset: number },
+): Promise<{ scanned: number; updated: number; offset: number; next_offset: number; complete: boolean }> {
+  const rows = await db.query<{
+    id: string;
+    title: string;
+    source_summary: string;
+    extracted_index_text: string;
+    organisation_name: string | null;
+    person_name: string | null;
+    raw_metadata: Record<string, unknown>;
+  }>(
+    `SELECT r.id::text,
+            r.canonical_title AS title,
+            r.source_summary,
+            r.extracted_index_text,
+            (
+              SELECT o.name FROM resource_organisations ro
+              JOIN organisations o ON o.id = ro.organisation_id
+              WHERE ro.resource_id = r.id AND ro.is_primary IS TRUE
+              LIMIT 1
+            ) AS organisation_name,
+            (
+              SELECT p.name FROM resource_people rp
+              JOIN people p ON p.id = rp.person_id
+              WHERE rp.resource_id = r.id
+              ORDER BY p.name
+              LIMIT 1
+            ) AS person_name,
+            COALESCE((
+              SELECT si.raw_metadata_json FROM resource_source_links l
+              JOIN source_items si ON si.id = l.source_item_id
+              WHERE l.resource_id = r.id
+              ORDER BY si.updated_at DESC NULLS LAST
+              LIMIT 1
+            ), '{}'::jsonb) AS raw_metadata
+     FROM resources r
+     WHERE r.active
+       AND r.review_status = 'NEEDS_REVIEW'
+       AND cardinality(r.review_reason_codes) = 0
+     ORDER BY r.id
+     OFFSET $1 LIMIT $2`,
+    [input.offset, REVIEW_BACKFILL_BATCH],
+  );
+
+  let updated = 0;
+  for (const row of rows.rows) {
+    const reasons = auditDraftShape({
+      title: row.title,
+      sourceSummary: row.source_summary,
+      extractedText: row.extracted_index_text,
+      organisationName: row.organisation_name,
+      personName: row.person_name,
+      rawMetadata: row.raw_metadata ?? {},
+    });
+    if (reasons.length === 0) continue;
+    await db.query(
+      `UPDATE resources SET review_reason_codes = $2::text[], updated_at = now() WHERE id = $1::uuid`,
+      [row.id, reasons],
+    );
+    updated += 1;
+  }
+
+  const next_offset = input.offset + rows.rows.length;
+  return {
+    scanned: rows.rows.length,
+    updated,
+    offset: input.offset,
+    next_offset,
+    complete: rows.rows.length < REVIEW_BACKFILL_BATCH,
+  };
+}
+
+export async function qualityReviewBreakdown(db: Queryable): Promise<{
+  by_source: Array<{ source_slug: string; count: number }>;
+  by_reason: Record<string, number>;
+}> {
+  const rows = await db.query<{
+    title: string;
+    source_summary: string;
+    extracted_index_text: string;
+    source_slug: string | null;
+    organisation_name: string | null;
+    person_name: string | null;
+    raw_metadata: Record<string, unknown>;
+    review_reason_codes: string[];
+  }>(
+    `SELECT r.canonical_title AS title,
+            r.source_summary,
+            r.extracted_index_text,
+            s.slug AS source_slug,
+            r.review_reason_codes,
+            (
+              SELECT o.name FROM resource_organisations ro
+              JOIN organisations o ON o.id = ro.organisation_id
+              WHERE ro.resource_id = r.id AND ro.is_primary IS TRUE
+              LIMIT 1
+            ) AS organisation_name,
+            (
+              SELECT p.name FROM resource_people rp
+              JOIN people p ON p.id = rp.person_id
+              WHERE rp.resource_id = r.id
+              ORDER BY p.name
+              LIMIT 1
+            ) AS person_name,
+            COALESCE((
+              SELECT si.raw_metadata_json FROM resource_source_links l
+              JOIN source_items si ON si.id = l.source_item_id
+              WHERE l.resource_id = r.id
+              ORDER BY si.updated_at DESC NULLS LAST
+              LIMIT 1
+            ), '{}'::jsonb) AS raw_metadata
+     FROM resources r
+     LEFT JOIN resource_source_links rsl ON rsl.resource_id = r.id
+     LEFT JOIN source_items si ON si.id = rsl.source_item_id
+     LEFT JOIN sources s ON s.id = si.source_id
+     WHERE r.active AND r.review_status = 'NEEDS_REVIEW'`,
+  );
+
+  const bySource = new Map<string, number>();
+  const byReason: Record<string, number> = {};
+
+  for (const row of rows.rows) {
+    const slug = row.source_slug ?? "unknown";
+    bySource.set(slug, (bySource.get(slug) ?? 0) + 1);
+
+    const reasons =
+      row.review_reason_codes?.length > 0
+        ? row.review_reason_codes
+        : auditDraftShape({
+            title: row.title,
+            sourceSummary: row.source_summary,
+            extractedText: row.extracted_index_text,
+            organisationName: row.organisation_name,
+            personName: row.person_name,
+            rawMetadata: row.raw_metadata ?? {},
+          });
+    if (reasons.length === 0) {
+      bump(byReason, "needs_review");
+      continue;
+    }
+    for (const code of reasons) {
+      bump(byReason, code);
+    }
+  }
+
+  return {
+    by_source: [...bySource.entries()]
+      .map(([source_slug, count]) => ({ source_slug, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 12),
+    by_reason: byReason,
+  };
 }
 
 export async function qualityAdminStatus(db: Queryable): Promise<{

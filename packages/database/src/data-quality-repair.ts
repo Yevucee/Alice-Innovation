@@ -1,10 +1,8 @@
 import {
   isInvalidOrganisationName,
-  isSlugLikeSummary,
   mergeColonSplitTitle,
   normaliseCountryDisplayName,
   repairSourceSummary,
-  summaryEqualsTitle,
   truncateAtWordBoundary,
 } from "@alice/shared";
 import type { Queryable } from "./pool.js";
@@ -190,67 +188,5 @@ export async function runDataQualityRepairBatch(
     offset: input.offset,
     next_offset,
     complete: rows.rows.length < BATCH,
-  };
-}
-
-export async function qualityReviewBreakdown(db: Queryable): Promise<{
-  by_source: Array<{ source_slug: string; count: number }>;
-  by_reason: Record<string, number>;
-}> {
-  const rows = await db.query<{
-    title: string;
-    source_summary: string;
-    extracted_index_text: string;
-    source_name: string | null;
-    source_slug: string | null;
-    org_name: string | null;
-  }>(
-    `SELECT r.canonical_title AS title,
-            r.source_summary,
-            r.extracted_index_text,
-            s.name AS source_name,
-            s.slug AS source_slug,
-            (
-              SELECT o.name FROM resource_organisations ro
-              JOIN organisations o ON o.id = ro.organisation_id
-              WHERE ro.resource_id = r.id AND ro.is_primary IS TRUE
-              LIMIT 1
-            ) AS org_name
-     FROM resources r
-     LEFT JOIN resource_source_links rsl ON rsl.resource_id = r.id
-     LEFT JOIN source_items si ON si.id = rsl.source_item_id
-     LEFT JOIN sources s ON s.id = si.source_id
-     WHERE r.active AND r.review_status = 'NEEDS_REVIEW'`,
-  );
-
-  const bySource = new Map<string, number>();
-  const byReason: Record<string, number> = {};
-
-  for (const row of rows.rows) {
-    const slug = row.source_slug ?? "unknown";
-    bySource.set(slug, (bySource.get(slug) ?? 0) + 1);
-
-    const reasons: string[] = [];
-    if (row.org_name && isInvalidOrganisationName(row.org_name, { resourceTitle: row.title, sourceName: row.source_name })) {
-      reasons.push("invalid_org_name");
-    }
-    if (summaryEqualsTitle(row.title, row.source_summary)) {
-      reasons.push("summary_equals_title");
-    }
-    if (isSlugLikeSummary(row.source_summary)) {
-      reasons.push("slug_summary");
-    }
-    if (reasons.length === 0) reasons.push("needs_review");
-    for (const code of reasons) {
-      byReason[code] = (byReason[code] ?? 0) + 1;
-    }
-  }
-
-  return {
-    by_source: [...bySource.entries()]
-      .map(([source_slug, count]) => ({ source_slug, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 12),
-    by_reason: byReason,
   };
 }

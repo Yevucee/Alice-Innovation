@@ -6,6 +6,8 @@ import {
   runQualityAudit,
   runDataQualityRepairBatch,
   runEmbeddingBackfillForResourceIds,
+  runRestoreTitleMatchedOrganisationsBatch,
+  backfillReviewReasonCodesBatch,
   updatePostDeployJobProgress,
   type PostDeployJobRow,
   type Queryable,
@@ -64,10 +66,34 @@ type ReingestProgress = {
   phase: "limit" | "full";
   limit_pass_done: boolean;
   sources_done: string[];
+  consecutive_failures?: number;
+  skipped_sources?: Record<string, string>;
 };
 
 function defaultReingestProgress(): ReingestProgress {
-  return { source_index: 0, phase: "limit", limit_pass_done: false, sources_done: [] };
+  return { source_index: 0, phase: "limit", limit_pass_done: false, sources_done: [], consecutive_failures: 0 };
+}
+
+function advanceReingestToNextSource(
+  state: ReingestProgress,
+  sourceId: string,
+  stepResult: Record<string, unknown>,
+  fullPassesRequired: number,
+): Record<string, unknown> {
+  const fullRuns = Number((state as { full_runs?: number }).full_runs ?? 0);
+  void fullPassesRequired;
+  void fullRuns;
+  return {
+    ...state,
+    source_index: state.source_index + 1,
+    phase: "limit",
+    limit_pass_done: false,
+    full_runs: 0,
+    consecutive_failures: 0,
+    sources_done: [...new Set([...state.sources_done, sourceId])],
+    last_step: stepResult,
+    complete: state.source_index + 1 >= REINGEST_SOURCES.length,
+  };
 }
 
 async function runScraperReingestStep(db: Queryable, progress: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -119,12 +145,31 @@ async function runScraperReingestStep(db: Queryable, progress: Record<string, un
   }
 
   if (result.failedSources.includes(sourceId)) {
-    return { ...state, full_runs: fullRuns, last_step: stepResult, last_failed_source: sourceId };
-  }
-
-  if (!state.limit_pass_done) {
+    const failCount = Number(state.consecutive_failures ?? 0) + 1;
+    const skipped = { ...(state.skipped_sources ?? {}) };
+    if (failCount >= 2) {
+      skipped[sourceId] = `ingest_failed_${failCount}`;
+      log("warn", "post_deploy_reingest_skip_source", { source_id: sourceId, fail_count: failCount });
+      return advanceReingestToNextSource(
+        { ...state, skipped_sources: skipped },
+        sourceId,
+        stepResult,
+        fullPassesRequired,
+      );
+    }
     return {
       ...state,
+      consecutive_failures: failCount,
+      last_step: stepResult,
+      last_failed_source: sourceId,
+    };
+  }
+
+  const clearedFailures = { ...state, consecutive_failures: 0 };
+
+  if (!clearedFailures.limit_pass_done) {
+    return {
+      ...clearedFailures,
       limit_pass_done: true,
       phase: "full",
       full_runs: 0,
@@ -134,20 +179,11 @@ async function runScraperReingestStep(db: Queryable, progress: Record<string, un
 
   const nextFullRuns = fullRuns + 1;
   if (nextFullRuns >= fullPassesRequired) {
-    return {
-      ...state,
-      source_index: state.source_index + 1,
-      phase: "limit",
-      limit_pass_done: false,
-      full_runs: 0,
-      sources_done: [...new Set([...state.sources_done, sourceId])],
-      last_step: stepResult,
-      complete: state.source_index + 1 >= REINGEST_SOURCES.length,
-    };
+    return advanceReingestToNextSource(clearedFailures, sourceId, stepResult, fullPassesRequired);
   }
 
   return {
-    ...state,
+    ...clearedFailures,
     full_runs: nextFullRuns,
     last_step: stepResult,
   };
@@ -383,6 +419,64 @@ async function runDataQualityRepairStep(
   };
 }
 
+type RestoreOrgProgress = {
+  restore_offset: number;
+  restore_complete: boolean;
+  review_reason_offset: number;
+  review_reason_complete: boolean;
+  totals: Record<string, number>;
+};
+
+async function runRestoreTitleMatchedOrgsStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const state: RestoreOrgProgress = {
+    restore_offset: 0,
+    restore_complete: false,
+    review_reason_offset: 0,
+    review_reason_complete: false,
+    totals: {},
+    ...(progress as Partial<RestoreOrgProgress>),
+  };
+  const totals = { ...state.totals };
+
+  if (!state.restore_complete) {
+    const batch = await runRestoreTitleMatchedOrganisationsBatch(db, { offset: state.restore_offset });
+    bumpTotal(totals, "orgs_restored", batch.restored);
+    bumpTotal(totals, "restore_scanned", batch.scanned);
+    bumpTotal(totals, "restore_skipped", batch.skipped);
+    log("info", "post_deploy_org_title_restore_batch", {
+      restored: batch.restored,
+      scanned: batch.scanned,
+      skipped: batch.skipped,
+      offset: batch.offset,
+    });
+    return {
+      ...state,
+      restore_offset: batch.next_offset,
+      restore_complete: batch.complete,
+      totals,
+      complete: false,
+    };
+  }
+
+  if (!state.review_reason_complete) {
+    const backfill = await backfillReviewReasonCodesBatch(db, { offset: state.review_reason_offset });
+    bumpTotal(totals, "review_reasons_backfilled", backfill.updated);
+    bumpTotal(totals, "review_reasons_scanned", backfill.scanned);
+    return {
+      ...state,
+      review_reason_offset: backfill.next_offset,
+      review_reason_complete: backfill.complete,
+      totals,
+      complete: backfill.complete,
+    };
+  }
+
+  return { ...state, totals, complete: true };
+}
+
 async function executePostDeployJobStep(
   db: Queryable,
   job: PostDeployJobRow,
@@ -396,6 +490,12 @@ async function executePostDeployJobStep(
     let result: Record<string, unknown> = {};
 
     switch (job.job_key) {
+      case "restore_title_matched_orgs_202510": {
+        nextProgress = await runRestoreTitleMatchedOrgsStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = { ...(nextProgress.totals as Record<string, unknown>) };
+        break;
+      }
       case "scraper_reingest_202510": {
         nextProgress = await runScraperReingestStep(db, progress);
         complete = Boolean(nextProgress.complete);
