@@ -7,19 +7,12 @@ import { resolveOrganisationId } from "./data-repair.js";
 
 const BATCH = 250;
 
-function orgCandidateForTitleRestore(
-  title: string,
-  sourceSlug: string | null,
-  rawMetadata: Record<string, unknown>,
-): string | null {
-  const rejected = rawMetadata.rejected_organisation_name;
-  if (typeof rejected === "string" && rejected.trim()) {
-    const name = rejected.trim();
-    return organisationNameMatchesResourceTitle(name, title) ? name : null;
-  }
-  if (sourceSlug === "mit-solve") {
-    const trimmedTitle = title.trim();
-    if (trimmedTitle.length >= 2) return trimmedTitle;
+function orgCandidateForTitleRestore(title: string, rawMetadata: Record<string, unknown>): string | null {
+  for (const key of ["rejected_organisation_name", "ingest_organisation_name"] as const) {
+    const value = rawMetadata[key];
+    if (typeof value !== "string" || !value.trim()) continue;
+    const name = value.trim();
+    if (organisationNameMatchesResourceTitle(name, title)) return name;
   }
   return null;
 }
@@ -43,7 +36,6 @@ export async function runRestoreTitleMatchedOrganisationsBatch(
     title: string;
     country: string | null;
     source_name: string | null;
-    source_slug: string | null;
     source_item_id: string;
     raw_metadata: Record<string, unknown>;
   }>(
@@ -52,7 +44,6 @@ export async function runRestoreTitleMatchedOrganisationsBatch(
             r.canonical_title AS title,
             r.primary_country_name AS country,
             s.name AS source_name,
-            s.slug AS source_slug,
             si.id::text AS source_item_id,
             COALESCE(si.raw_metadata_json, '{}'::jsonb) AS raw_metadata
      FROM resources r
@@ -73,7 +64,7 @@ export async function runRestoreTitleMatchedOrganisationsBatch(
 
   for (const row of rows.rows) {
     const meta = row.raw_metadata ?? {};
-    const candidate = orgCandidateForTitleRestore(row.title, row.source_slug, meta);
+    const candidate = orgCandidateForTitleRestore(row.title, meta);
     if (!candidate || !organisationNameMatchesResourceTitle(candidate, row.title)) {
       skipped += 1;
       continue;
