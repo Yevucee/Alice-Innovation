@@ -44,6 +44,7 @@ export {
   asResourceType,
 } from "./domain.js";
 export type { EvidenceBasis, EvidenceStage, NormalisedDraft, ResourceType } from "./domain.js";
+export { normaliseAllCapsTitle } from "./title-case.js";
 export {
   isInvalidOrganisationName,
   organisationNameMatchesResourceTitle,

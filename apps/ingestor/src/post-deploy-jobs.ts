@@ -20,8 +20,11 @@ import {
 } from "./image-backfill.js";
 import { runIngestion } from "./pipeline.js";
 import { getAdapter } from "./adapters/registry.js";
-import { fetchText } from "./http.js";
+import { fetchText, HttpStatusError } from "./http.js";
 import type { AdapterContext } from "./adapters/types.js";
+import { runOrgRecoveryFromSourceBatch } from "./org-recovery-job.js";
+import { runQualityContentBackfillBatch } from "./quality-content-backfill-job.js";
+import { getRunFailureTracker, resetRunFailureTracker } from "./run-failure-tracker.js";
 
 const REINGEST_SOURCES = [
   "su-launchlab",
@@ -209,16 +212,29 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
   const minInterval = Math.ceil(60000 / Math.max(1, source.limits.requests_per_minute));
   let lastRequest = 0;
+  const tracker = getRunFailureTracker();
   const ctx: AdapterContext = {
     source,
     userAgent,
     timeoutMs,
     limit: null,
     fetchText: async (url) => {
+      const skip = tracker.shouldSkipUrl(url);
+      if (skip) {
+        throw new HttpStatusError(`skipped:${skip}`, 0);
+      }
       const wait = minInterval - (Date.now() - lastRequest);
       if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
       lastRequest = Date.now();
-      return fetchText(url, { userAgent, timeoutMs });
+      try {
+        const result = await fetchText(url, { userAgent, timeoutMs, maxAttempts: 1 });
+        tracker.recordSuccess(url);
+        return result;
+      } catch (error) {
+        const status = error instanceof HttpStatusError ? error.status : null;
+        tracker.recordFailure(url, status);
+        throw error;
+      }
     },
   };
 
@@ -229,6 +245,7 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
   const rows = await loadSourceItemsMissingImages(db, { sourceSlug, limit: imageBackfillPerRun() });
   let updated = 0;
   for (const row of rows) {
+    if (tracker.shouldSkipUrl(row.canonical_url)) continue;
     const ref = byExternalId.get(row.external_id);
     if (!ref?.listingHtml) continue;
     try {
@@ -276,6 +293,7 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
       timeoutMs,
       validateRemote: true,
       minIntervalMs: 800,
+      failureTracker: getRunFailureTracker(),
     });
     const nextIndex = rows.length < imageBackfillPerRun() ? pageIndex + 1 : pageIndex;
     return {
@@ -300,6 +318,7 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
     timeoutMs,
     validateRemote: true,
     minIntervalMs: 800,
+    failureTracker: getRunFailureTracker(),
   });
   return {
     ...progress,
@@ -477,6 +496,91 @@ async function runRestoreTitleMatchedOrgsStep(
   return { ...state, totals, complete: true };
 }
 
+async function runOrgRecoveryFromSourceStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const phase = String(progress.phase ?? "mit-solve");
+  const offset = Number(progress.offset ?? 0);
+  const totals = { ...(progress.totals as Record<string, number> | undefined) };
+  const userAgent = process.env.INGESTION_USER_AGENT
+    || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
+  const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
+  const minIntervalMs = 800;
+
+  const batch = await runOrgRecoveryFromSourceBatch(db, {
+    offset,
+    sourceSlugs: phase === "mit-solve" ? ["mit-solve"] : null,
+    tracker: getRunFailureTracker(),
+    userAgent,
+    timeoutMs,
+    minIntervalMs,
+  });
+
+  bumpTotal(totals, "orgs_recovered", batch.orgs_recovered);
+  bumpTotal(totals, "not_found", batch.not_found);
+  bumpTotal(totals, "skipped_fetch", batch.skipped_fetch);
+
+  let nextPhase = phase;
+  let nextOffset = batch.next_offset;
+  if (batch.complete && phase === "mit-solve") {
+    nextPhase = "all";
+    nextOffset = 0;
+  }
+
+  const complete = batch.complete && phase === "all";
+  const pendingReembed = [
+    ...new Set([
+      ...((progress.pending_reembed_ids as string[]) ?? []),
+      ...batch.reembed_resource_ids,
+    ]),
+  ];
+
+  if (complete && pendingReembed.length > 0) {
+    const reembed = await reembedResourceIds(db, pendingReembed);
+    bumpTotal(totals, "reembedded", reembed.embedded);
+    if (!reembed.skipped) pendingReembed.length = 0;
+  }
+
+  return {
+    phase: nextPhase,
+    offset: nextOffset,
+    totals,
+    pending_reembed_ids: pendingReembed,
+    complete: complete && pendingReembed.length === 0,
+    last_batch: batch,
+  };
+}
+
+async function runQualityDetailBackfillStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const offset = Number(progress.offset ?? 0);
+  const totals = { ...(progress.totals as Record<string, number> | undefined) };
+  const batch = await runQualityContentBackfillBatch(db, { offset, tracker: getRunFailureTracker() });
+  bumpTotal(totals, "updated", batch.updated);
+  bumpTotal(totals, "scanned", batch.scanned);
+  const pending = [
+    ...new Set([
+      ...((progress.pending_reembed_ids as string[]) ?? []),
+      ...batch.reembed_resource_ids,
+    ]),
+  ];
+  const complete = batch.complete;
+  if (complete && pending.length > 0) {
+    const reembed = await reembedResourceIds(db, pending);
+    bumpTotal(totals, "reembedded", reembed.embedded);
+    if (!reembed.skipped) pending.length = 0;
+  }
+  return {
+    offset: batch.next_offset,
+    totals,
+    pending_reembed_ids: pending,
+    complete: complete && pending.length === 0,
+  };
+}
+
 async function executePostDeployJobStep(
   db: Queryable,
   job: PostDeployJobRow,
@@ -490,6 +594,12 @@ async function executePostDeployJobStep(
     let result: Record<string, unknown> = {};
 
     switch (job.job_key) {
+      case "org_recovery_from_source_202510": {
+        nextProgress = await runOrgRecoveryFromSourceStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = { ...(nextProgress.totals as Record<string, unknown>) };
+        break;
+      }
       case "restore_title_matched_orgs_202510": {
         nextProgress = await runRestoreTitleMatchedOrgsStep(db, progress);
         complete = Boolean(nextProgress.complete);
@@ -533,6 +643,12 @@ async function executePostDeployJobStep(
         result = { ...(nextProgress.totals as Record<string, unknown>), reembed_last: nextProgress.reembed_last };
         break;
       }
+      case "quality_detail_backfill_202510": {
+        nextProgress = await runQualityDetailBackfillStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = { ...(nextProgress.totals as Record<string, unknown>) };
+        break;
+      }
       default:
         log("warn", "post_deploy_job_unknown", { job_key: job.job_key });
         await completePostDeployJob(db, job.job_key, { skipped: true });
@@ -559,6 +675,7 @@ export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
     return;
   }
 
+  resetRunFailureTracker();
   const deadlineMs = Date.now() + postDeployJobsMaxMinutes() * 60 * 1000;
   let rounds = 0;
   let steps = 0;
@@ -586,6 +703,7 @@ export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
         rounds,
         steps,
         max_minutes: postDeployJobsMaxMinutes(),
+        skip_reasons: getRunFailureTracker().skipReasonsSummary(),
       });
     }
   } catch (error) {

@@ -1,5 +1,6 @@
 import { load } from "cheerio";
 import { buildDraft, ogImageFromPage, sitemapLocs } from "./draft.js";
+import { extractMitSolveOrganisationFromHtml } from "../mit-solve-org.js";
 import { defaultFetch, type FetchedPage, type SourceAdapter } from "./types.js";
 import type { NormalisedDraft } from "@alice/shared";
 
@@ -14,13 +15,7 @@ export function parseMitSolve(page: FetchedPage): NormalisedDraft {
     const answer = $(element).find(".text-18, .lg\\:text-20").first().text().replace(/\s+/g, " ").trim();
     if (question && answer) answers.set(question.toLowerCase(), answer);
   });
-  const organisationEntry = [...answers.entries()].find(([question]) =>
-    /name of your organization/i.test(question) || /name of your organisation/i.test(question),
-  ) ?? [...answers.entries()].find(([question]) =>
-    question.includes("organization")
-    && !/legal|form|type|registered|profit|structure|status/i.test(question),
-  );
-  const organisation = organisationEntry?.[1] ?? null;
+  const organisation = extractMitSolveOrganisationFromHtml(page.html) ?? null;
   const headquarters = [...answers.entries()].find(([question]) => question.includes("headquartered"))?.[1] ?? null;
   const stageAnswer = [...answers.entries()].find(([question]) =>
     /stage of (your )?solution|deployment|maturity|operational status/i.test(question),

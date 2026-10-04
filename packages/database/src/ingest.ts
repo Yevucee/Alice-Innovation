@@ -194,7 +194,11 @@ export async function upsertDraft(
            maturity_stage = CASE WHEN $7 = 'UNKNOWN' THEN maturity_stage ELSE $7 END,
            primary_country_code = COALESCE($8, primary_country_code),
            primary_country_name = COALESCE($9, primary_country_name),
-           review_status = CASE WHEN $10 = 'NEEDS_REVIEW' THEN 'NEEDS_REVIEW' ELSE review_status END,
+           review_status = CASE
+             WHEN $10 = 'NEEDS_REVIEW' THEN 'NEEDS_REVIEW'
+             WHEN $10 = 'AUTO_INGESTED' AND cardinality($11::text[]) = 0 THEN 'AUTO_INGESTED'
+             ELSE review_status
+           END,
            review_reason_codes = CASE
              WHEN $10 = 'NEEDS_REVIEW' AND cardinality($11::text[]) > 0 THEN $11
              ELSE review_reason_codes

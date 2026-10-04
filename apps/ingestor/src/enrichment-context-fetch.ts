@@ -22,8 +22,17 @@ export function isSupplementalHostBlocked(host: string): boolean {
   return hostsBlockedForRun.has(host);
 }
 
-/** Returns true once the host is blocked for the rest of the run (after 3 consecutive 403s). */
-export function recordSupplementalFetch403(host: string): boolean {
+/** Returns true once the host is blocked for the rest of the run (after 3 consecutive 403s, or immediately on 401/403/429). */
+export function recordSupplementalFetch403(host: string, status = 403): boolean {
+  if (status === 401 || status === 403 || status === 429) {
+    hostsBlockedForRun.add(host);
+    log("info", "enrichment_supplemental_host_blocked", {
+      host,
+      consecutive_403: host403Streak.get(host) ?? 0,
+      http_status: status,
+    });
+    return true;
+  }
   const streak = (host403Streak.get(host) ?? 0) + 1;
   host403Streak.set(host, streak);
   if (streak >= 3 && !hostsBlockedForRun.has(host)) {
@@ -110,16 +119,13 @@ export async function fetchEnrichmentPageText(
     await writeEnrichmentPageCache(db, normalized, { statusCode: page.status, extractedText: text });
     return { text, networkFetch: true };
   } catch (error) {
-    if (error instanceof HttpStatusError && error.status === 403) {
-      const blocked = recordSupplementalFetch403(host);
-      if (!blocked) {
-        log("warn", "enrichment_fetch_failed", {
-          url: normalized,
-          status: 403,
-          host,
-          consecutive_403: host403Streak.get(host),
-        });
-      }
+    if (error instanceof HttpStatusError && (error.status === 401 || error.status === 403 || error.status === 429)) {
+      recordSupplementalFetch403(host, error.status);
+      log("warn", "enrichment_fetch_failed", {
+        url: normalized,
+        status: error.status,
+        host,
+      });
       return { text: "", networkFetch: false };
     }
     log("warn", "enrichment_fetch_failed", {

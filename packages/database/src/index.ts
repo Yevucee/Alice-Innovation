@@ -114,6 +114,21 @@ export {
   runRestoreTitleMatchedOrganisationsBatch,
   type RestoreTitleMatchedOrgsBatchResult,
 } from "./org-title-restore.js";
+export {
+  loadOrgRecoveryCandidates,
+  linkRecoveredOrganisation,
+  organisationFromStoredMetadata,
+  acceptRecoveredOrganisationName,
+} from "./org-recovery-from-source.js";
+export {
+  loadQualityContentBackfillCandidates,
+  applyQualityContentUpdate,
+} from "./quality-content-backfill.js";
+export {
+  saveSourcePreviewReport,
+  latestSourcePreviewReports,
+  type SourcePreviewReportRow,
+} from "./source-preview.js";
 export { EXCLUDE_ARTICLE_RESOURCE_SQL } from "./innovation-resource-filter.js";
 export {
   correctMisassignedWaterSectorTags,

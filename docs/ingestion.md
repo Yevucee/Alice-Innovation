@@ -130,3 +130,15 @@ The classifier writes only to `resource_interpretations` and treats source HTML 
 | `engineering-for-change` | stops on the bot wall | fixture parser for title and summary |
 
 Page text is stripped of scripts before storage; stored text is capped.
+
+## New source checklist (preview before enable)
+
+1. Implement adapter discover + parse; add fixture tests under `tests/fixtures/`.
+2. **Dry-run sample** (no DB writes to `resources`):
+   - CLI: `npm run ingest -- --source <slug> --limit 20 --dry-run`
+   - Railway / Run now preview: set `INGEST_SOURCE_PREVIEW_SLUG=<slug>` and optional `INGEST_SOURCE_PREVIEW_LIMIT=20` on **alice-ingestor**, then **Run now** (forces dry-run for that source only).
+3. Review **Admin → Source preview**: `% flagged`, sample titles, org/country/stage, summary length, quality reason codes.
+4. Fix parser / quality gate issues until flagged rate is acceptable.
+5. Enable in `config/sources.yaml`, run `npm run seed`, then limited ingest `--limit 80` before `--full`.
+
+Post-deploy jobs (migration `015` onward): **`org_recovery_from_source_202510`** re-parses MIT Solve org answers from metadata and selective detail refetch; **`quality_detail_backfill_202510`** refetches thin listings. Per-run fetch caps: URLs/hosts skip after repeated failures; **401/403/429** block the host for the rest of the run (same policy as enrichment supplemental fetch).
