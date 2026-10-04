@@ -6,6 +6,7 @@ import { runPostIngestEmbeddingBackfill } from "./embedding-backfill.js";
 import { enrichMaxPerRun, runEnrichmentBackfill } from "./enrich.js";
 import { runPostIngestImageBackfill } from "./image-backfill.js";
 import { runPostDeployJobsStep } from "./post-deploy-jobs.js";
+import { getRunFailureTracker, resetRunFailureTracker } from "./run-failure-tracker.js";
 
 function envFlag(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
@@ -25,6 +26,7 @@ export async function runPostIngestMaintenance(
   db: Queryable,
   input: { touchedResourceIds: string[] },
 ): Promise<void> {
+  resetRunFailureTracker();
   try {
     await runPostDeployJobsStep(db);
   } catch (error) {

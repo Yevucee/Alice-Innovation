@@ -5,19 +5,21 @@ import {
   enrichmentAdminStatus,
   libraryStats,
   listRecentIngestionRuns,
+  latestSourcePreviewReports,
   qualityAdminStatus,
 } from "@alice/database";
 import { formatDate } from "@/lib/format";
 import { pool } from "@/lib/db";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings, quality, enrichment] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment, previews] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
     embeddingAdminStatus(pool()).catch(() => null),
     qualityAdminStatus(pool()).catch(() => null),
     enrichmentAdminStatus(pool()).catch(() => null),
+    latestSourcePreviewReports(pool(), 6).catch(() => []),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -77,6 +79,41 @@ export default async function AdminPage() {
               Last audit flagged {String(quality.last_run.flagged)} of {String(quality.last_run.scanned)} scanned
             </p>
           ) : null}
+        </section>
+      ) : null}
+
+      {previews.length > 0 ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">Source preview (dry-run)</h2>
+          <p className="mt-1 text-xs text-muted">
+            From <code className="text-ink">npm run ingest -- --source &lt;slug&gt; --limit 20 --dry-run</code> or{" "}
+            <code className="text-ink">INGEST_SOURCE_PREVIEW_SLUG</code>.
+          </p>
+          <ul className="mt-4 space-y-3 text-xs text-muted">
+            {previews.map((row) => {
+              const report = row.report as {
+                flagged_pct?: number;
+                sampled?: number;
+                flagged?: number;
+                samples?: Array<{ title: string; needs_review: boolean; reasons: string[] }>;
+              };
+              return (
+                <li key={`${row.source_slug}-${String(row.created_at)}`} className="border-t border-line pt-3">
+                  <p className="font-medium text-ink">
+                    {row.source_slug} — {String(report.flagged_pct ?? "—")}% flagged ({String(report.flagged)}/
+                    {String(report.sampled)})
+                  </p>
+                  <p className="mt-1">{formatDate(String(row.created_at))}</p>
+                  {report.samples?.slice(0, 3).map((sample, index) => (
+                    <p key={index} className="mt-1 truncate">
+                      {sample.needs_review ? "⚠ " : "✓ "}
+                      {sample.title} {sample.reasons?.length ? `[${sample.reasons.join(", ")}]` : ""}
+                    </p>
+                  ))}
+                </li>
+              );
+            })}
+          </ul>
         </section>
       ) : null}
 

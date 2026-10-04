@@ -3,6 +3,7 @@ import { loadDotEnv, log } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
 import { runPostIngestMaintenance } from "./post-ingest.js";
 import { resetSupplementalFetchHostPolicy } from "./enrichment-context-fetch.js";
+import { resetRunFailureTracker } from "./run-failure-tracker.js";
 import { runIngestion } from "./pipeline.js";
 
 loadDotEnv();
@@ -33,14 +34,31 @@ async function main(): Promise<void> {
     log("info", "ingestion_runs_interrupted", { count: interrupted });
   }
   const only = argValues("--source");
-  const dueOnly = process.argv.includes("--due") || only.length === 0;
+  const previewEnv = process.env.INGEST_SOURCE_PREVIEW_SLUG?.trim();
+  if (previewEnv && only.length === 0) {
+    only.push(previewEnv);
+  }
+  const dueOnly = process.argv.includes("--due") || (only.length === 0 && !previewEnv);
   const full = process.argv.includes("--full");
-  const dryRun = process.argv.includes("--dry-run");
-  const limit = argNumber("--limit");
+  const dryRun = process.argv.includes("--dry-run") || Boolean(previewEnv);
+  const limit = argNumber("--limit") ?? (previewEnv ? Number(process.env.INGEST_SOURCE_PREVIEW_LIMIT ?? "20") : null);
   const sources = loadSources();
   resetSupplementalFetchHostPolicy();
+  resetRunFailureTracker();
   log("info", "ingest_start", { due_only: dueOnly, full, dry_run: dryRun, limit, sources: only });
-  const result = await runIngestion({ sources, only, dueOnly: only.length === 0 ? dueOnly : false, limit, full, dryRun });
+  const result = await runIngestion({
+    sources,
+    only,
+    dueOnly: only.length === 0 ? dueOnly : false,
+    limit,
+    full,
+    dryRun,
+    collectSourcePreview: dryRun && only.length === 1,
+  });
+  if (result.sourcePreviewReport) {
+    const { persistSourcePreviewReport } = await import("./source-preview.js");
+    await persistSourcePreviewReport(pool, result.sourcePreviewReport);
+  }
   if (result.failedSources.length) {
     log("warn", "ingest_finished_with_source_failures", { sources: result.failedSources });
   } else {
@@ -48,7 +66,7 @@ async function main(): Promise<void> {
   }
   if (result.ingestSkippedDueToLock) {
     log("info", "post_ingest_skipped", { reason: "ingest_lock_held" });
-  } else {
+  } else if (!dryRun) {
     try {
       await runPostIngestMaintenance(getPool(), { touchedResourceIds: result.touchedResourceIds });
     } catch (error) {

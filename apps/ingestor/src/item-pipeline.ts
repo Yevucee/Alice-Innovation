@@ -16,6 +16,8 @@ import { classifyResource } from "./classifier.js";
 import { embedTexts, embeddingSettings, embeddingVersion } from "./embeddings.js";
 import { enrichOnIngest, enrichResourceOnIngest } from "./enrich.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
+import { enhanceDraftWithQualityDetailIfNeeded } from "./quality-detail-fetch.js";
+import { getRunFailureTracker } from "./run-failure-tracker.js";
 
 export interface ProcessIngestItemResult {
   saved: UpsertResult;
@@ -93,7 +95,8 @@ export async function processIngestItem(
   deps: ProcessIngestItemDeps = {},
 ): Promise<ProcessIngestItemResult> {
   const steps: string[] = [];
-  const draft = prepareIngestDraft(parsedDraft, source);
+  let draft = prepareIngestDraft(parsedDraft, source);
+  draft = await enhanceDraftWithQualityDetailIfNeeded(source, draft, getRunFailureTracker());
   steps.push("prepare");
 
   const quality = evaluateDraftQuality(draft);

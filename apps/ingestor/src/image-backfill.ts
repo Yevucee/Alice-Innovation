@@ -1,6 +1,7 @@
 import type { Queryable } from "@alice/database";
 import { log } from "@alice/shared";
 import { fetchText } from "./http.js";
+import { getRunFailureTracker } from "./run-failure-tracker.js";
 import { resolveValidatedPageImageUrl } from "./image-validate.js";
 import { isUsableImageUrl, resolvePageImageUrl } from "./adapters/draft.js";
 
@@ -58,6 +59,11 @@ export async function backfillSourceItemImages(
     timeoutMs: number;
     validateRemote?: boolean;
     minIntervalMs?: number;
+    failureTracker?: {
+      shouldSkipUrl: (url: string) => string | null;
+      recordFailure: (url: string, httpStatus?: number | null) => void;
+      recordSuccess: (url: string) => void;
+    };
   },
 ): Promise<ImageBackfillSummary> {
   let updated = 0;
@@ -67,6 +73,11 @@ export async function backfillSourceItemImages(
   const minInterval = options.minIntervalMs ?? 0;
 
   for (const row of rows) {
+    const skip = options.failureTracker?.shouldSkipUrl(row.canonical_url);
+    if (skip) {
+      skipped += 1;
+      continue;
+    }
     try {
       const wait = minInterval - (Date.now() - lastRequest);
       if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
@@ -76,6 +87,7 @@ export async function backfillSourceItemImages(
         userAgent: options.userAgent,
         timeoutMs: options.timeoutMs,
       });
+      options.failureTracker?.recordSuccess(row.canonical_url);
       let imageUrl: string | null;
       if (options.validateRemote) {
         imageUrl = await resolveValidatedPageImageUrl(page.body, page.finalUrl || row.canonical_url, {
@@ -94,6 +106,11 @@ export async function backfillSourceItemImages(
       updated += 1;
     } catch (error) {
       failed += 1;
+      const status =
+        error && typeof error === "object" && "status" in error
+          ? Number((error as { status: number }).status)
+          : null;
+      options.failureTracker?.recordFailure(row.canonical_url, status);
       log("warn", "image_backfill_item_failed", {
         source: row.source_slug,
         url: row.canonical_url,
@@ -137,6 +154,7 @@ export async function runPostIngestImageBackfill(
     timeoutMs,
     validateRemote: true,
     minIntervalMs: 600,
+    failureTracker: getRunFailureTracker(),
   });
   log("info", "post_ingest_image_backfill", { ...summary });
   return summary;

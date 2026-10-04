@@ -12,6 +12,7 @@ import {
   writeCheckpoint,
 } from "@alice/database";
 import { canonicaliseUrl, log } from "@alice/shared";
+import type { NormalisedDraft } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
 import { fetchText, HttpStatusError } from "./http.js";
 import { robotsAllows } from "./robots.js";
@@ -21,6 +22,7 @@ import { createHostPacedFetch, ingestDetailConcurrency, mapWithConcurrency } fro
 import { createIngestSourceLoopBudget } from "./ingest-loop-budget.js";
 import { processIngestItem } from "./item-pipeline.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
+import { buildSourcePreviewReport, type SourcePreviewReport } from "./source-preview.js";
 
 const LOCK_KEY = 84261001;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -76,11 +78,17 @@ export interface IngestOptions {
   limit: number | null;
   full: boolean;
   dryRun: boolean;
+  collectSourcePreview?: boolean;
 }
 
 export async function runIngestion(
   options: IngestOptions,
-): Promise<{ failedSources: string[]; touchedResourceIds: string[]; ingestSkippedDueToLock: boolean }> {
+): Promise<{
+  failedSources: string[];
+  touchedResourceIds: string[];
+  ingestSkippedDueToLock: boolean;
+  sourcePreviewReport?: import("./source-preview.js").SourcePreviewReport;
+}> {
   const pool = getPool();
   const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
@@ -94,6 +102,9 @@ export async function runIngestion(
 
   const failedSources: string[] = [];
   const touchedResourceIds = new Set<string>();
+  let previewDrafts: NormalisedDraft[] = [];
+  let previewSource: SourceRecord | null = null;
+  let previewLimit = options.limit ?? 20;
   const ingestLoopStartedAt = Date.now();
   const sourceLoopBudget = createIngestSourceLoopBudget(ingestLoopStartedAt);
   try {
@@ -230,6 +241,10 @@ export async function runIngestion(
             const parsed = adapter.parse(page);
             const draft = prepareIngestDraft(parsed, source);
             if (options.dryRun) {
+              if (options.collectSourcePreview) {
+                previewDrafts.push(parsed);
+                previewSource = source;
+              }
               log("info", "dry_run_item", { source_id: source.id, title: draft.title, url: draft.canonicalUrl });
               return { ref, cursor: ref.url };
             }
@@ -361,7 +376,16 @@ export async function runIngestion(
     await client.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]);
     client.release();
   }
-  return { failedSources, touchedResourceIds: [...touchedResourceIds], ingestSkippedDueToLock: false };
+  let sourcePreviewReport: SourcePreviewReport | undefined;
+  if (options.dryRun && options.collectSourcePreview && previewSource && previewDrafts.length > 0) {
+    sourcePreviewReport = buildSourcePreviewReport(previewSource, previewDrafts, previewLimit);
+    log("info", "source_preview_complete", {
+      source_slug: sourcePreviewReport.source_slug,
+      flagged_pct: sourcePreviewReport.flagged_pct,
+      sampled: sourcePreviewReport.sampled,
+    });
+  }
+  return { failedSources, touchedResourceIds: [...touchedResourceIds], ingestSkippedDueToLock: false, sourcePreviewReport };
 }
 
 async function finishRun(
