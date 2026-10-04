@@ -27,12 +27,15 @@ export function applyDraftDataQuality(draft: NormalisedDraft, source: SourceReco
   });
 
   const priorOrg = draft.organisationName;
+  const rawMetadata = { ...draft.rawMetadata };
+  if (priorOrg?.trim()) {
+    rawMetadata.ingest_organisation_name = priorOrg;
+  }
   const organisationName = sanitiseOrganisationName(priorOrg, {
     resourceTitle: title,
     sourceName: source.name,
   });
 
-  const rawMetadata = { ...draft.rawMetadata };
   if (priorOrg?.trim() && !organisationName) {
     const reasons = Array.isArray(rawMetadata.quality_reasons)
       ? [...(rawMetadata.quality_reasons as string[])]

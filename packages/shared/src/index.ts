@@ -46,6 +46,7 @@ export {
 export type { EvidenceBasis, EvidenceStage, NormalisedDraft, ResourceType } from "./domain.js";
 export {
   isInvalidOrganisationName,
+  organisationNameMatchesResourceTitle,
   sanitiseOrganisationName,
 } from "./org-name-validator.js";
 export type { OrganisationNameContext } from "./org-name-validator.js";
