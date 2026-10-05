@@ -79,6 +79,7 @@ export async function shouldRunPostDeployBeforeIngest(
   input: { cleanupOnly: boolean },
 ): Promise<boolean> {
   if (process.argv.includes("--post-deploy-after-ingest")) return false;
+  if (process.argv.includes("--post-deploy-first")) return true;
   if (!envFlag("POST_DEPLOY_BEFORE_INGEST", true)) return false;
   if (input.cleanupOnly) return true;
   if (isManualIngestTrigger()) return true;

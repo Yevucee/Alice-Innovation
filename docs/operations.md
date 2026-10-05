@@ -16,7 +16,7 @@ After deploy **#46** (migration `010_post_deploy_jobs`), each ingest run can adv
 
 **Cleanup-only:** `npm run start:ingestor -- --cleanup-only` runs the post-deploy queue (30-minute budget) and post-ingest maintenance **without** catalogue ingest. Use this to drain NEEDS_REVIEW / org recovery without a 2-hour crawl.
 
-**Post-deploy before ingest (default):** When any post_deploy job is pending, or the run is manual (Railway one-off without `RAILWAY_CRON=1`), cleanup runs **before** ingest. Opt out with `POST_DEPLOY_BEFORE_INGEST=false` or `--post-deploy-after-ingest`.
+**Post-deploy before ingest (default):** When any post_deploy job is pending, or the run is manual (Railway one-off without `RAILWAY_CRON=1`), cleanup runs **before** ingest. You can also pass `--post-deploy-first` on **Run now**. Opt out with `POST_DEPLOY_BEFORE_INGEST=false` or `--post-deploy-after-ingest`.
 
 Disable the queue with `POST_DEPLOY_JOBS_ON_INGEST=false` once all jobs show `completed`. Admin shows `updated_at`, `last_error`, and `progress.last_run` (minutes, steps, offset before/after, stop reason).
 
