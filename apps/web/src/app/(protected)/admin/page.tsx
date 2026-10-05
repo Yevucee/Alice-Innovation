@@ -6,13 +6,14 @@ import {
   libraryStats,
   listRecentIngestionRuns,
   latestSourcePreviewReports,
+  postDeployJobsAdminPanel,
   qualityAdminStatus,
 } from "@alice/database";
 import { formatDate } from "@/lib/format";
 import { pool } from "@/lib/db";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings, quality, enrichment, previews] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
@@ -20,6 +21,7 @@ export default async function AdminPage() {
     qualityAdminStatus(pool()).catch(() => null),
     enrichmentAdminStatus(pool()).catch(() => null),
     latestSourcePreviewReports(pool(), 6).catch(() => []),
+    postDeployJobsAdminPanel(pool()).catch(() => null),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -113,6 +115,66 @@ export default async function AdminPage() {
                 </li>
               );
             })}
+          </ul>
+        </section>
+      ) : null}
+
+      {postDeploy ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">Post-deploy jobs</h2>
+          <p className="mt-1 text-xs text-muted">Read-only queue state from <code className="text-ink">post_deploy_jobs</code>.</p>
+          {postDeploy.last_run_budget.minutes_used != null ? (
+            <p className="mt-2 text-muted">
+              Last ingest post-deploy activity: ~{postDeploy.last_run_budget.minutes_used} min (
+              {postDeploy.last_run_budget.jobs_touched} job
+              {postDeploy.last_run_budget.jobs_touched === 1 ? "" : "s"} touched
+              {postDeploy.last_run_budget.ingest_completed_at
+                ? ` · ingest finished ${formatDate(String(postDeploy.last_run_budget.ingest_completed_at))}`
+                : ""}
+              ). Budget cap on ingestor:{" "}
+              <code className="text-ink">POST_DEPLOY_JOBS_MAX_MINUTES</code> (default 30).
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-muted">{postDeploy.last_run_budget.note}</p>
+          )}
+          <ul className="mt-4 space-y-4">
+            {postDeploy.jobs.map((job) => (
+              <li key={job.job_key} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="font-medium text-ink">{job.job_key}</p>
+                  <span className="text-xs uppercase tracking-wide text-muted">{job.display_status}</span>
+                </div>
+                <p className="mt-1 text-xs text-muted">{job.description}</p>
+                <p className="mt-1 text-xs text-muted">Updated {formatDate(String(job.updated_at))}</p>
+                {job.counters.length > 0 ? (
+                  <dl className="mt-2 grid gap-1 sm:grid-cols-2 text-xs text-muted">
+                    {job.counters.map((row) => (
+                      <div key={`${job.job_key}-${row.key}`}>
+                        <dt>{row.label}</dt>
+                        <dd className="text-ink">{String(row.value)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="mt-2 text-xs text-muted">No progress counters stored yet.</p>
+                )}
+                {job.skipped.length > 0 ? (
+                  <div className="mt-2 text-xs text-muted">
+                    <p className="font-medium text-ink">Skipped sources / hosts</p>
+                    <ul className="mt-1 space-y-1">
+                      {job.skipped.map((row) => (
+                        <li key={`${job.job_key}-${row.key}`}>
+                          {row.key}: {row.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {job.last_error ? (
+                  <p className="mt-2 text-xs text-amber-800">Last error: {job.last_error}</p>
+                ) : null}
+              </li>
+            ))}
           </ul>
         </section>
       ) : null}

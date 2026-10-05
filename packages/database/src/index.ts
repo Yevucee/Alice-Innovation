@@ -100,6 +100,15 @@ export {
   type PostDeployJobStatus,
 } from "./post-deploy-jobs.js";
 export {
+  loadPostDeployJobsAdmin,
+  postDeployJobsAdminPanel,
+  postDeployLastRunBudget,
+  summarisePostDeployJobCounters,
+  summarisePostDeployJobSkipped,
+  type PostDeployJobAdminRow,
+  type PostDeployLastRunBudget,
+} from "./post-deploy-admin.js";
+export {
   inferStageFromText,
   normaliseEnrichmentStageLabel,
   stageFromAdapterMetadata,
