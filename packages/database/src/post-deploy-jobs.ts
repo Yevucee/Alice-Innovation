@@ -14,6 +14,13 @@ export interface PostDeployJobRow {
   completed_at: Date | null;
 }
 
+export async function hasPendingPostDeployJobs(db: Queryable): Promise<boolean> {
+  const row = await db.query<{ count: string }>(
+    `SELECT count(*)::text AS count FROM post_deploy_jobs WHERE status IN ('pending', 'in_progress')`,
+  );
+  return Number(row.rows[0]?.count ?? 0) > 0;
+}
+
 export async function listPostDeployJobs(db: Queryable): Promise<PostDeployJobRow[]> {
   const rows = await db.query<PostDeployJobRow>(
     `SELECT job_key, description, status, sort_order, progress, result, last_error, started_at, completed_at

@@ -81,6 +81,23 @@ export default async function AdminPage() {
               Last audit flagged {String(quality.last_run.flagged)} of {String(quality.last_run.scanned)} scanned
             </p>
           ) : null}
+          {quality.backlog_run ? (
+            <div className="mt-4 rounded border border-line bg-slate-50 p-3 text-xs text-muted">
+              <p className="font-medium text-ink">Last backlog run ({quality.backlog_run.trigger})</p>
+              <p className="mt-1">
+                NEEDS_REVIEW {quality.backlog_run.needs_review_before.toLocaleString()} →{" "}
+                {quality.backlog_run.needs_review_after.toLocaleString()} (net{" "}
+                {quality.backlog_run.net_change >= 0 ? "+" : ""}
+                {quality.backlog_run.net_change.toLocaleString()})
+              </p>
+              <p className="mt-1">
+                Cleared {quality.backlog_run.cleared.toLocaleString()} · SOURCE_LIMITED{" "}
+                {quality.backlog_run.source_limited.toLocaleString()} · still flagged{" "}
+                {quality.backlog_run.still_flagged.toLocaleString()} · newly flagged{" "}
+                {quality.backlog_run.newly_flagged.toLocaleString()}
+              </p>
+            </div>
+          ) : null}
         </section>
       ) : null}
 

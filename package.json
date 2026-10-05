@@ -20,6 +20,7 @@
     "seed": "tsx scripts/seed.ts",
     "mcp": "tsx apps/mcp/src/index.ts",
     "ingest": "tsx apps/ingestor/src/index.ts",
+    "ingest:cleanup-only": "tsx apps/ingestor/src/index.ts -- --cleanup-only",
     "check:image-coverage": "tsx scripts/check-image-coverage.ts",
     "adapter:sample-dry-run": "tsx scripts/adapter-sample-dry-run.ts",
     "ingest:production-backfill-images": "bash scripts/ingest-production-backfill-images.sh",
