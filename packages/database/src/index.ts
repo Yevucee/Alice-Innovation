@@ -91,6 +91,7 @@ export type { ResourceEnrichmentContext } from "./enrichment-context.js";
 export {
   completePostDeployJob,
   getActivePostDeployJob,
+  hasPendingPostDeployJobs,
   listActivePostDeployJobs,
   listPostDeployJobs,
   markPostDeployJobInProgress,
@@ -116,6 +117,21 @@ export {
   type PostDeployJobLastRun,
   type PostDeployJobStopReason,
 } from "./post-deploy-run-summary.js";
+export {
+  runNeedsReviewReconcileBatch,
+  loadNeedsReviewReconcileBatch,
+  evaluateResourceQuality,
+  shouldAcceptSourceLimited,
+  countNeedsReview,
+  type NeedsReviewReconcileBatchResult,
+} from "./needs-review-reconcile.js";
+export {
+  startQualityReviewBacklogRun,
+  completeQualityReviewBacklogRun,
+  latestQualityReviewBacklogRun,
+  sampleNeedsReviewBySources,
+  type QualityReviewBacklogRunRow,
+} from "./quality-review-backlog.js";
 export {
   inferStageFromText,
   normaliseEnrichmentStageLabel,

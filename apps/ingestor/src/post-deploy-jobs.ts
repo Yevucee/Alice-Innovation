@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   completePostDeployJob,
+  hasPendingPostDeployJobs,
   listActivePostDeployJobs,
   listPostDeployJobs,
   markPostDeployJobInProgress,
@@ -30,6 +31,7 @@ import { fetchText, HttpStatusError } from "./http.js";
 import type { AdapterContext } from "./adapters/types.js";
 import { runOrgRecoveryFromSourceBatch } from "./org-recovery-job.js";
 import { runQualityContentBackfillBatch } from "./quality-content-backfill-job.js";
+import { runNeedsReviewReconcileJobBatch, reembedReconcileBatch } from "./needs-review-reconcile-job.js";
 import { getRunFailureTracker, resetRunFailureTracker } from "./run-failure-tracker.js";
 
 const REINGEST_SOURCES = [
@@ -55,9 +57,34 @@ export function postDeployJobsEnabled(): boolean {
   return envFlag("POST_DEPLOY_JOBS_ON_INGEST", true);
 }
 
-/** Run post-deploy queue before catalogue ingest (manual / long runs). */
+/** @deprecated use shouldRunPostDeployBeforeIngest */
 export function postDeployBeforeIngestEnabled(): boolean {
-  return envFlag("POST_DEPLOY_BEFORE_INGEST", false) || process.argv.includes("--post-deploy-first");
+  return false;
+}
+
+export function isRailwayCronRun(): boolean {
+  return process.env.RAILWAY_CRON === "1" || process.env.RAILWAY_CRON === "true";
+}
+
+export function isManualIngestTrigger(): boolean {
+  if (process.argv.includes("--cleanup-only")) return true;
+  if (process.argv.includes("--source") || process.argv.includes("--full") || process.argv.includes("--limit")) {
+    return true;
+  }
+  return !isRailwayCronRun();
+}
+
+export async function shouldRunPostDeployBeforeIngest(
+  db: Queryable,
+  input: { cleanupOnly: boolean },
+): Promise<boolean> {
+  if (process.argv.includes("--post-deploy-after-ingest")) return false;
+  if (process.argv.includes("--post-deploy-first")) return true;
+  if (!envFlag("POST_DEPLOY_BEFORE_INGEST", true)) return false;
+  if (input.cleanupOnly) return true;
+  if (isManualIngestTrigger()) return true;
+  if (await hasPendingPostDeployJobs(db)) return true;
+  return false;
 }
 
 export interface PostDeployRunnerSummary {
@@ -70,6 +97,9 @@ export interface PostDeployRunnerSummary {
   max_minutes: number;
   trigger: string;
   pending_job_keys: string[];
+  reconcile_cleared: number;
+  reconcile_source_limited: number;
+  reconcile_still_flagged: number;
 }
 
 type JobStepStats = {
@@ -669,6 +699,41 @@ async function runQualityDetailBackfillStep(
   };
 }
 
+async function runNeedsReviewReconcileStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const offset = Number(progress.offset ?? 0);
+  const totals = { ...(progress.totals as Record<string, number> | undefined) };
+  const batch = await runNeedsReviewReconcileJobBatch(db, offset);
+  bumpTotal(totals, "scanned", batch.scanned);
+  bumpTotal(totals, "cleared", batch.cleared);
+  bumpTotal(totals, "source_limited", batch.source_limited);
+  bumpTotal(totals, "still_flagged", batch.still_flagged);
+  const pending = [
+    ...new Set([
+      ...((progress.pending_reembed_ids as string[]) ?? []),
+      ...batch.reembed_resource_ids,
+    ]),
+  ];
+  const complete = batch.complete;
+  if (batch.reembed_resource_ids.length > 0) {
+    const embedded = await reembedReconcileBatch(db, batch.reembed_resource_ids);
+    bumpTotal(totals, "reembedded", embedded);
+  }
+  if (complete && pending.length > 0) {
+    const reembed = await reembedResourceIds(db, pending);
+    bumpTotal(totals, "reembedded", (totals.reembedded ?? 0) + reembed.embedded);
+    if (!reembed.skipped) pending.length = 0;
+  }
+  return {
+    offset: batch.next_offset,
+    totals,
+    pending_reembed_ids: pending,
+    complete: complete && pending.length === 0,
+  };
+}
+
 async function executePostDeployJobStep(
   db: Queryable,
   job: PostDeployJobRow,
@@ -761,6 +826,12 @@ async function executePostDeployJobStep(
         result = { ...(nextProgress.totals as Record<string, unknown>) };
         break;
       }
+      case "needs_review_reconcile_202510": {
+        nextProgress = await runNeedsReviewReconcileStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = { ...(nextProgress.totals as Record<string, unknown>) };
+        break;
+      }
       default:
         log("warn", "post_deploy_job_unknown", { job_key: job.job_key });
         await completePostDeployJob(db, job.job_key, { skipped: true });
@@ -812,6 +883,9 @@ export async function runPostDeployJobsStep(
     max_minutes: maxMinutes,
     trigger,
     pending_job_keys: pending,
+    reconcile_cleared: 0,
+    reconcile_source_limited: 0,
+    reconcile_still_flagged: 0,
   });
 
   if (!postDeployJobsEnabled()) {
@@ -938,6 +1012,9 @@ export async function runPostDeployJobsStep(
     });
   }
 
+  const reconcileJob = finalSnapshot.find((row) => row.job_key === "needs_review_reconcile_202510");
+  const reconcileTotals = (reconcileJob?.progress?.totals ?? {}) as Record<string, number>;
+
   const summary: PostDeployRunnerSummary = {
     started_at: sessionStartedAt,
     ended_at: sessionEndedAt,
@@ -948,6 +1025,9 @@ export async function runPostDeployJobsStep(
     max_minutes: maxMinutes,
     trigger,
     pending_job_keys: pendingKeys,
+    reconcile_cleared: reconcileTotals.cleared ?? 0,
+    reconcile_source_limited: reconcileTotals.source_limited ?? 0,
+    reconcile_still_flagged: reconcileTotals.still_flagged ?? 0,
   };
 
   log("info", "post_deploy_jobs_run_complete", {

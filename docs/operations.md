@@ -14,7 +14,9 @@ A session advisory lock stops a second ingestor from starting while one is runni
 
 After deploy **#46** (migration `010_post_deploy_jobs`), each ingest run can advance the post-deploy queue within a time budget (`POST_DEPLOY_JOBS_MAX_MINUTES`, default 30). Progress lives in `post_deploy_jobs` (`progress`, `progress.last_run` per runner session). Logs emit `post_deploy_job_run_summary` (one line per job) and `post_deploy_jobs_run_complete`.
 
-**Order:** by default post-deploy runs at the **end** of post-ingest (after catalogue ingest). A long manual ingest (e.g. 2+ hours) can finish without reaching post-ingest, so counters never move. Set `POST_DEPLOY_BEFORE_INGEST=true` or pass `--post-deploy-first` on **Run now** to spend the budget **before** ingest; post-ingest skips a second post-deploy pass in the same process.
+**Cleanup-only:** `npm run start:ingestor -- --cleanup-only` runs the post-deploy queue (30-minute budget) and post-ingest maintenance **without** catalogue ingest. Use this to drain NEEDS_REVIEW / org recovery without a 2-hour crawl.
+
+**Post-deploy before ingest (default):** When any post_deploy job is pending, or the run is manual (Railway one-off without `RAILWAY_CRON=1`), cleanup runs **before** ingest. You can also pass `--post-deploy-first` on **Run now**. Opt out with `POST_DEPLOY_BEFORE_INGEST=false` or `--post-deploy-after-ingest`.
 
 Disable the queue with `POST_DEPLOY_JOBS_ON_INGEST=false` once all jobs show `completed`. Admin shows `updated_at`, `last_error`, and `progress.last_run` (minutes, steps, offset before/after, stop reason).
 

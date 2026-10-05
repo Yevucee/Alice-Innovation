@@ -1,6 +1,7 @@
 import type { NormalisedDraft } from "@alice/shared";
 import { evaluateDraftQuality } from "@alice/shared";
 import type { Queryable } from "./pool.js";
+import { latestQualityReviewBacklogRun } from "./quality-review-backlog.js";
 
 export interface QualityAuditRow {
   entity_type: "resource" | "person" | "organisation";
@@ -136,7 +137,7 @@ export async function runQualityAudit(
   const rows: QualityAuditRow[] = [];
 
   for (const resource of resources) {
-    if (resource.review_status === "NEEDS_REVIEW" || resource.review_status === "ARCHIVED") {
+    if (resource.review_status === "NEEDS_REVIEW" || resource.review_status === "ARCHIVED" || resource.review_status === "SOURCE_LIMITED") {
       continue;
     }
     const reasons = auditDraftShape({
@@ -203,7 +204,7 @@ export async function runQualityAudit(
              review_reason_codes = $2::text[],
              updated_at = now()
          WHERE id = $1::uuid
-           AND review_status NOT IN ('ARCHIVED', 'ALICE_PICK', 'REVIEWED')`,
+           AND review_status NOT IN ('ARCHIVED', 'ALICE_PICK', 'REVIEWED', 'SOURCE_LIMITED')`,
         [row.id, row.reason_codes],
       );
     }
@@ -393,6 +394,7 @@ export async function qualityAdminStatus(db: Queryable): Promise<{
   needs_review: number;
   last_run: Record<string, unknown> | null;
   review_breakdown: Awaited<ReturnType<typeof qualityReviewBreakdown>>;
+  backlog_run: Awaited<ReturnType<typeof latestQualityReviewBacklogRun>>;
 }> {
   const needs = await db.query<{ count: string }>(
     `SELECT count(*)::text AS count FROM resources WHERE active AND review_status = 'NEEDS_REVIEW'`,
@@ -402,9 +404,11 @@ export async function qualityAdminStatus(db: Queryable): Promise<{
      FROM quality_audit_runs ORDER BY started_at DESC LIMIT 1`,
   );
   const review_breakdown = await qualityReviewBreakdown(db);
+  const backlog_run = await latestQualityReviewBacklogRun(db);
   return {
     needs_review: Number(needs.rows[0]?.count ?? 0),
     last_run: last.rows[0] ?? null,
     review_breakdown,
+    backlog_run,
   };
 }
