@@ -13,7 +13,7 @@ export class HttpStatusError extends Error {
   constructor(
     message: string,
     readonly status: number,
-    readonly url: string,
+    readonly url: string = "",
   ) {
     super(message);
     this.name = "HttpStatusError";
