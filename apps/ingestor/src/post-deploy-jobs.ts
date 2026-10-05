@@ -1,14 +1,20 @@
+import { randomUUID } from "node:crypto";
 import {
   completePostDeployJob,
   listActivePostDeployJobs,
+  listPostDeployJobs,
   markPostDeployJobInProgress,
   notePostDeployJobError,
+  primaryProgressOffset,
   runQualityAudit,
   runDataQualityRepairBatch,
   runEmbeddingBackfillForResourceIds,
   runRestoreTitleMatchedOrganisationsBatch,
   backfillReviewReasonCodesBatch,
+  setPostDeployJobLastRun,
   updatePostDeployJobProgress,
+  type PostDeployJobLastRun,
+  type PostDeployJobStopReason,
   type PostDeployJobRow,
   type Queryable,
 } from "@alice/database";
@@ -47,6 +53,88 @@ function envFlag(name: string, defaultValue: boolean): boolean {
 
 export function postDeployJobsEnabled(): boolean {
   return envFlag("POST_DEPLOY_JOBS_ON_INGEST", true);
+}
+
+/** Run post-deploy queue before catalogue ingest (manual / long runs). */
+export function postDeployBeforeIngestEnabled(): boolean {
+  return envFlag("POST_DEPLOY_BEFORE_INGEST", false) || process.argv.includes("--post-deploy-first");
+}
+
+export interface PostDeployRunnerSummary {
+  started_at: string;
+  ended_at: string;
+  minutes_used: number;
+  rounds: number;
+  steps: number;
+  stop_reason: "disabled" | "no_pending_jobs" | "budget" | "error" | "done" | "no_steps";
+  max_minutes: number;
+  trigger: string;
+  pending_job_keys: string[];
+}
+
+type JobStepStats = {
+  offset_before: number | null;
+  offset_after: number | null;
+  steps: number;
+  ms: number;
+  stop_reason: PostDeployJobStopReason;
+};
+
+function roundMinutes(ms: number): number {
+  return Math.round((ms / 60_000) * 10) / 10;
+}
+
+function logPostDeployJobRunLine(input: {
+  job_key: string;
+  started_at: string;
+  minutes_used: number;
+  offset_before: number | null;
+  offset_after: number | null;
+  stop_reason: PostDeployJobStopReason;
+  steps: number;
+  rounds: number;
+}): void {
+  const offsetPart = input.offset_before != null || input.offset_after != null
+    ? ` offset ${input.offset_before ?? "—"}→${input.offset_after ?? "—"}`
+    : "";
+  log("info", "post_deploy_job_run_summary", {
+    job_key: input.job_key,
+    started_at: input.started_at,
+    minutes_used: input.minutes_used,
+    offset_before: input.offset_before,
+    offset_after: input.offset_after,
+    stop_reason: input.stop_reason,
+    steps: input.steps,
+    rounds: input.rounds,
+    line: `post-deploy ${input.job_key}: started ${input.started_at}, ${input.minutes_used} min,${offsetPart}, stop=${input.stop_reason}`,
+  });
+}
+
+async function persistJobLastRun(
+  db: Queryable,
+  input: {
+    job_key: string;
+    session_id: string;
+    trigger: string;
+    session_started_at: string;
+    session_ended_at: string;
+    stats: JobStepStats;
+    rounds: number;
+  },
+): Promise<void> {
+  const lastRun: PostDeployJobLastRun = {
+    started_at: input.session_started_at,
+    ended_at: input.session_ended_at,
+    minutes_used: roundMinutes(input.stats.ms),
+    steps: input.stats.steps,
+    rounds: input.rounds,
+    offset_before: input.stats.offset_before,
+    offset_after: input.stats.offset_after,
+    stop_reason: input.stats.stop_reason,
+    session_id: input.session_id,
+    trigger: input.trigger,
+  };
+  await setPostDeployJobLastRun(db, input.job_key, { ...lastRun });
 }
 
 function reingestItemsPerRun(): number {
@@ -584,8 +672,32 @@ async function runQualityDetailBackfillStep(
 async function executePostDeployJobStep(
   db: Queryable,
   job: PostDeployJobRow,
+  runContext: {
+    sessionId: string;
+    trigger: string;
+    sessionStartedAt: string;
+    rounds: number;
+    jobStats: Map<string, JobStepStats>;
+    budgetExhausted: () => boolean;
+  },
 ): Promise<void> {
   const progress = { ...(job.progress ?? {}) };
+  const offsetBefore = primaryProgressOffset(progress);
+  const stepStarted = Date.now();
+  let stats = runContext.jobStats.get(job.job_key);
+  if (!stats) {
+    stats = {
+      offset_before: offsetBefore,
+      offset_after: offsetBefore,
+      steps: 0,
+      ms: 0,
+      stop_reason: "not_run",
+    };
+    runContext.jobStats.set(job.job_key, stats);
+  } else if (stats.offset_before == null) {
+    stats.offset_before = offsetBefore;
+  }
+
   await markPostDeployJobInProgress(db, job.job_key, progress);
 
   try {
@@ -658,59 +770,199 @@ async function executePostDeployJobStep(
     if (complete) {
       await completePostDeployJob(db, job.job_key, result);
       log("info", "post_deploy_job_completed", { job_key: job.job_key, result });
+      stats.offset_after = primaryProgressOffset(nextProgress);
+      stats.steps += 1;
+      stats.ms += Date.now() - stepStarted;
+      stats.stop_reason = "done";
     } else {
       await updatePostDeployJobProgress(db, job.job_key, nextProgress);
       log("info", "post_deploy_job_progress", { job_key: job.job_key, progress: nextProgress });
+      stats.offset_after = primaryProgressOffset(nextProgress);
+      stats.steps += 1;
+      stats.ms += Date.now() - stepStarted;
+      stats.stop_reason = runContext.budgetExhausted() ? "budget" : "progress";
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await notePostDeployJobError(db, job.job_key, message, progress);
     log("warn", "post_deploy_job_step_failed", { job_key: job.job_key, message });
+    stats.steps += 1;
+    stats.ms += Date.now() - stepStarted;
+    stats.stop_reason = "error";
   }
 }
 
-export async function runPostDeployJobsStep(db: Queryable): Promise<void> {
+export async function runPostDeployJobsStep(
+  db: Queryable,
+  input?: { trigger?: string },
+): Promise<PostDeployRunnerSummary> {
+  const trigger = input?.trigger ?? "post_ingest";
+  const sessionId = randomUUID();
+  const sessionStartedAt = new Date().toISOString();
+  const startedMs = Date.now();
+  const maxMinutes = postDeployJobsMaxMinutes();
+
+  const emptySummary = (stop_reason: PostDeployRunnerSummary["stop_reason"], pending: string[]): PostDeployRunnerSummary => ({
+    started_at: sessionStartedAt,
+    ended_at: new Date().toISOString(),
+    minutes_used: 0,
+    rounds: 0,
+    steps: 0,
+    stop_reason,
+    max_minutes: maxMinutes,
+    trigger,
+    pending_job_keys: pending,
+  });
+
   if (!postDeployJobsEnabled()) {
-    log("info", "post_deploy_jobs_skipped", { reason: "POST_DEPLOY_JOBS_ON_INGEST=false" });
-    return;
+    log("info", "post_deploy_jobs_skipped", { reason: "POST_DEPLOY_JOBS_ON_INGEST=false", trigger });
+    return emptySummary("disabled", []);
+  }
+
+  const pendingSnapshot = await listPostDeployJobs(db);
+  const pendingKeys = pendingSnapshot
+    .filter((row) => row.status === "pending" || row.status === "in_progress")
+    .map((row) => row.job_key);
+
+  log("info", "post_deploy_jobs_run_start", {
+    trigger,
+    session_id: sessionId,
+    max_minutes: maxMinutes,
+    pending_jobs: pendingKeys.length,
+    pending_job_keys: pendingKeys,
+  });
+
+  if (pendingKeys.length === 0) {
+    log("info", "post_deploy_jobs_none_pending", { trigger });
+    return emptySummary("no_pending_jobs", []);
   }
 
   resetRunFailureTracker();
-  const deadlineMs = Date.now() + postDeployJobsMaxMinutes() * 60 * 1000;
+  const deadlineMs = startedMs + maxMinutes * 60 * 1000;
   let rounds = 0;
   let steps = 0;
+  const jobStats = new Map<string, JobStepStats>();
+  let stopReason: PostDeployRunnerSummary["stop_reason"] = "done";
+
+  const runContext = {
+    sessionId,
+    trigger,
+    sessionStartedAt,
+    rounds: 0,
+    jobStats,
+    budgetExhausted: () => Date.now() >= deadlineMs,
+  };
 
   try {
     while (Date.now() < deadlineMs) {
       const jobs = await listActivePostDeployJobs(db);
       if (jobs.length === 0) {
-        if (steps === 0) {
-          log("info", "post_deploy_jobs_none_pending");
-        }
+        stopReason = steps === 0 ? "no_pending_jobs" : "done";
         break;
       }
 
+      runContext.rounds = rounds + 1;
       for (const job of jobs) {
-        if (Date.now() >= deadlineMs) break;
-        await executePostDeployJobStep(db, job);
+        if (Date.now() >= deadlineMs) {
+          stopReason = "budget";
+          break;
+        }
+        await executePostDeployJobStep(db, job, runContext);
         steps += 1;
       }
       rounds += 1;
+      if (Date.now() >= deadlineMs) {
+        stopReason = "budget";
+        break;
+      }
     }
-
-    if (steps > 0) {
-      log("info", "post_deploy_jobs_run_complete", {
-        rounds,
-        steps,
-        max_minutes: postDeployJobsMaxMinutes(),
-        skip_reasons: getRunFailureTracker().skipReasonsSummary(),
-      });
+    if (stopReason === "done" && Date.now() >= deadlineMs && steps > 0) {
+      stopReason = "budget";
     }
   } catch (error) {
+    stopReason = "error";
     log("warn", "post_deploy_jobs_run_failed", {
       message: error instanceof Error ? error.message : String(error),
       rounds,
       steps,
+      trigger,
+      session_id: sessionId,
     });
   }
+
+  const sessionEndedAt = new Date().toISOString();
+  const sessionMs = Date.now() - startedMs;
+  const finalSnapshot = await listPostDeployJobs(db);
+
+  if (steps === 0 && pendingKeys.length > 0) {
+    stopReason = "no_steps";
+  }
+
+  for (const jobKey of pendingKeys) {
+    const finalProgress = finalSnapshot.find((row) => row.job_key === jobKey)?.progress ?? {};
+    const stats = jobStats.get(jobKey) ?? {
+      offset_before: primaryProgressOffset(
+        pendingSnapshot.find((row) => row.job_key === jobKey)?.progress ?? {},
+      ),
+      offset_after: primaryProgressOffset(finalProgress),
+      steps: 0,
+      ms: 0,
+      stop_reason: "not_run" as PostDeployJobStopReason,
+    };
+    if (stats.steps === 0) {
+      stats.offset_after = primaryProgressOffset(finalProgress);
+    }
+    if (stats.steps === 0 && stats.stop_reason === "not_run" && stopReason === "budget") {
+      stats.stop_reason = "not_run";
+    } else if (stats.steps > 0 && stats.stop_reason === "progress" && stopReason === "budget") {
+      stats.stop_reason = "budget";
+    }
+    await persistJobLastRun(db, {
+      job_key: jobKey,
+      session_id: sessionId,
+      trigger,
+      session_started_at: sessionStartedAt,
+      session_ended_at: sessionEndedAt,
+      stats,
+      rounds,
+    });
+    logPostDeployJobRunLine({
+      job_key: jobKey,
+      started_at: sessionStartedAt,
+      minutes_used: stats.steps > 0 ? roundMinutes(stats.ms) : 0,
+      offset_before: stats.offset_before,
+      offset_after: stats.offset_after,
+      stop_reason: stats.stop_reason,
+      steps: stats.steps,
+      rounds,
+    });
+  }
+
+  const summary: PostDeployRunnerSummary = {
+    started_at: sessionStartedAt,
+    ended_at: sessionEndedAt,
+    minutes_used: roundMinutes(sessionMs),
+    rounds,
+    steps,
+    stop_reason: stopReason,
+    max_minutes: maxMinutes,
+    trigger,
+    pending_job_keys: pendingKeys,
+  };
+
+  log("info", "post_deploy_jobs_run_complete", {
+    ...summary,
+    skip_reasons: getRunFailureTracker().skipReasonsSummary(),
+    line: `post-deploy runner: ${summary.minutes_used}/${summary.max_minutes} min, ${summary.steps} steps, ${summary.rounds} rounds, stop=${summary.stop_reason}, trigger=${trigger}`,
+  });
+
+  if (steps === 0 && pendingKeys.length > 0) {
+    log("warn", "post_deploy_jobs_zero_steps", {
+      trigger,
+      pending_job_keys: pendingKeys,
+      hint: "Post-deploy queue did not advance — check POST_DEPLOY_JOBS_ON_INGEST or whether post-ingest ran after a long ingest.",
+    });
+  }
+
+  return summary;
 }

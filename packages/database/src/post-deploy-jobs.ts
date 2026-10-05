@@ -101,3 +101,17 @@ export async function notePostDeployJobError(
     [jobKey, message.slice(0, 2000), JSON.stringify(progress)],
   );
 }
+
+export async function setPostDeployJobLastRun(
+  db: Queryable,
+  jobKey: string,
+  lastRun: Record<string, unknown>,
+): Promise<void> {
+  await db.query(
+    `UPDATE post_deploy_jobs
+     SET progress = jsonb_set(COALESCE(progress, '{}'::jsonb), '{last_run}', $2::jsonb, true),
+         updated_at = now()
+     WHERE job_key = $1`,
+    [jobKey, JSON.stringify(lastRun)],
+  );
+}
