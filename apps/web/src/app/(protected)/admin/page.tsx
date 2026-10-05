@@ -5,15 +5,17 @@ import {
   enrichmentAdminStatus,
   libraryStats,
   listRecentIngestionRuns,
+  listSourceCandidates,
   latestSourcePreviewReports,
   postDeployJobsAdminPanel,
   qualityAdminStatus,
 } from "@alice/database";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
+import { SourceCandidateForm } from "@/components/source-candidate-form";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
@@ -22,6 +24,7 @@ export default async function AdminPage() {
     enrichmentAdminStatus(pool()).catch(() => null),
     latestSourcePreviewReports(pool(), 6).catch(() => []),
     postDeployJobsAdminPanel(pool()).catch(() => null),
+    listSourceCandidates(pool(), 12).catch(() => []),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -34,6 +37,32 @@ export default async function AdminPage() {
       <p className="mt-2 text-xs text-muted">
         Deploy checklist: <code className="text-ink">docs/railway-checklist.md</code>
       </p>
+
+      <section className="mt-8 rounded border border-line bg-white p-4 text-sm">
+        <h2 className="text-sm font-medium">Suggest a new source</h2>
+        <p className="mt-1 text-xs text-muted">
+          Drop a link to a tech hub, award, directory, or programme page. It is stored in{" "}
+          <code className="text-ink">source_candidates</code> for later adapter work — nothing is crawled automatically.
+        </p>
+        <SourceCandidateForm />
+        {sourceIdeas.length > 0 ? (
+          <ul className="mt-6 space-y-3 border-t border-line pt-4 text-xs text-muted">
+            <li className="font-medium text-ink">Recent ideas</li>
+            {sourceIdeas.map((row) => (
+              <li key={row.id}>
+                <p className="font-medium text-ink">{row.name}</p>
+                {row.homepage ? (
+                  <a href={row.homepage} className="text-accent hover:underline break-all" target="_blank" rel="noreferrer">
+                    {row.homepage}
+                  </a>
+                ) : null}
+                {row.notes ? <p className="mt-1">{row.notes}</p> : null}
+                <p className="mt-1">{formatDateTime(String(row.created_at))}</p>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
 
       <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm">
         {Object.entries(stats).map(([key, value]) => (

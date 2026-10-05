@@ -193,6 +193,15 @@ export {
   searchOrganisations,
 } from "./stats.js";
 export {
+  insertSourceCandidate,
+  listSourceCandidates,
+  countSourceCandidates,
+  normalizeCandidateUrl,
+  defaultCandidateName,
+  findSourceCandidateByHomepage,
+  type SourceCandidateRow,
+} from "./source-candidates.js";
+export {
   listCollections,
   getCollectionBySlug,
   createCollection,
