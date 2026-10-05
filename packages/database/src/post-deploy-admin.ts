@@ -1,5 +1,6 @@
 import type { Queryable } from "./pool.js";
 import type { PostDeployJobStatus } from "./post-deploy-jobs.js";
+import { readLastRunFromProgress, type PostDeployJobLastRun } from "./post-deploy-run-summary.js";
 
 export interface PostDeployJobAdminRow {
   job_key: string;
@@ -8,6 +9,7 @@ export interface PostDeployJobAdminRow {
   display_status: string;
   updated_at: Date;
   last_error: string | null;
+  last_run: PostDeployJobLastRun | null;
   counters: Array<{ key: string; label: string; value: number | string }>;
   skipped: Array<{ key: string; reason: string }>;
 }
@@ -19,6 +21,7 @@ export interface PostDeployLastRunBudget {
   activity_ended_at: Date | null;
   minutes_used: number | null;
   jobs_touched: number;
+  runner_stop_reason: string | null;
   note: string;
 }
 
@@ -154,6 +157,7 @@ export async function loadPostDeployJobsAdmin(db: Queryable): Promise<PostDeploy
     display_status: adminStatusLabel(row.status),
     updated_at: row.updated_at,
     last_error: row.last_error,
+    last_run: readLastRunFromProgress(row.progress),
     counters: summarisePostDeployJobCounters({ progress: row.progress ?? {}, result: row.result }),
     skipped: summarisePostDeployJobSkipped(row.progress ?? {}),
   }));
@@ -177,18 +181,20 @@ export async function postDeployLastRunBudget(db: Queryable): Promise<PostDeploy
       activity_ended_at: null,
       minutes_used: null,
       jobs_touched: 0,
+      runner_stop_reason: null,
       note: "No completed ingestion run yet.",
     };
   }
 
+  // Post-deploy runs after ingest; look for job touches in the post-ingest window (not during catalogue crawl).
   const activity = await db.query<{ first_touch: Date | null; last_touch: Date | null; jobs_touched: string }>(
     `SELECT min(updated_at) AS first_touch,
             max(updated_at) AS last_touch,
             count(*)::text AS jobs_touched
      FROM post_deploy_jobs
      WHERE updated_at >= $1::timestamptz
-       AND updated_at <= $2::timestamptz + interval '2 minutes'`,
-    [ingest.started_at, ingest.completed_at],
+       AND updated_at <= $1::timestamptz + interval '45 minutes'`,
+    [ingest.completed_at],
   );
   const touch = activity.rows[0];
   const jobsTouched = Number(touch?.jobs_touched ?? 0);
@@ -199,6 +205,20 @@ export async function postDeployLastRunBudget(db: Queryable): Promise<PostDeploy
     minutesUsed = Math.round(((last.getTime() - first.getTime()) / 60_000) * 10) / 10;
   }
 
+  const lastRunner = await db.query<{ stop_reason: string | null }>(
+    `SELECT progress->'last_run'->>'stop_reason' AS stop_reason
+     FROM post_deploy_jobs
+     WHERE progress ? 'last_run'
+     ORDER BY (progress->'last_run'->>'ended_at')::timestamptz DESC NULLS LAST
+     LIMIT 1`,
+  );
+
+  const ingestMinutes = Math.round(((ingest.completed_at.getTime() - ingest.started_at.getTime()) / 60_000) * 10) / 10;
+  const noPostDeployTouches = jobsTouched === 0;
+  const note = noPostDeployTouches
+    ? `No post_deploy_jobs.updated_at changes within 45m after the latest ingest finished (${ingestMinutes} min ingest). Post-deploy likely did not run (process ended before post-ingest, POST_DEPLOY_JOBS_ON_INGEST=false, or ingest lock skip). Set POST_DEPLOY_BEFORE_INGEST=true or --post-deploy-first for manual runs.`
+    : "Post-deploy activity window starts at ingest completion (jobs run in post-ingest, or first when POST_DEPLOY_BEFORE_INGEST is set).";
+
   return {
     ingest_started_at: ingest.started_at,
     ingest_completed_at: ingest.completed_at,
@@ -206,8 +226,8 @@ export async function postDeployLastRunBudget(db: Queryable): Promise<PostDeploy
     activity_ended_at: last,
     minutes_used: minutesUsed,
     jobs_touched: jobsTouched,
-    note:
-      "Estimated from post_deploy_jobs.updated_at during the latest completed ingest (ingestor budget defaults to POST_DEPLOY_JOBS_MAX_MINUTES=30).",
+    runner_stop_reason: lastRunner.rows[0]?.stop_reason ?? null,
+    note,
   };
 }
 

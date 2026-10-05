@@ -2,6 +2,7 @@ import { closePool, getPool, markInterruptedIngestionRuns } from "@alice/databas
 import { loadDotEnv, log } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
 import { runPostIngestMaintenance } from "./post-ingest.js";
+import { postDeployBeforeIngestEnabled, runPostDeployJobsStep } from "./post-deploy-jobs.js";
 import { resetSupplementalFetchHostPolicy } from "./enrichment-context-fetch.js";
 import { resetRunFailureTracker } from "./run-failure-tracker.js";
 import { runIngestion } from "./pipeline.js";
@@ -46,6 +47,22 @@ async function main(): Promise<void> {
   resetSupplementalFetchHostPolicy();
   resetRunFailureTracker();
   log("info", "ingest_start", { due_only: dueOnly, full, dry_run: dryRun, limit, sources: only });
+
+  let skipPostDeploy = false;
+  if (!dryRun && postDeployBeforeIngestEnabled()) {
+    log("info", "post_deploy_before_ingest", {
+      reason: "POST_DEPLOY_BEFORE_INGEST or --post-deploy-first",
+    });
+    try {
+      await runPostDeployJobsStep(pool, { trigger: "before_ingest" });
+      skipPostDeploy = true;
+    } catch (error) {
+      log("error", "post_deploy_before_ingest_failed", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   const result = await runIngestion({
     sources,
     only,
@@ -68,7 +85,10 @@ async function main(): Promise<void> {
     log("info", "post_ingest_skipped", { reason: "ingest_lock_held" });
   } else if (!dryRun) {
     try {
-      await runPostIngestMaintenance(getPool(), { touchedResourceIds: result.touchedResourceIds });
+      await runPostIngestMaintenance(getPool(), {
+        touchedResourceIds: result.touchedResourceIds,
+        skipPostDeploy,
+      });
     } catch (error) {
       log("warn", "post_ingest_maintenance_failed", {
         message: error instanceof Error ? error.message : String(error),

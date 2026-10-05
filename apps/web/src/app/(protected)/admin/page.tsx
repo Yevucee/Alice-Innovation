@@ -9,7 +9,7 @@ import {
   postDeployJobsAdminPanel,
   qualityAdminStatus,
 } from "@alice/database";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
 
 export default async function AdminPage() {
@@ -123,20 +123,21 @@ export default async function AdminPage() {
         <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
           <h2 className="text-sm font-medium">Post-deploy jobs</h2>
           <p className="mt-1 text-xs text-muted">Read-only queue state from <code className="text-ink">post_deploy_jobs</code>.</p>
+          <p className="mt-2 text-xs text-muted">{postDeploy.last_run_budget.note}</p>
           {postDeploy.last_run_budget.minutes_used != null ? (
             <p className="mt-2 text-muted">
-              Last ingest post-deploy activity: ~{postDeploy.last_run_budget.minutes_used} min (
+              Last post-deploy window: ~{postDeploy.last_run_budget.minutes_used} min (
               {postDeploy.last_run_budget.jobs_touched} job
               {postDeploy.last_run_budget.jobs_touched === 1 ? "" : "s"} touched
-              {postDeploy.last_run_budget.ingest_completed_at
-                ? ` · ingest finished ${formatDate(String(postDeploy.last_run_budget.ingest_completed_at))}`
+              {postDeploy.last_run_budget.runner_stop_reason
+                ? ` · stop ${postDeploy.last_run_budget.runner_stop_reason}`
                 : ""}
-              ). Budget cap on ingestor:{" "}
-              <code className="text-ink">POST_DEPLOY_JOBS_MAX_MINUTES</code> (default 30).
+              {postDeploy.last_run_budget.ingest_completed_at
+                ? ` · after ingest ${formatDateTime(String(postDeploy.last_run_budget.ingest_completed_at))}`
+                : ""}
+              ). Cap: <code className="text-ink">POST_DEPLOY_JOBS_MAX_MINUTES</code> (default 30).
             </p>
-          ) : (
-            <p className="mt-2 text-xs text-muted">{postDeploy.last_run_budget.note}</p>
-          )}
+          ) : null}
           <ul className="mt-4 space-y-4">
             {postDeploy.jobs.map((job) => (
               <li key={job.job_key} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
@@ -145,7 +146,22 @@ export default async function AdminPage() {
                   <span className="text-xs uppercase tracking-wide text-muted">{job.display_status}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted">{job.description}</p>
-                <p className="mt-1 text-xs text-muted">Updated {formatDate(String(job.updated_at))}</p>
+                <p className="mt-1 text-xs text-muted">
+                  Updated {formatDateTime(String(job.updated_at))}
+                </p>
+                {job.last_run ? (
+                  <p className="mt-2 text-xs text-muted">
+                    Last runner session ({job.last_run.trigger}): {formatDateTime(job.last_run.started_at)} →{" "}
+                    {formatDateTime(job.last_run.ended_at)} · {job.last_run.minutes_used} min · {job.last_run.steps}{" "}
+                    step{job.last_run.steps === 1 ? "" : "s"} · {job.last_run.rounds} round
+                    {job.last_run.rounds === 1 ? "" : "s"} · stop {job.last_run.stop_reason}
+                    {job.last_run.offset_before != null || job.last_run.offset_after != null
+                      ? ` · offset ${job.last_run.offset_before ?? "—"}→${job.last_run.offset_after ?? "—"}`
+                      : ""}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-muted">No runner session recorded yet (stored in progress.last_run).</p>
+                )}
                 {job.counters.length > 0 ? (
                   <dl className="mt-2 grid gap-1 sm:grid-cols-2 text-xs text-muted">
                     {job.counters.map((row) => (

@@ -95,6 +95,7 @@ export {
   listPostDeployJobs,
   markPostDeployJobInProgress,
   notePostDeployJobError,
+  setPostDeployJobLastRun,
   updatePostDeployJobProgress,
   type PostDeployJobRow,
   type PostDeployJobStatus,
@@ -108,6 +109,13 @@ export {
   type PostDeployJobAdminRow,
   type PostDeployLastRunBudget,
 } from "./post-deploy-admin.js";
+export {
+  primaryProgressOffset,
+  readLastRunFromProgress,
+  mergeLastRunIntoProgress,
+  type PostDeployJobLastRun,
+  type PostDeployJobStopReason,
+} from "./post-deploy-run-summary.js";
 export {
   inferStageFromText,
   normaliseEnrichmentStageLabel,

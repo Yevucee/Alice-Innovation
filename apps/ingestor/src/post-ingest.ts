@@ -24,15 +24,22 @@ export function enrichBackfillOnIngestEnabled(): boolean {
 
 export async function runPostIngestMaintenance(
   db: Queryable,
-  input: { touchedResourceIds: string[] },
+  input: { touchedResourceIds: string[]; skipPostDeploy?: boolean },
 ): Promise<void> {
+  log("info", "post_ingest_maintenance_start", {
+    skip_post_deploy: Boolean(input.skipPostDeploy),
+  });
   resetRunFailureTracker();
-  try {
-    await runPostDeployJobsStep(db);
-  } catch (error) {
-    log("warn", "post_deploy_jobs_failed", {
-      message: error instanceof Error ? error.message : String(error),
-    });
+  if (!input.skipPostDeploy) {
+    try {
+      await runPostDeployJobsStep(db, { trigger: "post_ingest" });
+    } catch (error) {
+      log("error", "post_deploy_jobs_failed", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  } else {
+    log("info", "post_deploy_jobs_skipped", { reason: "already_ran_before_ingest_this_process" });
   }
 
   try {

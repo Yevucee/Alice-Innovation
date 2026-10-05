@@ -12,7 +12,11 @@ Processes write one JSON object per line: `time`, `severity`, `service`, `event`
 
 A session advisory lock stops a second ingestor from starting while one is running. The second process logs `ingest_skipped` and exits 0 **without** running post-ingest maintenance (enrichment, re-embed, org repair), so overlapping cron/manual runs do not record spurious zero-count backfills.
 
-After deploy **#46** (migration `010_post_deploy_jobs`), each **Run now** on **alice-ingestor** advances the post-deploy queue within a time budget (`POST_DEPLOY_JOBS_MAX_MINUTES`, default 30): **data quality repair** → cohort audit → image backfill → scraper re-ingest (order from migration `013`). Progress is stored in `post_deploy_jobs`; failures are logged only. Disable with `POST_DEPLOY_JOBS_ON_INGEST=false` once all jobs show `completed`.
+After deploy **#46** (migration `010_post_deploy_jobs`), each ingest run can advance the post-deploy queue within a time budget (`POST_DEPLOY_JOBS_MAX_MINUTES`, default 30). Progress lives in `post_deploy_jobs` (`progress`, `progress.last_run` per runner session). Logs emit `post_deploy_job_run_summary` (one line per job) and `post_deploy_jobs_run_complete`.
+
+**Order:** by default post-deploy runs at the **end** of post-ingest (after catalogue ingest). A long manual ingest (e.g. 2+ hours) can finish without reaching post-ingest, so counters never move. Set `POST_DEPLOY_BEFORE_INGEST=true` or pass `--post-deploy-first` on **Run now** to spend the budget **before** ingest; post-ingest skips a second post-deploy pass in the same process.
+
+Disable the queue with `POST_DEPLOY_JOBS_ON_INGEST=false` once all jobs show `completed`. Admin shows `updated_at`, `last_error`, and `progress.last_run` (minutes, steps, offset before/after, stop reason).
 
 ## Access
 
