@@ -23,3 +23,15 @@ test("searchFiltersFromWebBody does not apply Africa quality when query is set",
   });
   assert.equal(filters.qualityBrowse, undefined);
 });
+
+test("searchFiltersFromWebBody applies relaxed Asia quality browse for empty query", () => {
+  const filters = searchFiltersFromWebBody({
+    query: "",
+    continents: ["asia"],
+    limit: 20,
+    offset: 0,
+    sort: "newest",
+  });
+  assert.equal(filters.qualityBrowse, true);
+  assert.equal(filters.qualityBrowseRelaxed, true);
+});

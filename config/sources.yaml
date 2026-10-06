@@ -3412,11 +3412,11 @@ sources:
   - id: j-startup
     name: J-Startup
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 19 (japan). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    description: "PARTIAL: J-Startup company catalogue (/en/startups/*.html). Adapter verified Oct 2026."
     homepage: https://www.j-startup.go.jp/en/
-    collection_url: https://www.j-startup.go.jp/en/
-    enabled: false
-    status: PAUSED
+    collection_url: https://www.j-startup.go.jp/en/startups/
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -3433,7 +3433,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Asia acquisition queue seq 19 (japan). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+      notes: "Preflight: /en/startups/ lists 269+ company pages; html-catalogue adapter verified Oct 2026."
     limits:
       requests_per_minute: 8
       concurrency: 1
@@ -5207,8 +5207,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 75 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://wavemaker.vc/
     collection_url: https://wavemaker.vc/portfolio
-    enabled: false
-    status: PAUSED
+    enabled: true
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -5225,7 +5225,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Asia acquisition queue seq 75 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+      notes: "Preflight: /portfolio/* static HTML; dry-run discovered portfolio companies Oct 2026."
     limits:
       requests_per_minute: 8
       concurrency: 1

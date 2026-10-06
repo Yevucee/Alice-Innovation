@@ -186,7 +186,7 @@
       "batch": "india",
       "name": "Startup India Showcase",
       "homepage": "https://www.startupindia.gov.in/",
-      "collection_url": "https://www.startupindia.gov.in/content/sih/en/startup-schemes/startup-india-showcase.html",
+      "collection_url": "https://www.startupindia.gov.in/content/sih/en/startup-directory.html",
       "priority_first": false,
       "duplicate_of": null,
       "notes": ""
@@ -197,7 +197,7 @@
       "batch": "india",
       "name": "National Startup Awards India",
       "homepage": "https://www.startupindia.gov.in/",
-      "collection_url": "https://www.startupindia.gov.in/content/sih/en/startup-india-awards.html",
+      "collection_url": "https://www.startupindia.gov.in/content/sih/en/startup-india-awards/winners.html",
       "priority_first": false,
       "duplicate_of": null,
       "notes": ""
@@ -208,7 +208,7 @@
       "batch": "india",
       "name": "C-CAMP",
       "homepage": "https://www.ccamp.res.in/",
-      "collection_url": "https://www.ccamp.res.in/startups",
+      "collection_url": "https://www.ccamp.res.in/",
       "priority_first": true,
       "duplicate_of": null,
       "notes": ""
@@ -329,7 +329,7 @@
       "batch": "singapore",
       "name": "NTUitive",
       "homepage": "https://www.ntuitive.sg/",
-      "collection_url": "https://www.ntuitive.sg/portfolio",
+      "collection_url": "https://www.ntuitive.sg/our-startups",
       "priority_first": false,
       "duplicate_of": null,
       "notes": ""
@@ -692,7 +692,7 @@
       "batch": "bangladesh",
       "name": "Startup Bangladesh Portfolio",
       "homepage": "https://startupbangladesh.gov.bd/",
-      "collection_url": "https://startupbangladesh.gov.bd/en/portfolio",
+      "collection_url": "https://startupbangladesh.gov.bd/en",
       "priority_first": true,
       "duplicate_of": null,
       "notes": ""
@@ -758,7 +758,7 @@
       "batch": "central-asia",
       "name": "Astana Hub Company Network",
       "homepage": "https://astanahub.com/",
-      "collection_url": "https://astanahub.com/en/community",
+      "collection_url": "https://astanahub.com/en/startup/",
       "priority_first": true,
       "duplicate_of": null,
       "notes": ""
@@ -889,7 +889,7 @@
       "seq": 66,
       "batch": "china",
       "name": "China International College Students Innovation Competition",
-      "homepage": "http://www.moe.gov.cn/",
+      "homepage": "https://www.moe.gov.cn/",
       "collection_url": null,
       "priority_first": false,
       "duplicate_of": null,
@@ -912,7 +912,7 @@
       "batch": "pan-asian",
       "name": "ADB Ventures",
       "homepage": "https://www.adb.org/",
-      "collection_url": "https://www.adb.org/what-we-do/private-sector/adb-ventures",
+      "collection_url": "https://www.adb.org/what-we-do/private-sector/adb-ventures/impact",
       "priority_first": true,
       "duplicate_of": null,
       "notes": ""
@@ -923,7 +923,7 @@
       "batch": "pan-asian",
       "name": "Circulate Capital",
       "homepage": "https://www.circulatecapital.com/",
-      "collection_url": "https://www.circulatecapital.com/portfolio",
+      "collection_url": "https://www.circulatecapital.com/our-portfolio",
       "priority_first": false,
       "duplicate_of": null,
       "notes": ""
@@ -967,7 +967,7 @@
       "batch": "pan-asian",
       "name": "AppWorks Accelerator",
       "homepage": "https://appworks.tw/",
-      "collection_url": "https://appworks.tw/portfolio",
+      "collection_url": "https://appworks.tw/companies",
       "priority_first": false,
       "duplicate_of": null,
       "notes": ""

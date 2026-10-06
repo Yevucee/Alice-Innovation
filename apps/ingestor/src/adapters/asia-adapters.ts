@@ -4,6 +4,22 @@ import type { SourceAdapter } from "./types.js";
 /** First-wave Asia html-catalogue adapters (expand after `asia:verify` + dry-run). */
 export const asiaAdapters: SourceAdapter[] = [
   createHtmlCatalogueAdapter({
+    id: "j-startup",
+    siteOrigin: "https://www.j-startup.go.jp",
+    pathPattern: /^\/en\/startups\/[^/]+\.html$/i,
+    extraListingUrls: ["https://www.j-startup.go.jp/en/startups/"],
+    resourceType: "ORGANISATION",
+    evidenceBasis: "PROGRAMME_SELECTED",
+  }),
+  createHtmlCatalogueAdapter({
+    id: "j-startup-impact",
+    siteOrigin: "https://www.j-startup.go.jp",
+    pathPattern: /^\/en\/startups\/[^/]+\.html$/i,
+    extraListingUrls: ["https://www.j-startup.go.jp/en/startups/"],
+    resourceType: "ORGANISATION",
+    evidenceBasis: "PROGRAMME_SELECTED",
+  }),
+  createHtmlCatalogueAdapter({
     id: "sginnovate-portfolio",
     siteOrigin: "https://www.sginnovate.com",
     pathPattern: /^\/our-portfolio\/[^/]+\/?$/i,

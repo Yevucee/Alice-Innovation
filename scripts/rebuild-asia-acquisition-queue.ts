@@ -62,9 +62,9 @@ function row(
 const acquisition: Entry[] = [
   // Batch 1 India
   row(1, "india", "birac-technology-portal", "BIRAC Technology Portal", "https://www.birac.nic.in/", "https://www.birac.nic.in/"),
-  row(2, "india", "startup-india-showcase", "Startup India Showcase", "https://www.startupindia.gov.in/", "https://www.startupindia.gov.in/content/sih/en/startup-schemes/startup-india-showcase.html"),
-  row(3, "india", "national-startup-awards-india", "National Startup Awards India", "https://www.startupindia.gov.in/", "https://www.startupindia.gov.in/content/sih/en/startup-india-awards.html"),
-  row(4, "india", "ccamp", "C-CAMP", "https://www.ccamp.res.in/", "https://www.ccamp.res.in/startups"),
+  row(2, "india", "startup-india-showcase", "Startup India Showcase", "https://www.startupindia.gov.in/", "https://www.startupindia.gov.in/content/sih/en/startup-directory.html"),
+  row(3, "india", "national-startup-awards-india", "National Startup Awards India", "https://www.startupindia.gov.in/", "https://www.startupindia.gov.in/content/sih/en/startup-india-awards/winners.html"),
+  row(4, "india", "ccamp", "C-CAMP", "https://www.ccamp.res.in/", "https://www.ccamp.res.in/"),
   row(5, "india", "atal-innovation-mission", "Atal Innovation Mission", "https://aim.gov.in/", "https://aim.gov.in/"),
   row(6, "india", "atal-incubation-centres", "Atal Incubation Centres", "https://aim.gov.in/", "https://aim.gov.in/atal-incubation-centres.php", null, "Same programme family as AIM; separate listing surface."),
   row(7, "india", "birac-bionest", "BIRAC BioNEST", "https://www.birac.nic.in/", "https://www.birac.nic.in/bionest.php", null, "BioNEST incubator network under BIRAC."),
@@ -76,7 +76,7 @@ const acquisition: Entry[] = [
   row(12, "singapore", "ipi-singapore-innovation-marketplace", "IPI Singapore Innovation Marketplace", "https://www.ipi-singapore.org/", "https://www.ipi-singapore.org/"),
   row(13, "singapore", "the-liveability-challenge", "The Liveability Challenge", "https://www.theliveabilitychallenge.org/", "https://www.theliveabilitychallenge.org/"),
   row(14, "singapore", "nus-enterprise", "NUS Enterprise", "https://enterprise.nus.edu.sg/", "https://enterprise.nus.edu.sg/"),
-  row(15, "singapore", "ntuitive", "NTUitive", "https://www.ntuitive.sg/", "https://www.ntuitive.sg/portfolio"),
+  row(15, "singapore", "ntuitive", "NTUitive", "https://www.ntuitive.sg/", "https://www.ntuitive.sg/our-startups"),
   // Batch 3 Taiwan
   row(16, "taiwan", "findit-taiwan", "FINDIT Taiwan", "https://findit.org.tw/", "https://findit.org.tw/"),
   row(17, "taiwan", "startup-terrace-taiwan", "Startup Terrace Taiwan", "https://startupterrace.tw/", "https://startupterrace.tw/"),
@@ -119,7 +119,7 @@ const acquisition: Entry[] = [
   row(46, "philippines", "startup-philippines-directory", "Startup Philippines Startup Directory", "https://startup.gov.ph/", "https://startup.gov.ph/startups"),
   // Batch 12 Bangladesh
   row(47, "bangladesh", "startup-bangladesh", "Startup Bangladesh", "https://startupbangladesh.gov.bd/", "https://startupbangladesh.gov.bd/en"),
-  row(48, "bangladesh", "startup-bangladesh-portfolio", "Startup Bangladesh Portfolio", "https://startupbangladesh.gov.bd/", "https://startupbangladesh.gov.bd/en/portfolio"),
+  row(48, "bangladesh", "startup-bangladesh-portfolio", "Startup Bangladesh Portfolio", "https://startupbangladesh.gov.bd/", "https://startupbangladesh.gov.bd/en"),
   // Batch 13 Pakistan
   row(49, "pakistan", "ignite-pakistan", "Ignite National Technology Fund", "https://ignite.org.pk/", "https://ignite.org.pk/"),
   row(50, "pakistan", "pakistan-national-incubation-centres", "Pakistan National Incubation Centres", "https://ignite.org.pk/", null, null, "Discover individual NICs through Ignite; may become multiple hub sources."),
@@ -128,7 +128,7 @@ const acquisition: Entry[] = [
   // Batch 15 Kazakhstan and Central Asia
   row(52, "central-asia", "astana-hub", "Astana Hub", "https://astanahub.com/", "https://astanahub.com/"),
   row(53, "central-asia", "astana-hub-startup-programmes", "Astana Hub Startup Programmes", "https://astanahub.com/", "https://astanahub.com/en/programs"),
-  row(54, "central-asia", "astana-hub-company-network", "Astana Hub Company Network", "https://astanahub.com/", "https://astanahub.com/en/community"),
+  row(54, "central-asia", "astana-hub-company-network", "Astana Hub Company Network", "https://astanahub.com/", "https://astanahub.com/en/startup/"),
   // Batch 16 UAE
   row(55, "uae", "hub71", "Hub71", "https://www.hub71.com/", "https://www.hub71.com/"),
   row(56, "uae", "hub71-startup-directory", "Hub71 Startup Directory", "https://www.hub71.com/", "https://www.hub71.com/startups"),
@@ -146,12 +146,12 @@ const acquisition: Entry[] = [
   row(66, "china", "china-college-students-innovation-competition", "China International College Students Innovation Competition", "https://www.moe.gov.cn/", null, null, "Use official Ministry of Education competition/result pages during audit."),
   row(67, "china", "hicool", "HICOOL Global Entrepreneur Summit & Entrepreneurship Competition", "https://www.hicool.com/", "https://www.hicool.com/"),
   // Batch 19 Pan-Asian / regional
-  row(68, "pan-asian", "adb-ventures-portfolio", "ADB Ventures", "https://www.adb.org/", "https://www.adb.org/what-we-do/private-sector/adb-ventures"),
-  row(69, "pan-asian", "circulate-capital", "Circulate Capital", "https://www.circulatecapital.com/", "https://www.circulatecapital.com/portfolio"),
+  row(68, "pan-asian", "adb-ventures-portfolio", "ADB Ventures", "https://www.adb.org/", "https://www.adb.org/what-we-do/private-sector/adb-ventures/impact"),
+  row(69, "pan-asian", "circulate-capital", "Circulate Capital", "https://www.circulatecapital.com/", "https://www.circulatecapital.com/our-portfolio"),
   row(70, "pan-asian", "accelerating-asia", "Accelerating Asia", "https://www.acceleratingasia.com/", "https://www.acceleratingasia.com/portfolio"),
   row(71, "pan-asian", "iterative", "Iterative", "https://www.iterative.vc/", "https://www.iterative.vc/"),
   row(72, "pan-asian", "iterative-demo-day", "Iterative Demo Day / companies", "https://www.iterative.vc/", "https://www.iterative.vc/companies"),
-  row(73, "pan-asian", "appworks-accelerator", "AppWorks Accelerator", "https://appworks.tw/", "https://appworks.tw/portfolio"),
+  row(73, "pan-asian", "appworks-accelerator", "AppWorks Accelerator", "https://appworks.tw/", "https://appworks.tw/companies"),
   row(74, "pan-asian", "wavemaker-impact-portfolio", "Wavemaker Impact", "https://wavemakerimpact.com/", "https://wavemakerimpact.com/portfolio"),
   row(75, "pan-asian", "wavemaker-partners-portfolio", "Wavemaker Partners / Ventures", "https://wavemaker.vc/", "https://wavemaker.vc/portfolio"),
   row(76, "pan-asian", "thinkzone-ventures", "ThinkZone Ventures", "https://thinkzone.vc/", "https://thinkzone.vc/portfolio"),
