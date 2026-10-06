@@ -4,6 +4,7 @@ import {
   closePool,
   findSimilar,
   getPool,
+  randomQualityBrowseResource,
   resourcesFromAfrica,
   searchLibrary,
   searchWithEmbedding,
@@ -97,6 +98,12 @@ test("search SQL paths execute against Postgres without parameter errors", async
 
   const africa = await resourcesFromAfrica(pool, 5);
   assert.ok(africa.length > 0, "browse africa qualityBrowse");
+
+  const spotlight = await randomQualityBrowseResource(pool);
+  assert.ok(spotlight, "random quality browse resource");
+  const another = await randomQualityBrowseResource(pool, [spotlight!.resource_id]);
+  assert.ok(another, "random with exclude");
+  assert.notEqual(another!.resource_id, spotlight!.resource_id);
 
   const mechanismApproaches = await searchWithEmbedding(
     pool,

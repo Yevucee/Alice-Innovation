@@ -180,6 +180,7 @@ export {
   resourcesForTaxonomy,
   resourcesForSource,
   resourcesFromAfrica,
+  randomQualityBrowseResource,
   getPerson,
   getOrganisation,
   diverseApproachesForResource,

@@ -4,8 +4,10 @@ import {
   browseSources,
   libraryStats,
   listRecentResources,
+  randomQualityBrowseResource,
   resourcesFromAfrica,
 } from "@alice/database";
+import { RandomShowcase } from "@/components/random-showcase";
 import { ResourceCard } from "@/components/resource-card";
 import { SearchBar } from "@/components/search-bar";
 import { pool } from "@/lib/db";
@@ -23,12 +25,13 @@ const problemLinks = [
 
 export default async function DiscoverPage() {
   const db = pool();
-  const [stats, recent, africa, categories, sources] = await Promise.all([
+  const [stats, recent, africa, categories, sources, spotlight] = await Promise.all([
     libraryStats(db),
     listRecentResources(db, 8),
     resourcesFromAfrica(db, 8),
     browseCategories(db),
     browseSources(db, {}),
+    randomQualityBrowseResource(db),
   ]);
 
   const sectorList = (categories.sectors as Array<{ slug: string; name: string }>).slice(0, 9);
@@ -70,6 +73,8 @@ export default async function DiscoverPage() {
         </div>
       </section>
 
+      <RandomShowcase initial={spotlight} />
+
       <Section title="Recently added" href="/search?sort=newest">
         <CardGrid resources={recent} empty="Run ingest to populate the library." />
       </Section>
@@ -94,7 +99,7 @@ export default async function DiscoverPage() {
         </div>
       </Section>
 
-      <Section title="From Africa">
+      <Section title="From Africa" href="/search?continent=africa&sort=newest" linkLabel="See more">
         <CardGrid resources={africa} empty="No African resources indexed yet." />
       </Section>
 
@@ -117,12 +122,26 @@ export default async function DiscoverPage() {
   );
 }
 
-function Section({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  href,
+  linkLabel = "View all",
+  children,
+}: {
+  title: string;
+  href?: string;
+  linkLabel?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <div className="mb-6 flex items-baseline justify-between gap-4">
         <h2 className="text-lg font-medium">{title}</h2>
-        {href ? <Link href={href} className="text-sm text-muted hover:text-ink">View all</Link> : null}
+        {href ? (
+          <Link href={href} className="text-sm text-muted hover:text-ink">
+            {linkLabel}
+          </Link>
+        ) : null}
       </div>
       {children}
     </section>

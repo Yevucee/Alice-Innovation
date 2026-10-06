@@ -4,7 +4,7 @@ import { libraryStats } from "@alice/database";
 import { log } from "@alice/shared";
 import { requireSession } from "@/lib/api-auth";
 import { pool } from "@/lib/db";
-import { searchWithEmbedding } from "@/lib/search";
+import { searchFiltersFromWebBody, searchWithEmbedding } from "@/lib/search";
 
 const bodySchema = z.object({
   query: z.string().max(500).default(""),
@@ -32,21 +32,7 @@ export async function POST(request: NextRequest) {
   }
   const input = parsed.data;
   try {
-    const found = await searchWithEmbedding(pool(), {
-      query: input.query,
-      resourceTypes: input.resource_types,
-      problems: input.problems,
-      sectors: input.sectors,
-      technologies: input.technologies,
-      countries: input.countries,
-      continents: input.continents,
-      sources: input.sources,
-      evidenceStages: input.evidence_stages,
-      diverse: input.diverse,
-      sort: input.sort ?? "relevance",
-      limit: input.limit,
-      offset: input.offset,
-    });
+    const found = await searchWithEmbedding(pool(), searchFiltersFromWebBody(input));
     log("info", "web_search", {
       vector: found.vector,
       relaxed: found.relaxed,
