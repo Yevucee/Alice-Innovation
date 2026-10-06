@@ -1,5 +1,11 @@
 import type { Queryable } from "./pool.js";
 import { searchWithEmbedding } from "./search-with-embedding.js";
+import {
+  FILTER_PARAM_COUNT,
+  FILTER_QUERY_TEXT_BIND_SQL,
+  FILTER_SQL,
+  filterParams,
+} from "./search-sql.js";
 import type { CompactResource, SearchFilters } from "./search.js";
 import { compactResourcesByIds, searchLibrary } from "./search.js";
 
@@ -57,6 +63,34 @@ export async function resourcesFromAfrica(db: Queryable, limit: number): Promise
     null,
   );
   return found.results;
+}
+
+/** One random resource from the same quality-browse pool as homepage “Recently added”. */
+export async function randomQualityBrowseResource(
+  db: Queryable,
+  excludeIds: string[] = [],
+): Promise<CompactResource | null> {
+  const filters: SearchFilters = {
+    query: "",
+    limit: 1,
+    offset: 0,
+    sort: "newest",
+    qualityBrowse: true,
+  };
+  const params = [...filterParams(filters), excludeIds.length > 0 ? excludeIds : null];
+  const excludeParam = FILTER_PARAM_COUNT + 1;
+  const row = await db.query<{ id: string }>(
+    `SELECT r.id::text
+     FROM resources r
+     WHERE r.active = true AND ($1::text = '' OR $1::text IS NOT NULL) AND ${FILTER_SQL}
+       AND ($${excludeParam}::uuid[] IS NULL OR NOT (r.id = ANY($${excludeParam}::uuid[])))
+     ORDER BY random()
+     LIMIT 1`,
+    params,
+  );
+  if (!row.rows[0]) return null;
+  const [resource] = await compactResourcesByIds(db, [row.rows[0].id]);
+  return resource ?? null;
 }
 
 export async function getPerson(db: Queryable, personId: string): Promise<Record<string, unknown> | null> {
