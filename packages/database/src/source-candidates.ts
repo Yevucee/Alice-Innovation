@@ -6,7 +6,6 @@ import {
   uniquePromotedSourceSlug,
   upsertPromotedSourceInDb,
 } from "./promoted-sources.js";
-import { appendSourceToRegistryYaml } from "@alice/source-registry";
 
 export type SourceCandidateRow = {
   id: string;
@@ -117,12 +116,12 @@ export async function getSourceCandidate(db: Queryable, id: string): Promise<Sou
 export async function promoteSourceCandidateToIngest(
   db: Queryable,
   candidateId: string,
-): Promise<{ row: SourceCandidateRow; source_slug: string; registry_updated: boolean }> {
+): Promise<{ row: SourceCandidateRow; source_slug: string }> {
   const candidate = await getSourceCandidate(db, candidateId);
   if (!candidate) throw new Error("Source candidate not found");
   if (!candidate.homepage) throw new Error("Candidate has no URL");
   if (candidate.source_slug) {
-    return { row: candidate, source_slug: candidate.source_slug, registry_updated: false };
+    return { row: candidate, source_slug: candidate.source_slug };
   }
 
   const homepage = candidate.homepage;
@@ -148,15 +147,5 @@ export async function promoteSourceCandidateToIngest(
   const row = updated.rows[0];
   if (!row) throw new Error("Failed to update source candidate after promote");
 
-  let registry_updated = false;
-  if (process.env.SKIP_SOURCE_REGISTRY_APPEND !== "true") {
-    try {
-      appendSourceToRegistryYaml(record);
-      registry_updated = true;
-    } catch {
-      registry_updated = false;
-    }
-  }
-
-  return { row, source_slug: slug, registry_updated };
+  return { row, source_slug: slug };
 }

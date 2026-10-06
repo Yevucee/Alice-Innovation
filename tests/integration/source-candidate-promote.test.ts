@@ -3,7 +3,6 @@ import test from "node:test";
 import { applyMigrations, closePool, getPool, insertSourceCandidate, promoteSourceCandidateToIngest } from "../../packages/database/src/index.ts";
 
 test("promoteSourceCandidateToIngest creates enabled source and config", async () => {
-  process.env.SKIP_SOURCE_REGISTRY_APPEND = "true";
   const pool = getPool();
   await applyMigrations(pool);
   const { row: candidate } = await insertSourceCandidate(pool, {

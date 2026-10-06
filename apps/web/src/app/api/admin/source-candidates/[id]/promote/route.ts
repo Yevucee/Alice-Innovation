@@ -22,7 +22,6 @@ export async function POST(
     const result = await promoteSourceCandidateToIngest(pool(), id);
     return NextResponse.json({
       source_slug: result.source_slug,
-      registry_updated: result.registry_updated,
       candidate: result.row,
     });
   } catch (error) {
