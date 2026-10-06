@@ -71,6 +71,13 @@ export const FILTER_SQL = `
       JOIN sources s_af ON s_af.id = si_af.source_id
       WHERE l_af.resource_id = r.id AND s_af.enabled AND s_af.category = 'africa-innovation'
     )
+  ) OR (
+    $9::text[] IS NOT NULL AND 'Asia' = ANY($9::text[]) AND EXISTS (
+      SELECT 1 FROM resource_source_links l_as
+      JOIN source_items si_as ON si_as.id = l_as.source_item_id
+      JOIN sources s_as ON s_as.id = si_as.source_id
+      WHERE l_as.resource_id = r.id AND s_as.enabled AND s_as.category = 'asia-innovation'
+    )
   ))
   AND ($6::text[] IS NULL OR EXISTS (
     SELECT 1 FROM resource_sectors rs
