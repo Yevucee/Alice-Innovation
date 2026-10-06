@@ -5,15 +5,18 @@ import {
   enrichmentAdminStatus,
   libraryStats,
   listRecentIngestionRuns,
+  listSourceCandidates,
   latestSourcePreviewReports,
   postDeployJobsAdminPanel,
   qualityAdminStatus,
 } from "@alice/database";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
+import { SourceCandidateForm } from "@/components/source-candidate-form";
+import { SourceCandidateList } from "@/components/source-candidate-list";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
@@ -22,6 +25,7 @@ export default async function AdminPage() {
     enrichmentAdminStatus(pool()).catch(() => null),
     latestSourcePreviewReports(pool(), 6).catch(() => []),
     postDeployJobsAdminPanel(pool()).catch(() => null),
+    listSourceCandidates(pool(), 12).catch(() => []),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -34,6 +38,27 @@ export default async function AdminPage() {
       <p className="mt-2 text-xs text-muted">
         Deploy checklist: <code className="text-ink">docs/railway-checklist.md</code>
       </p>
+
+      <section className="mt-8 rounded border border-line bg-white p-4 text-sm">
+        <h2 className="text-sm font-medium">Suggest a new source</h2>
+        <p className="mt-1 text-xs text-muted">
+          Drop a link to a tech hub, award, directory, or programme page. It is stored in{" "}
+          <code className="text-ink">source_candidates</code> for later adapter work — nothing is crawled until you click{" "}
+          <strong className="font-medium text-ink">Add to ingest list</strong> (creates an enabled PARTIAL source for the next ingest run).
+        </p>
+        <SourceCandidateForm />
+        <SourceCandidateList
+          items={sourceIdeas.map((row) => ({
+            id: row.id,
+            name: row.name,
+            homepage: row.homepage,
+            notes: row.notes,
+            status: row.status,
+            source_slug: row.source_slug,
+            created_at: String(row.created_at),
+          }))}
+        />
+      </section>
 
       <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm">
         {Object.entries(stats).map(([key, value]) => (

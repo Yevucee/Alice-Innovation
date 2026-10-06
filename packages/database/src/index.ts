@@ -193,6 +193,24 @@ export {
   searchOrganisations,
 } from "./stats.js";
 export {
+  insertSourceCandidate,
+  listSourceCandidates,
+  countSourceCandidates,
+  getSourceCandidate,
+  promoteSourceCandidateToIngest,
+  normalizeCandidateUrl,
+  defaultCandidateName,
+  findSourceCandidateByHomepage,
+  type SourceCandidateRow,
+} from "./source-candidates.js";
+export {
+  inferPromotedCatalogueConfig,
+  loadPromotedCatalogueConfigs,
+  loadPromotedSourceRecords,
+  uniquePromotedSourceSlug,
+  type PromotedCatalogueConfigRow,
+} from "./promoted-sources.js";
+export {
   listCollections,
   getCollectionBySlug,
   createCollection,

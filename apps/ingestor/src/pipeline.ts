@@ -16,7 +16,7 @@ import type { NormalisedDraft } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
 import { fetchText, HttpStatusError } from "./http.js";
 import { robotsAllows } from "./robots.js";
-import { getAdapter } from "./adapters/registry.js";
+import { getAdapter, ensurePromotedCatalogueAdapters } from "./adapters/registry.js";
 import { AccessBlockedError, type AdapterContext, type DiscoveredRef } from "./adapters/types.js";
 import { createHostPacedFetch, ingestDetailConcurrency, mapWithConcurrency } from "./detail-fetch.js";
 import { createIngestSourceLoopBudget } from "./ingest-loop-budget.js";
@@ -108,6 +108,7 @@ export async function runIngestion(
   const ingestLoopStartedAt = Date.now();
   const sourceLoopBudget = createIngestSourceLoopBudget(ingestLoopStartedAt);
   try {
+    await ensurePromotedCatalogueAdapters(pool);
     const selected = options.sources.filter((source) => {
       if (options.only && options.only.length > 0) return options.only.includes(source.id);
       return source.enabled;
