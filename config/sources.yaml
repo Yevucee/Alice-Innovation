@@ -2832,3 +2832,2948 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
+  # --- Asia acquisition queue (auto-registered) ---
+  - id: birac-technology-portal
+    name: BIRAC Technology Portal
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 1 (india). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.birac.nic.in/
+    collection_url: https://www.birac.nic.in/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: birac-technology-portal
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 1 (india). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-india-showcase
+    name: Startup India Showcase
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 2 (india). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.startupindia.gov.in/
+    collection_url: https://www.startupindia.gov.in/content/sih/en/startup-schemes/startup-india-showcase.html
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-india-showcase
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 2 (india). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: national-startup-awards-india
+    name: National Startup Awards India
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 3 (india). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.startupindia.gov.in/
+    collection_url: https://www.startupindia.gov.in/content/sih/en/startup-india-awards.html
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: national-startup-awards-india
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 3 (india). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: ccamp
+    name: C-CAMP
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 4 (india). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.ccamp.res.in/
+    collection_url: https://www.ccamp.res.in/startups
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: ccamp
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 4 (india). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: atal-innovation-mission
+    name: Atal Innovation Mission
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 5 (india). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://aim.gov.in/
+    collection_url: https://aim.gov.in/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: atal-innovation-mission
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 5 (india). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: atal-incubation-centres
+    name: Atal Incubation Centres
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 6 (india). Same programme family as AIM; separate listing surface. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://aim.gov.in/
+    collection_url: https://aim.gov.in/atal-incubation-centres.php
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: atal-incubation-centres
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 6 (india). Same programme family as AIM; separate listing surface. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: birac-bionest
+    name: BIRAC BioNEST
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 7 (india). BioNEST incubator network under BIRAC. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.birac.nic.in/
+    collection_url: https://www.birac.nic.in/bionest.php
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: birac-bionest
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 7 (india). BioNEST incubator network under BIRAC. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-sg
+    name: Startup SG
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 8 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.startupsg.gov.sg/
+    collection_url: https://www.startupsg.gov.sg/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-sg
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 8 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: sginnovate-portfolio
+    name: SGInnovate Portfolio
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 9 (singapore). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.sginnovate.com/
+    collection_url: https://www.sginnovate.com/our-portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: sginnovate-portfolio
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 9 (singapore). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: open-innovation-network-singapore
+    name: Singapore Open Innovation Network
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 10 (singapore). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.openinnovationnetwork.gov.sg/
+    collection_url: https://www.openinnovationnetwork.gov.sg/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: open-innovation-network-singapore
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 10 (singapore). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: switch-slingshot
+    name: SWITCH SLINGSHOT
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 11 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.switchsg.com/
+    collection_url: https://www.switchsg.com/slingshot
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: switch-slingshot
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 11 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: ipi-singapore-innovation-marketplace
+    name: IPI Singapore Innovation Marketplace
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 12 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.ipi-singapore.org/
+    collection_url: https://www.ipi-singapore.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: ipi-singapore-innovation-marketplace
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 12 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: the-liveability-challenge
+    name: The Liveability Challenge
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 13 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.theliveabilitychallenge.org/
+    collection_url: https://www.theliveabilitychallenge.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: the-liveability-challenge
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 13 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: nus-enterprise
+    name: NUS Enterprise
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 14 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://enterprise.nus.edu.sg/
+    collection_url: https://enterprise.nus.edu.sg/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: nus-enterprise
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 14 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: ntuitive
+    name: NTUitive
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 15 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.ntuitive.sg/
+    collection_url: https://www.ntuitive.sg/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: ntuitive
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 15 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: findit-taiwan
+    name: FINDIT Taiwan
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 16 (taiwan). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://findit.org.tw/
+    collection_url: https://findit.org.tw/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: findit-taiwan
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 16 (taiwan). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-terrace-taiwan
+    name: Startup Terrace Taiwan
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 17 (taiwan). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startupterrace.tw/
+    collection_url: https://startupterrace.tw/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-terrace-taiwan
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 17 (taiwan). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-terrace-kaohsiung
+    name: Startup Terrace Kaohsiung / Asia New Bay Area
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 18 (taiwan). duplicate_of=startup-terrace-taiwan. Kaohsiung / ANBA listing on Startup Terrace. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startupterrace.tw/
+    collection_url: https://startupterrace.tw/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-terrace-kaohsiung
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 18 (taiwan). duplicate_of=startup-terrace-taiwan. Kaohsiung / ANBA listing on Startup Terrace. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: j-startup
+    name: J-Startup
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 19 (japan). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.j-startup.go.jp/en/
+    collection_url: https://www.j-startup.go.jp/en/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: j-startup
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 19 (japan). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: j-startup-impact
+    name: J-Startup Impact
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 20 (japan). duplicate_of=j-startup. Ingest Impact designation separately from core J-Startup list. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.j-startup.go.jp/en/
+    collection_url: https://www.j-startup.go.jp/en/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: j-startup-impact
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 20 (japan). duplicate_of=j-startup. Ingest Impact designation separately from core J-Startup list. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: seoul-startup-plus
+    name: Seoul Startup Plus
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 21 (south-korea). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.seoulstartuphub.com/
+    collection_url: https://www.seoulstartuphub.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: seoul-startup-plus
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 21 (south-korea). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: dcamp-startup-directory
+    name: D.CAMP Startup Directory
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 22 (south-korea). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://dcamp.kr/
+    collection_url: https://dcamp.kr/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: dcamp-startup-directory
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 22 (south-korea). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: seoul-bio-hub
+    name: Seoul Bio Hub
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 23 (south-korea). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.seoulbiohub.or.kr/
+    collection_url: https://www.seoulbiohub.or.kr/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: seoul-bio-hub
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 23 (south-korea). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: k-startup-grand-challenge
+    name: K-Startup Grand Challenge
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 24 (south-korea). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.k-startupgc.org/
+    collection_url: https://www.k-startupgc.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: k-startup-grand-challenge
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 24 (south-korea). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: kised
+    name: KISED
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 25 (south-korea). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.kised.or.kr/
+    collection_url: https://www.kised.or.kr/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kised
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 25 (south-korea). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: hkstp-company-directory
+    name: Hong Kong Science and Technology Parks Company Directory
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 26 (hong-kong). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.hkstp.org/
+    collection_url: https://www.hkstp.org/en/directory
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hkstp-company-directory
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 26 (hong-kong). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: hkstp-elite-portfolio
+    name: HKSTP Elite Portfolio
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 27 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.hkstp.org/
+    collection_url: https://www.hkstp.org/en/elite
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hkstp-elite-portfolio
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 27 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: cyberport
+    name: Cyberport
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 28 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.cyberport.hk/
+    collection_url: https://www.cyberport.hk/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cyberport
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 28 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: cyberport-incubation-programme
+    name: Cyberport Incubation Programme
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 29 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.cyberport.hk/
+    collection_url: https://www.cyberport.hk/en/about_cyberport/cyberport_incubation_programme
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cyberport-incubation-programme
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 29 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: hkust-entrepreneurship-center
+    name: HKUST Entrepreneurship / Technology Commercialisation
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 30 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://ec.hkust.edu.hk/
+    collection_url: https://ec.hkust.edu.hk/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hkust-entrepreneurship-center
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 30 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-thailand-ecosystem
+    name: Startup Thailand Ecosystem
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 31 (thailand). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startupthailand.org/
+    collection_url: https://startupthailand.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-thailand-ecosystem
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 31 (thailand). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: nia-thailand
+    name: National Innovation Agency Thailand
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 32 (thailand). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.nia.or.th/
+    collection_url: https://www.nia.or.th/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: nia-thailand
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 32 (thailand). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: nia-innovation-catalogue
+    name: NIA Innovation Product / Innovation Catalogue
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 33 (thailand). Locate current public product catalogue during audit. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.nia.or.th/
+    collection_url: https://www.nia.or.th/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: nia-innovation-catalogue
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 33 (thailand). Locate current public product catalogue during audit. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: mystartup-malaysia
+    name: MYStartup Malaysia
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 34 (malaysia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://mystartup.my/
+    collection_url: https://mystartup.my/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: mystartup-malaysia
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 34 (malaysia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: mystartup-startup-directory
+    name: MYStartup Startup Directory
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 35 (malaysia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://mystartup.my/
+    collection_url: https://mystartup.my/directory
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: mystartup-startup-directory
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 35 (malaysia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: cradle-fund
+    name: Cradle Fund
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 36 (malaysia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.cradle.com.my/
+    collection_url: https://www.cradle.com.my/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cradle-fund
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 36 (malaysia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: cradle-seed-ventures
+    name: Cradle Seed Ventures
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 37 (malaysia). Verify current portfolio route from Cradle site during audit. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.cradle.com.my/
+    collection_url: https://www.cradle.com.my/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cradle-seed-ventures
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 37 (malaysia). Verify current portfolio route from Cradle site during audit. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-studio-indonesia
+    name: Startup Studio Indonesia
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 38 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startupstudio.id/
+    collection_url: https://startupstudio.id/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-studio-indonesia
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 38 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: 1000-startup-digital
+    name: 1000 Startup Digital
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 39 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://1000startupdigital.id/
+    collection_url: https://1000startupdigital.id/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: 1000-startup-digital
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 39 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: climate-impact-innovations-challenge
+    name: Climate Impact Innovations Challenge
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 40 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://climateimpact.id/
+    collection_url: https://climateimpact.id/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: climate-impact-innovations-challenge
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 40 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: indigo-indonesia
+    name: Indigo
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 41 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://indigo.id/
+    collection_url: https://indigo.id/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: indigo-indonesia
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 41 (indonesia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-wheel
+    name: Startup Wheel
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 42 (vietnam). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startupwheel.vn/
+    collection_url: https://startupwheel.vn/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-wheel
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 42 (vietnam). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: techfest-vietnam
+    name: TECHFEST Vietnam
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 43 (vietnam). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://techfest.vn/
+    collection_url: https://techfest.vn/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: techfest-vietnam
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 43 (vietnam). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: vietnam-nic
+    name: Vietnam National Innovation Center
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 44 (vietnam). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://nic.gov.vn/
+    collection_url: https://nic.gov.vn/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: vietnam-nic
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 44 (vietnam). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-philippines
+    name: Startup Philippines
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 45 (philippines). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startup.gov.ph/
+    collection_url: https://startup.gov.ph/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-philippines
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 45 (philippines). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-philippines-directory
+    name: Startup Philippines Startup Directory
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 46 (philippines). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startup.gov.ph/
+    collection_url: https://startup.gov.ph/startups
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-philippines-directory
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 46 (philippines). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-bangladesh
+    name: Startup Bangladesh
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 47 (bangladesh). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startupbangladesh.gov.bd/
+    collection_url: https://startupbangladesh.gov.bd/en
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-bangladesh
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 47 (bangladesh). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-bangladesh-portfolio
+    name: Startup Bangladesh Portfolio
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 48 (bangladesh). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://startupbangladesh.gov.bd/
+    collection_url: https://startupbangladesh.gov.bd/en/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-bangladesh-portfolio
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 48 (bangladesh). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: ignite-pakistan
+    name: Ignite National Technology Fund
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 49 (pakistan). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://ignite.org.pk/
+    collection_url: https://ignite.org.pk/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: ignite-pakistan
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 49 (pakistan). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: pakistan-national-incubation-centres
+    name: Pakistan National Incubation Centres
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 50 (pakistan). Discover individual NICs through Ignite; may become multiple hub sources. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://ignite.org.pk/
+    collection_url: https://ignite.org.pk/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: pakistan-national-incubation-centres
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 50 (pakistan). Discover individual NICs through Ignite; may become multiple hub sources. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-sri-lanka
+    name: Startup Sri Lanka
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 51 (sri-lanka). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.startupsl.lk/
+    collection_url: https://www.startupsl.lk/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-sri-lanka
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 51 (sri-lanka). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: astana-hub
+    name: Astana Hub
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 52 (central-asia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://astanahub.com/
+    collection_url: https://astanahub.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: astana-hub
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 52 (central-asia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: astana-hub-startup-programmes
+    name: Astana Hub Startup Programmes
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 53 (central-asia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://astanahub.com/
+    collection_url: https://astanahub.com/en/programs
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: astana-hub-startup-programmes
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 53 (central-asia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: astana-hub-company-network
+    name: Astana Hub Company Network
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 54 (central-asia). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://astanahub.com/
+    collection_url: https://astanahub.com/en/community
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: astana-hub-company-network
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 54 (central-asia). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: hub71
+    name: Hub71
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 55 (uae). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.hub71.com/
+    collection_url: https://www.hub71.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hub71
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 55 (uae). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: hub71-startup-directory
+    name: Hub71 Startup Directory
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 56 (uae). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.hub71.com/
+    collection_url: https://www.hub71.com/startups
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hub71-startup-directory
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 56 (uae). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: sheraa
+    name: Sheraa
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 57 (uae). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://sheraa.ae/
+    collection_url: https://sheraa.ae/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: sheraa
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 57 (uae). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: in5-dubai
+    name: in5 Dubai
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 58 (uae). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://infive.ae/
+    collection_url: https://infive.ae/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: in5-dubai
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 58 (uae). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: kaust-innovation
+    name: KAUST Innovation
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 59 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://innovation.kaust.edu.sa/
+    collection_url: https://innovation.kaust.edu.sa/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kaust-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 59 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: kaust-innovation-ventures
+    name: KAUST Innovation Ventures
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 60 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://innovation.kaust.edu.sa/
+    collection_url: https://innovation.kaust.edu.sa/ventures
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kaust-innovation-ventures
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 60 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: kaust-taqadam
+    name: KAUST Entrepreneurship Programmes / TAQADAM
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 61 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://entrepreneurship.kaust.edu.sa/
+    collection_url: https://entrepreneurship.kaust.edu.sa/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kaust-taqadam
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 61 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: kaust-scalex-portfolio
+    name: KAUST ScaleX Portfolio
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 62 (saudi-arabia). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://entrepreneurship.kaust.edu.sa/
+    collection_url: https://entrepreneurship.kaust.edu.sa/portfolio/scalex
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kaust-scalex-portfolio
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 62 (saudi-arabia). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: kaust-entrepreneurial-spinouts
+    name: KAUST entrepreneurial spinouts
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 63 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://innovation.kaust.edu.sa/
+    collection_url: https://innovation.kaust.edu.sa/spinouts
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kaust-entrepreneurial-spinouts
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 63 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: china-innovation-entrepreneurship-competition
+    name: "China Innovation & Entrepreneurship Competition"
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 64 (china). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.cxcyds.com/
+    collection_url: https://www.cxcyds.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: china-innovation-entrepreneurship-competition
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 64 (china). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: startup-in-shanghai
+    name: Startup in Shanghai / Shanghai Innovation Competition
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 65 (china). Use official Shanghai Government and competition pages discovered during audit. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.shanghai.gov.cn/
+    collection_url: https://www.shanghai.gov.cn/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: startup-in-shanghai
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 65 (china). Use official Shanghai Government and competition pages discovered during audit. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: china-college-students-innovation-competition
+    name: China International College Students Innovation Competition
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 66 (china). Use official Ministry of Education competition/result pages during audit. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.moe.gov.cn/
+    collection_url: https://www.moe.gov.cn/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: china-college-students-innovation-competition
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 66 (china). Use official Ministry of Education competition/result pages during audit. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: hicool
+    name: "HICOOL Global Entrepreneur Summit & Entrepreneurship Competition"
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 67 (china). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.hicool.com/
+    collection_url: https://www.hicool.com/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hicool
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 67 (china). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: adb-ventures-portfolio
+    name: ADB Ventures
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 68 (pan-asian). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.adb.org/
+    collection_url: https://www.adb.org/what-we-do/private-sector/adb-ventures
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: adb-ventures-portfolio
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 68 (pan-asian). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: circulate-capital
+    name: Circulate Capital
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 69 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.circulatecapital.com/
+    collection_url: https://www.circulatecapital.com/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: circulate-capital
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 69 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: accelerating-asia
+    name: Accelerating Asia
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 70 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.acceleratingasia.com/
+    collection_url: https://www.acceleratingasia.com/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: accelerating-asia
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 70 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: iterative
+    name: Iterative
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 71 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.iterative.vc/
+    collection_url: https://www.iterative.vc/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: iterative
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 71 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: iterative-demo-day
+    name: Iterative Demo Day / companies
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 72 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.iterative.vc/
+    collection_url: https://www.iterative.vc/companies
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: iterative-demo-day
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 72 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: appworks-accelerator
+    name: AppWorks Accelerator
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 73 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://appworks.tw/
+    collection_url: https://appworks.tw/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: appworks-accelerator
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 73 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: wavemaker-impact-portfolio
+    name: Wavemaker Impact
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 74 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://wavemakerimpact.com/
+    collection_url: https://wavemakerimpact.com/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: wavemaker-impact-portfolio
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 74 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: wavemaker-partners-portfolio
+    name: Wavemaker Partners / Ventures
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 75 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://wavemaker.vc/
+    collection_url: https://wavemaker.vc/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: wavemaker-partners-portfolio
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 75 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: thinkzone-ventures
+    name: ThinkZone Ventures
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 76 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://thinkzone.vc/
+    collection_url: https://thinkzone.vc/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: thinkzone-ventures
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 76 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: insignia-ventures-partners
+    name: Insignia Ventures Partners
+    category: asia-innovation
+    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 77 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.insignia.vc/
+    collection_url: https://www.insignia.vc/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: insignia-ventures-partners
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 77 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: iit-bombay-innovation
+    name: "IIT Bombay Innovation & Entrepreneurship"
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 78 (university). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.iitb.ac.in/
+    collection_url: https://www.sineiitb.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: iit-bombay-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 78 (university). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: iit-delhi-innovation
+    name: "IIT Delhi Innovation & Incubation"
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 79 (university). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://home.iitd.ac.in/
+    collection_url: https://www.iitd-incubation.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: iit-delhi-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 79 (university). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: iit-madras-innovation
+    name: IIT Madras Incubation Cell
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 80 (university). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.iitm.ac.in/
+    collection_url: https://www.iitmic.org/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: iit-madras-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 80 (university). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: iit-kanpur-innovation
+    name: IIT Kanpur SIIC
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 81 (university). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.iitk.ac.in/
+    collection_url: https://www.iitk.ac.in/siic
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: iit-kanpur-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 81 (university). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: iit-kharagpur-innovation
+    name: IIT Kharagpur Rajendra Mishra School Innovation
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 82 (university). Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.iitkgp.ac.in/
+    collection_url: https://www.iitkgp.ac.in/department/IP
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: iit-kharagpur-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 82 (university). Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: nus-enterprise-innovation
+    name: NUS Enterprise Innovation
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 83 (university). duplicate_of=nus-enterprise. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://enterprise.nus.edu.sg/
+    collection_url: https://enterprise.nus.edu.sg/startups
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: nus-enterprise-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 83 (university). duplicate_of=nus-enterprise. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: ntu-innovation
+    name: "NTU Innovation & Entrepreneurship"
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 84 (university). duplicate_of=ntuitive-portfolio. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.ntu.edu.sg/
+    collection_url: https://www.ntuitive.sg/portfolio
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: ntu-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 84 (university). duplicate_of=ntuitive-portfolio. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: hkust-innovation
+    name: "HKUST Innovation & Entrepreneurship"
+    category: asia-innovation
+    description: "PAUSED: Asia source (university). Asia acquisition queue seq 85 (university). duplicate_of=hkust-entrepreneurship-center. Verify collection_url via npm run asia:verify before enabling."
+    homepage: https://www.hkust.edu.hk/
+    collection_url: https://ec.hkust.edu.hk/startups
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: hkust-innovation
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Asia acquisition queue seq 85 (university). duplicate_of=hkust-entrepreneurship-center. Verify collection_url via npm run asia:verify before enabling."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: e27
+    name: e27
+    category: general-innovation
+    description: "PAUSED: Asia source (blocked). Asia acquisition queue seq 87 (blocked). BLOCKED terms; manual only. Manual/reference only; do not crawl without terms review."
+    homepage: https://e27.co/
+    collection_url: https://e27.co/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: e27
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: Asia acquisition queue seq 87 (blocked). BLOCKED terms; manual only. Manual/reference only; do not crawl without terms review.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: tech-in-asia
+    name: Tech in Asia
+    category: general-innovation
+    description: "PAUSED: Asia source (blocked). Asia acquisition queue seq 88 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review."
+    homepage: https://www.techinasia.com/
+    collection_url: https://www.techinasia.com/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: tech-in-asia
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: Asia acquisition queue seq 88 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: crunchbase
+    name: Crunchbase
+    category: general-innovation
+    description: "PAUSED: Asia source (blocked). Asia acquisition queue seq 89 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review."
+    homepage: https://www.crunchbase.com/
+    collection_url: https://www.crunchbase.com/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: crunchbase
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: Asia acquisition queue seq 89 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: tracxn
+    name: Tracxn
+    category: general-innovation
+    description: "PAUSED: Asia source (blocked). Asia acquisition queue seq 90 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review."
+    homepage: https://tracxn.com/
+    collection_url: https://tracxn.com/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: tracxn
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: Asia acquisition queue seq 90 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: dealroom
+    name: Dealroom
+    category: general-innovation
+    description: "PAUSED: Asia source (blocked). Asia acquisition queue seq 91 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review."
+    homepage: https://dealroom.co/
+    collection_url: https://dealroom.co/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: dealroom
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: Asia acquisition queue seq 91 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: pitchbook
+    name: PitchBook
+    category: general-innovation
+    description: "PAUSED: Asia source (blocked). Asia acquisition queue seq 92 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review."
+    homepage: https://pitchbook.com/
+    collection_url: https://pitchbook.com/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: pitchbook
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: Asia acquisition queue seq 92 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
+  - id: cb-insights
+    name: CB Insights
+    category: general-innovation
+    description: "PAUSED: Asia source (blocked). Asia acquisition queue seq 93 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review."
+    homepage: https://www.cbinsights.com/
+    collection_url: https://www.cbinsights.com/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cb-insights
+    access:
+      class: PUBLIC
+      status: UNVERIFIED_COLLECTION
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: Asia acquisition queue seq 93 (blocked). Tier blocked; manual only. Manual/reference only; do not crawl without terms review.
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Added from asia-acquisition-queue.json; adapter not verified.
+
