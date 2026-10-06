@@ -1,7 +1,7 @@
 import type { Queryable } from "@alice/database";
 import { log } from "@alice/shared";
 import { fetchText } from "./http.js";
-import { getRunFailureTracker } from "./run-failure-tracker.js";
+import { resetImageBackfillFailureTracker } from "./image-backfill-failure-tracker.js";
 import { resolveValidatedPageImageUrl } from "./image-validate.js";
 import { isUsableImageUrl, resolvePageImageUrl } from "./adapters/draft.js";
 
@@ -154,7 +154,7 @@ export async function runPostIngestImageBackfill(
     timeoutMs,
     validateRemote: true,
     minIntervalMs: 600,
-    failureTracker: getRunFailureTracker(),
+    failureTracker: resetImageBackfillFailureTracker(),
   });
   log("info", "post_ingest_image_backfill", { ...summary });
   return summary;

@@ -26,7 +26,7 @@ export default async function DiscoverPage() {
   const [stats, recent, africa, categories, sources] = await Promise.all([
     libraryStats(db),
     listRecentResources(db, 8),
-    resourcesFromAfrica(db, 6),
+    resourcesFromAfrica(db, 8),
     browseCategories(db),
     browseSources(db, {}),
   ]);

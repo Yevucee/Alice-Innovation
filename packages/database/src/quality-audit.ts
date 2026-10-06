@@ -72,6 +72,7 @@ export async function loadResourcesForQualityAudit(
   source_slug: string | null;
   url: string | null;
   raw_metadata: Record<string, unknown>;
+  quality_audit_verified_at: Date | null;
 }>> {
   const rows = await db.query(
     `SELECT r.id::text,
@@ -100,7 +101,8 @@ export async function loadResourcesForQualityAudit(
               WHERE l.resource_id = r.id
               ORDER BY si.last_seen_at DESC
               LIMIT 1
-            ), '{}'::jsonb) AS raw_metadata
+            ), '{}'::jsonb) AS raw_metadata,
+            r.quality_audit_verified_at
      FROM resources r
      WHERE r.active
        AND ($1::uuid[] IS NULL OR r.id = ANY($1::uuid[]))
@@ -119,6 +121,7 @@ export async function loadResourcesForQualityAudit(
     source_slug: string | null;
     url: string | null;
     raw_metadata: Record<string, unknown>;
+    quality_audit_verified_at: Date | null;
   }>;
 }
 
@@ -139,6 +142,12 @@ export async function runQualityAudit(
   for (const resource of resources) {
     if (resource.review_status === "NEEDS_REVIEW" || resource.review_status === "ARCHIVED" || resource.review_status === "SOURCE_LIMITED") {
       continue;
+    }
+    if (resource.quality_audit_verified_at) {
+      const verifiedMs = new Date(resource.quality_audit_verified_at).getTime();
+      if (verifiedMs > Date.now() - 30 * 24 * 60 * 60 * 1000) {
+        continue;
+      }
     }
     const reasons = auditDraftShape({
       title: resource.title,
@@ -204,7 +213,11 @@ export async function runQualityAudit(
              review_reason_codes = $2::text[],
              updated_at = now()
          WHERE id = $1::uuid
-           AND review_status NOT IN ('ARCHIVED', 'ALICE_PICK', 'REVIEWED', 'SOURCE_LIMITED')`,
+           AND review_status NOT IN ('ARCHIVED', 'ALICE_PICK', 'REVIEWED', 'SOURCE_LIMITED')
+           AND (
+             review_status <> 'AUTO_INGESTED'
+             OR review_reason_codes IS DISTINCT FROM $2::text[]
+           )`,
         [row.id, row.reason_codes],
       );
     }

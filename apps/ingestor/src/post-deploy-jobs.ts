@@ -11,6 +11,7 @@ import {
   runDataQualityRepairBatch,
   runEmbeddingBackfillForResourceIds,
   runRestoreTitleMatchedOrganisationsBatch,
+  runAllCapsTitleRepairBatch,
   backfillReviewReasonCodesBatch,
   setPostDeployJobLastRun,
   updatePostDeployJobProgress,
@@ -32,6 +33,7 @@ import type { AdapterContext } from "./adapters/types.js";
 import { runOrgRecoveryFromSourceBatch } from "./org-recovery-job.js";
 import { runQualityContentBackfillBatch } from "./quality-content-backfill-job.js";
 import { runNeedsReviewReconcileJobBatch, reembedReconcileBatch } from "./needs-review-reconcile-job.js";
+import { resetImageBackfillFailureTracker } from "./image-backfill-failure-tracker.js";
 import { getRunFailureTracker, resetRunFailureTracker } from "./run-failure-tracker.js";
 
 const REINGEST_SOURCES = [
@@ -383,7 +385,7 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
 
   const listingRuns = Number(progress.listing_runs ?? 0) + 1;
   const listingUpdated = Number(progress.listing_updated ?? 0) + updated;
-  const nextIndex = rows.length < imageBackfillPerRun() ? sourceIndex + 1 : sourceIndex;
+  const nextIndex = rows.length < imageBackfillPerRun() || updated === 0 ? sourceIndex + 1 : sourceIndex;
   return {
     ...progress,
     listing_source_index: nextIndex,
@@ -393,6 +395,17 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
     last_listing_source: sourceSlug,
     last_listing_updated: updated,
   };
+}
+
+function shouldAdvanceImageSourceIndex(
+  rowCount: number,
+  summary: { updated: number; skipped: number },
+): boolean {
+  const perRun = imageBackfillPerRun();
+  if (rowCount < perRun) return true;
+  if (summary.updated > 0) return false;
+  if (rowCount > 0 && summary.skipped === rowCount) return true;
+  return false;
 }
 
 async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -411,9 +424,9 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
       timeoutMs,
       validateRemote: true,
       minIntervalMs: 800,
-      failureTracker: getRunFailureTracker(),
+      failureTracker: resetImageBackfillFailureTracker(),
     });
-    const nextIndex = rows.length < imageBackfillPerRun() ? pageIndex + 1 : pageIndex;
+    const nextIndex = shouldAdvanceImageSourceIndex(rows.length, summary) ? pageIndex + 1 : pageIndex;
     return {
       ...progress,
       page_source_index: nextIndex,
@@ -436,7 +449,7 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
     timeoutMs,
     validateRemote: true,
     minIntervalMs: 800,
-    failureTracker: getRunFailureTracker(),
+    failureTracker: resetImageBackfillFailureTracker(),
   });
   return {
     ...progress,
@@ -444,7 +457,7 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
     global_backfill_updated: Number(progress.global_backfill_updated ?? 0) + summary.updated,
     global_remaining: globalRows.length - summary.updated,
     last_global_summary: summary,
-    complete: globalRows.length < imageBackfillPerRun(),
+    complete: globalRows.length < imageBackfillPerRun() || (summary.updated === 0 && summary.skipped === globalRows.length),
   };
 }
 
@@ -703,8 +716,29 @@ async function runNeedsReviewReconcileStep(
   db: Queryable,
   progress: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const offset = Number(progress.offset ?? 0);
   const totals = { ...(progress.totals as Record<string, number> | undefined) };
+
+  if (!progress.all_caps_complete) {
+    const allCapsOffset = Number(progress.all_caps_offset ?? 0);
+    const repair = await runAllCapsTitleRepairBatch(db, allCapsOffset);
+    bumpTotal(totals, "all_caps_scanned", repair.scanned);
+    bumpTotal(totals, "all_caps_titles_repaired", repair.titles_repaired);
+    bumpTotal(totals, "all_caps_cleared", repair.cleared_review);
+    if (repair.reembed_resource_ids.length > 0) {
+      await reembedReconcileBatch(db, repair.reembed_resource_ids);
+    }
+    if (!repair.complete) {
+      return {
+        ...progress,
+        all_caps_offset: repair.next_offset,
+        totals,
+        complete: false,
+      };
+    }
+    progress = { ...progress, all_caps_complete: true, all_caps_offset: repair.next_offset, totals };
+  }
+
+  const offset = Number(progress.offset ?? 0);
   const batch = await runNeedsReviewReconcileJobBatch(db, offset);
   bumpTotal(totals, "scanned", batch.scanned);
   bumpTotal(totals, "cleared", batch.cleared);

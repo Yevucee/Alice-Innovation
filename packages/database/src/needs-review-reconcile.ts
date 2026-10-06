@@ -136,6 +136,7 @@ export async function runNeedsReviewReconcileBatch(
         `UPDATE resources SET
            review_status = 'AUTO_INGESTED',
            review_reason_codes = '{}'::text[],
+           quality_audit_verified_at = now(),
            embedding_content_hash = NULL,
            updated_at = now()
          WHERE id = $1::uuid`,

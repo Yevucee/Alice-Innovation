@@ -1,7 +1,12 @@
 import { continentNamesForFilter } from "@alice/taxonomy";
-import { QUALITY_BROWSE_EXTRA_SQL, QUALITY_BROWSE_ORDER_SQL, qualityBrowseBlocklistParam } from "./quality-browse-sql.js";
+import {
+  QUALITY_BROWSE_COMPLETENESS_ORDER_SQL,
+  QUALITY_BROWSE_ORDER_SQL,
+  qualityBrowseBlocklistParam,
+  qualityBrowseExtraSql,
+} from "./quality-browse-sql.js";
 
-export { QUALITY_BROWSE_ORDER_SQL };
+export { QUALITY_BROWSE_ORDER_SQL, QUALITY_BROWSE_COMPLETENESS_ORDER_SQL };
 
 export interface SearchFilters {
   query: string;
@@ -19,6 +24,8 @@ export interface SearchFilters {
   diversity?: "source" | "mechanism";
   sort?: "relevance" | "newest" | "maturity";
   qualityBrowse?: boolean;
+  /** When true with qualityBrowse, uses relaxed filters (From Africa row). */
+  qualityBrowseRelaxed?: boolean;
 }
 
 function arr(values: string[] | undefined): string[] | null {
@@ -81,22 +88,29 @@ export const FILTER_SQL = `
     WHERE rt.resource_id = r.id AND t.slug = ANY($8)
   ))
   AND ($10::boolean IS NOT TRUE OR (
-    r.review_status NOT IN ('NEEDS_REVIEW', 'ARCHIVED')
+    r.review_status NOT IN ('NEEDS_REVIEW', 'ARCHIVED', 'SOURCE_LIMITED')
     AND char_length(trim(coalesce(r.source_summary, ''))) >= 40
-    ${QUALITY_BROWSE_EXTRA_SQL}
+    ${qualityBrowseExtraSql(false)}
+  ))
+  AND ($12::boolean IS NOT TRUE OR (
+    r.review_status NOT IN ('NEEDS_REVIEW', 'ARCHIVED', 'SOURCE_LIMITED')
+    AND char_length(trim(coalesce(r.source_summary, ''))) >= 40
+    ${qualityBrowseExtraSql(true)}
   ))
 `;
 
 /** Positional params produced by {@link filterParams} ($1 … $FILTER_PARAM_COUNT). */
-export const FILTER_PARAM_COUNT = 11;
+export const FILTER_PARAM_COUNT = 12;
 
-/** $1 query, $2–$9 filters, $10 qualityBrowse flag, $11 quality blocklist (text[]). */
+/** $1 query, $2–$9 filters, $10 strict qualityBrowse, $11 blocklist, $12 relaxed qualityBrowse. */
 export const SEMANTIC_EMBEDDING_PARAM = FILTER_PARAM_COUNT + 1;
 export const SEMANTIC_MAX_DISTANCE_PARAM = FILTER_PARAM_COUNT + 2;
 
 export function filterParams(filters: SearchFilters): unknown[] {
   const countries = arr(filters.countries)?.map((value) => value.toLowerCase()) ?? null;
   const continents = continentNamesForFilter(arr(filters.continents) ?? []);
+  const strictQualityBrowse = filters.qualityBrowse === true && filters.qualityBrowseRelaxed !== true;
+  const relaxedQualityBrowse = filters.qualityBrowse === true && filters.qualityBrowseRelaxed === true;
   return [
     filters.query,
     arr(filters.resourceTypes),
@@ -107,8 +121,9 @@ export function filterParams(filters: SearchFilters): unknown[] {
     arr(filters.problems),
     arr(filters.technologies),
     continents,
-    filters.qualityBrowse === true,
+    strictQualityBrowse,
     qualityBrowseBlocklistParam(),
+    relaxedQualityBrowse,
   ];
 }
 

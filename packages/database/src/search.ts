@@ -19,6 +19,7 @@ import {
   FILTER_SQL,
   filterParams,
   OR_TERM_MATCH_COUNT_SQL,
+  QUALITY_BROWSE_COMPLETENESS_ORDER_SQL,
   QUALITY_BROWSE_ORDER_SQL,
   semanticDistancePredicateSql,
   semanticOrderByDistanceSql,
@@ -115,9 +116,11 @@ export async function searchLibrary(
       ? `CASE r.evidence_stage
            WHEN 'SCALED' THEN 1 WHEN 'MULTIPLE_DEPLOYMENTS' THEN 2 WHEN 'DEPLOYED' THEN 3
            WHEN 'PILOT' THEN 4 WHEN 'PROTOTYPE' THEN 5 WHEN 'IDEA' THEN 6 ELSE 7 END`
-      : filters.qualityBrowse === true
-        ? QUALITY_BROWSE_ORDER_SQL.trim()
-        : "r.created_at DESC";
+      : filters.qualityBrowse === true && filters.qualityBrowseRelaxed === true
+        ? QUALITY_BROWSE_COMPLETENESS_ORDER_SQL.trim()
+        : filters.qualityBrowse === true
+          ? QUALITY_BROWSE_ORDER_SQL.trim()
+          : "r.created_at DESC";
     const browse = await db.query<IdRow>(
       `SELECT r.id::text, NULL::text AS source_id
        FROM resources r

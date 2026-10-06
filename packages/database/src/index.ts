@@ -125,6 +125,7 @@ export {
   countNeedsReview,
   type NeedsReviewReconcileBatchResult,
 } from "./needs-review-reconcile.js";
+export { runAllCapsTitleRepairBatch } from "./title-case-repair.js";
 export {
   startQualityReviewBacklogRun,
   completeQualityReviewBacklogRun,
