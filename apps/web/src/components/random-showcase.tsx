@@ -35,27 +35,25 @@ export function RandomShowcase({ initial }: { initial: CompactResource | null })
   return (
     <section className="border-b border-line bg-accent-soft/30">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
-        <div className="mb-6 flex flex-wrap items-baseline justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-medium">Spotlight</h2>
-            <p className="mt-1 text-sm text-muted">A random innovation from the library — refresh for another.</p>
-          </div>
+        <div className="mx-auto flex max-w-md flex-col items-center text-center">
+          <h2 className="text-lg font-medium">Spotlight</h2>
+          <p className="mt-1 text-sm text-muted">One innovation from the library, chosen at random.</p>
           <button
             type="button"
-            className="rounded border border-line bg-white px-4 py-2 text-sm font-medium hover:border-ink/30 disabled:opacity-50"
+            className="mt-5 rounded border border-line bg-white px-5 py-2.5 text-sm font-medium hover:border-ink/30 disabled:opacity-50"
             onClick={() => void loadAnother()}
             disabled={loading}
           >
-            {loading ? "Loading…" : "Show another"}
+            {loading ? "Loading…" : "Random innovation"}
           </button>
-        </div>
-        {error ? (
-          <p className="mb-4 text-sm text-red-800" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <div className="max-w-md">
-          <ResourceCard resource={resource} />
+          {error ? (
+            <p className="mt-4 text-sm text-red-800" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="mt-8 w-full">
+            <ResourceCard resource={resource} />
+          </div>
         </div>
       </div>
     </section>
