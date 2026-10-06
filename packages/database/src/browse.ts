@@ -49,9 +49,10 @@ export async function resourcesFromAfrica(db: Queryable, limit: number): Promise
       continents: ["africa"],
       limit,
       offset: 0,
-      diverse: true,
+      diverse: false,
       sort: "newest",
       qualityBrowse: true,
+      qualityBrowseRelaxed: true,
     },
     null,
   );

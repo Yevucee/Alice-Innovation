@@ -1,6 +1,7 @@
 export { canonicaliseUrl } from "./url.js";
 export { sha256, contentHash } from "./hash.js";
 export { htmlToText, truncate, truncateAtWordBoundary, normaliseName } from "./text.js";
+export { convertAllCapsTitleToTitleCase, looksLikeAllCapsTitle } from "./title-case.js";
 export { classifyDuplicate, nearDuplicateKey } from "./dedupe.js";
 export { evaluateDraftQuality } from "./quality-gate.js";
 export type { QualityGateResult } from "./quality-gate.js";

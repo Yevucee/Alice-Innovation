@@ -80,6 +80,8 @@
     "check:africa-index:remote": "bash scripts/run-with-production-env.sh npm run check:africa-index",
     "check:africa-ingest": "tsx scripts/check-africa-ingest-status.ts",
     "check:africa-ingest:remote": "bash scripts/run-with-production-env.sh npm run check:africa-ingest",
+    "report:africa-browse-funnel": "tsx scripts/africa-browse-funnel.ts",
+    "report:africa-browse-funnel:remote": "bash scripts/run-with-production-env.sh npm run report:africa-browse-funnel",
     "classify:batch": "tsx scripts/classify-batch.ts",
     "classify:batch:remote": "bash scripts/run-with-production-env.sh npm run classify:batch",
     "hubs:discover": "tsx scripts/hub-discovery.ts",
