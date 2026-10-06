@@ -13,6 +13,7 @@ import {
 import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
 import { SourceCandidateForm } from "@/components/source-candidate-form";
+import { SourceCandidateList } from "@/components/source-candidate-list";
 
 export default async function AdminPage() {
   const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas] = await Promise.all([
@@ -42,26 +43,21 @@ export default async function AdminPage() {
         <h2 className="text-sm font-medium">Suggest a new source</h2>
         <p className="mt-1 text-xs text-muted">
           Drop a link to a tech hub, award, directory, or programme page. It is stored in{" "}
-          <code className="text-ink">source_candidates</code> for later adapter work — nothing is crawled automatically.
+          <code className="text-ink">source_candidates</code> for later adapter work — nothing is crawled until you click{" "}
+          <strong className="font-medium text-ink">Add to ingest list</strong> (creates an enabled PARTIAL source for the next ingest run).
         </p>
         <SourceCandidateForm />
-        {sourceIdeas.length > 0 ? (
-          <ul className="mt-6 space-y-3 border-t border-line pt-4 text-xs text-muted">
-            <li className="font-medium text-ink">Recent ideas</li>
-            {sourceIdeas.map((row) => (
-              <li key={row.id}>
-                <p className="font-medium text-ink">{row.name}</p>
-                {row.homepage ? (
-                  <a href={row.homepage} className="text-accent hover:underline break-all" target="_blank" rel="noreferrer">
-                    {row.homepage}
-                  </a>
-                ) : null}
-                {row.notes ? <p className="mt-1">{row.notes}</p> : null}
-                <p className="mt-1">{formatDateTime(String(row.created_at))}</p>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        <SourceCandidateList
+          items={sourceIdeas.map((row) => ({
+            id: row.id,
+            name: row.name,
+            homepage: row.homepage,
+            notes: row.notes,
+            status: row.status,
+            source_slug: row.source_slug,
+            created_at: String(row.created_at),
+          }))}
+        />
       </section>
 
       <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm">

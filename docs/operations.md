@@ -24,7 +24,7 @@ Disable the queue with `POST_DEPLOY_JOBS_ON_INGEST=false` once all jobs show `co
 
 Do not bypass login, paywalls, CAPTCHA, or bot walls. Engineering for Change is `BLOCKED` for that reason. Sources without an adapter stay `PAUSED` and `enabled: false`, so the cron does not call them.
 
-`source_candidates` holds URLs you add from the admin panel (tech hubs, awards, directories). Nothing inserts there from ingest; candidates are never crawled until an adapter is added to `sources.yaml`.
+`source_candidates` holds URLs you add from the admin panel (tech hubs, awards, directories). Use **Add to ingest list** to create an enabled `PARTIAL` source plus a generic html-catalogue adapter config in the database (and append to `config/sources.yaml` when the app can write it). Promoted sources join the normal ingest rotation on the next run.
 
 ## Review
 

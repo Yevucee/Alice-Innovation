@@ -1,4 +1,4 @@
-import { closePool, getPool, markInterruptedIngestionRuns } from "@alice/database";
+import { closePool, getPool, loadPromotedSourceRecords, markInterruptedIngestionRuns } from "@alice/database";
 import {
   completeQualityReviewBacklogRun,
   sampleNeedsReviewBySources,
@@ -6,6 +6,7 @@ import {
 } from "@alice/database";
 import { loadDotEnv, log } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
+import type { SourceRecord } from "@alice/source-registry";
 import { runPostIngestMaintenance } from "./post-ingest.js";
 import { runPostDeployJobsStep, shouldRunPostDeployBeforeIngest } from "./post-deploy-jobs.js";
 import { resetSupplementalFetchHostPolicy } from "./enrichment-context-fetch.js";
@@ -16,6 +17,12 @@ loadDotEnv();
 process.env.SERVICE_NAME = "alice-ingestor";
 
 const ingestProcessStartedAt = new Date();
+
+function mergeSourceRegistry(registry: SourceRecord[], promoted: SourceRecord[]): SourceRecord[] {
+  const byId = new Map(registry.map((source) => [source.id, source]));
+  for (const source of promoted) byId.set(source.id, source);
+  return [...byId.values()];
+}
 
 function argValues(flag: string): string[] {
   const values: string[] = [];
@@ -94,7 +101,9 @@ async function main(): Promise<void> {
   const full = process.argv.includes("--full");
   const dryRun = process.argv.includes("--dry-run") || Boolean(previewEnv);
   const limit = argNumber("--limit") ?? (previewEnv ? Number(process.env.INGEST_SOURCE_PREVIEW_LIMIT ?? "20") : null);
-  const sources = loadSources();
+  const registrySources = loadSources();
+  const promotedSources = await loadPromotedSourceRecords(pool).catch(() => [] as SourceRecord[]);
+  const sources = mergeSourceRegistry(registrySources, promotedSources);
   resetSupplementalFetchHostPolicy();
   resetRunFailureTracker();
 

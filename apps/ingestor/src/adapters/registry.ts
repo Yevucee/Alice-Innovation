@@ -1,3 +1,6 @@
+import type { Queryable } from "@alice/database";
+import { loadPromotedCatalogueConfigs } from "@alice/database";
+import { createHtmlCatalogueAdapter } from "./html-catalogue.js";
 import type { SourceAdapter } from "./types.js";
 import { engineeringForChangeAdapter } from "./engineering-for-change.js";
 import { mitSolveAdapter } from "./mit-solve.js";
@@ -31,15 +34,37 @@ const CORE_ADAPTERS: SourceAdapter[] = [
   ...remainingCatalogueAdapters,
 ];
 
-const ADAPTERS: SourceAdapter[] = [
-  ...CORE_ADAPTERS,
-  ...buildPlaceholderAdapters(new Set(CORE_ADAPTERS.map((adapter) => adapter.id))),
-];
+const adapterById = new Map<string, SourceAdapter>();
+for (const adapter of CORE_ADAPTERS) {
+  adapterById.set(adapter.id, adapter);
+}
+for (const adapter of buildPlaceholderAdapters(new Set(CORE_ADAPTERS.map((item) => item.id)))) {
+  if (!adapterById.has(adapter.id)) adapterById.set(adapter.id, adapter);
+}
+
+export function registerPromotedCatalogueAdapter(adapter: SourceAdapter): void {
+  adapterById.set(adapter.id, adapter);
+}
+
+export async function ensurePromotedCatalogueAdapters(db: Queryable): Promise<void> {
+  const configs = await loadPromotedCatalogueConfigs(db);
+  for (const row of configs) {
+    registerPromotedCatalogueAdapter(
+      createHtmlCatalogueAdapter({
+        id: row.source_slug,
+        siteOrigin: row.site_origin,
+        pathPattern: new RegExp(row.path_pattern, "i"),
+        resourceType: "SOLUTION",
+        evidenceBasis: "PROGRAMME_SELECTED",
+      }),
+    );
+  }
+}
 
 export function getAdapter(id: string): SourceAdapter | undefined {
-  return ADAPTERS.find((adapter) => adapter.id === id);
+  return adapterById.get(id);
 }
 
 export function listAdapters(): string[] {
-  return ADAPTERS.map((adapter) => adapter.id);
+  return [...adapterById.keys()];
 }

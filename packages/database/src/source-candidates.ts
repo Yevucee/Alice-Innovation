@@ -1,5 +1,12 @@
 import { canonicaliseUrl } from "@alice/shared";
 import type { Queryable } from "./pool.js";
+import {
+  buildPromotedSourceRecord,
+  inferPromotedCatalogueConfig,
+  uniquePromotedSourceSlug,
+  upsertPromotedSourceInDb,
+} from "./promoted-sources.js";
+import { appendSourceToRegistryYaml } from "@alice/source-registry";
 
 export type SourceCandidateRow = {
   id: string;
@@ -8,6 +15,8 @@ export type SourceCandidateRow = {
   notes: string;
   suggested_by: string;
   status: string;
+  source_slug: string | null;
+  promoted_at: Date | null;
   created_at: Date;
 };
 
@@ -36,7 +45,8 @@ export async function findSourceCandidateByHomepage(
   homepage: string,
 ): Promise<SourceCandidateRow | null> {
   const row = await db.query<SourceCandidateRow>(
-    `SELECT id::text AS id, name, homepage, notes, suggested_by, status, created_at
+    `SELECT id::text AS id, name, homepage, notes, suggested_by, status,
+            source_slug, promoted_at, created_at
      FROM source_candidates
      WHERE homepage = $1
      ORDER BY created_at DESC
@@ -66,7 +76,8 @@ export async function insertSourceCandidate(
   const inserted = await db.query<SourceCandidateRow>(
     `INSERT INTO source_candidates (name, homepage, notes, suggested_by)
      VALUES ($1, $2, $3, $4)
-     RETURNING id::text AS id, name, homepage, notes, suggested_by, status, created_at`,
+     RETURNING id::text AS id, name, homepage, notes, suggested_by, status,
+               source_slug, promoted_at, created_at`,
     [name, homepage, notes, suggestedBy],
   );
   const row = inserted.rows[0];
@@ -77,7 +88,8 @@ export async function insertSourceCandidate(
 export async function listSourceCandidates(db: Queryable, limit = 20): Promise<SourceCandidateRow[]> {
   const capped = Math.min(Math.max(limit, 1), 100);
   const rows = await db.query<SourceCandidateRow>(
-    `SELECT id::text AS id, name, homepage, notes, suggested_by, status, created_at
+    `SELECT id::text AS id, name, homepage, notes, suggested_by, status,
+            source_slug, promoted_at, created_at
      FROM source_candidates
      ORDER BY created_at DESC
      LIMIT $1`,
@@ -89,4 +101,62 @@ export async function listSourceCandidates(db: Queryable, limit = 20): Promise<S
 export async function countSourceCandidates(db: Queryable): Promise<number> {
   const row = await db.query<{ count: string }>(`SELECT count(*)::text AS count FROM source_candidates`);
   return Number(row.rows[0]?.count ?? 0);
+}
+
+export async function getSourceCandidate(db: Queryable, id: string): Promise<SourceCandidateRow | null> {
+  const row = await db.query<SourceCandidateRow>(
+    `SELECT id::text AS id, name, homepage, notes, suggested_by, status,
+            source_slug, promoted_at, created_at
+     FROM source_candidates
+     WHERE id = $1::uuid`,
+    [id],
+  );
+  return row.rows[0] ?? null;
+}
+
+export async function promoteSourceCandidateToIngest(
+  db: Queryable,
+  candidateId: string,
+): Promise<{ row: SourceCandidateRow; source_slug: string; registry_updated: boolean }> {
+  const candidate = await getSourceCandidate(db, candidateId);
+  if (!candidate) throw new Error("Source candidate not found");
+  if (!candidate.homepage) throw new Error("Candidate has no URL");
+  if (candidate.source_slug) {
+    return { row: candidate, source_slug: candidate.source_slug, registry_updated: false };
+  }
+
+  const homepage = candidate.homepage;
+  const config = inferPromotedCatalogueConfig(homepage);
+  const slug = await uniquePromotedSourceSlug(db, homepage, candidate.name);
+  const record = buildPromotedSourceRecord(slug, candidate.name, config, candidate.notes);
+  await upsertPromotedSourceInDb(db, {
+    slug,
+    name: candidate.name,
+    record,
+    config,
+    candidateId: candidate.id,
+  });
+
+  const updated = await db.query<SourceCandidateRow>(
+    `UPDATE source_candidates
+     SET status = 'PROMOTED', source_slug = $2, promoted_at = now()
+     WHERE id = $1::uuid
+     RETURNING id::text AS id, name, homepage, notes, suggested_by, status,
+               source_slug, promoted_at, created_at`,
+    [candidate.id, slug],
+  );
+  const row = updated.rows[0];
+  if (!row) throw new Error("Failed to update source candidate after promote");
+
+  let registry_updated = false;
+  if (process.env.SKIP_SOURCE_REGISTRY_APPEND !== "true") {
+    try {
+      appendSourceToRegistryYaml(record);
+      registry_updated = true;
+    } catch {
+      registry_updated = false;
+    }
+  }
+
+  return { row, source_slug: slug, registry_updated };
 }
