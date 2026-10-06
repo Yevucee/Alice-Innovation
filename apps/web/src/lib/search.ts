@@ -37,11 +37,11 @@ export function searchFiltersFromWebBody(input: WebSearchBody): SearchFilters {
     limit: input.limit,
     offset: input.offset,
   };
-  const africaOnly =
+  const continentOnly =
     (input.continents?.length ?? 0) === 1
-    && input.continents![0].toLowerCase() === "africa"
     && !input.query.trim();
-  if (africaOnly) {
+  const continent = continentOnly ? input.continents![0].toLowerCase() : "";
+  if (continent === "africa" || continent === "asia") {
     filters.qualityBrowse = true;
     filters.qualityBrowseRelaxed = true;
   }

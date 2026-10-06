@@ -65,6 +65,24 @@ export async function resourcesFromAfrica(db: Queryable, limit: number): Promise
   return found.results;
 }
 
+export async function resourcesFromAsia(db: Queryable, limit: number): Promise<CompactResource[]> {
+  const found = await searchLibrary(
+    db,
+    {
+      query: "",
+      continents: ["asia"],
+      limit,
+      offset: 0,
+      diverse: false,
+      sort: "newest",
+      qualityBrowse: true,
+      qualityBrowseRelaxed: true,
+    },
+    null,
+  );
+  return found.results;
+}
+
 /** One random resource from the same quality-browse pool as homepage “Recently added”. */
 export async function randomQualityBrowseResource(
   db: Queryable,

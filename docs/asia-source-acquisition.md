@@ -1,24 +1,24 @@
 # Asia source acquisition verification
 
-Generated: 2026-10-06T21:55:40.235Z
+Generated: 2026-10-06T22:15:24.969Z
 
 | Seq | Tier | ID | OK | HTTP | URL | Notes |
 |----:|------|-----|:---:|-----:|-----|-------|
 | 1 | acquisition | `birac-technology-portal` | yes | 200 | https://www.birac.nic.in/ |  |
-| 2 | acquisition | `startup-india-showcase` | **no** | 404 | https://www.startupindia.gov.in/content/sih/en/startup-schemes/startup-india-showcase.html | HTTP 404 |
-| 3 | acquisition | `national-startup-awards-india` | **no** | 404 | https://www.startupindia.gov.in/content/sih/en/startup-india-awards.html | HTTP 404 |
-| 4 | acquisition | `ccamp` | **no** | 404 | https://www.ccamp.res.in/startups | HTTP 404 |
+| 2 | acquisition | `startup-india-showcase` | **no** | 404 | https://www.startupindia.gov.in/content/sih/en/startup-directory.html | HTTP 404 |
+| 3 | acquisition | `national-startup-awards-india` | **no** | 404 | https://www.startupindia.gov.in/content/sih/en/startup-india-awards/winners.html | HTTP 404 |
+| 4 | acquisition | `ccamp` | yes | 200 | https://www.ccamp.res.in/ |  |
 | 5 | acquisition | `atal-innovation-mission` | yes | 200 | https://aim.gov.in/ |  |
 | 6 | acquisition | `atal-incubation-centres` | yes | 200 | https://aim.gov.in/atal-incubation-centres.php |  |
 | 7 | acquisition | `birac-bionest` | yes | 200 | https://www.birac.nic.in/bionest.php |  |
 | 8 | acquisition | `startup-sg` | yes | 200 | https://www.startupsg.gov.sg/ |  |
-| 9 | acquisition | `sginnovate-portfolio` | yes | 200 | https://www.sginnovate.com/portfolio |  |
+| 9 | acquisition | `sginnovate-portfolio` | yes | 200 | https://www.sginnovate.com/our-portfolio |  |
 | 10 | acquisition | `open-innovation-network-singapore` | yes | 200 | https://www.openinnovationnetwork.gov.sg/ |  |
 | 11 | acquisition | `switch-slingshot` | **no** | error | https://www.switchsg.com/slingshot | fetch failed |
 | 12 | acquisition | `ipi-singapore-innovation-marketplace` | yes | 200 | https://www.ipi-singapore.org/ |  |
 | 13 | acquisition | `the-liveability-challenge` | yes | 200 | https://www.theliveabilitychallenge.org/ |  |
 | 14 | acquisition | `nus-enterprise` | yes | 200 | https://enterprise.nus.edu.sg/ |  |
-| 15 | acquisition | `ntuitive` | **no** | 404 | https://www.ntuitive.sg/portfolio | HTTP 404 |
+| 15 | acquisition | `ntuitive` | **no** | 404 | https://www.ntuitive.sg/our-startups | HTTP 404 |
 | 16 | acquisition | `findit-taiwan` | **no** | error | https://findit.org.tw/ | fetch failed |
 | 17 | acquisition | `startup-terrace-taiwan` | **no** | error | https://startupterrace.tw/ | fetch failed |
 | 18 | acquisition | `startup-terrace-kaohsiung` | yes | skip | (duplicate) | duplicate_of startup-terrace-taiwan |
@@ -51,13 +51,13 @@ Generated: 2026-10-06T21:55:40.235Z
 | 45 | acquisition | `startup-philippines` | yes | 200 | https://startup.gov.ph/ |  |
 | 46 | acquisition | `startup-philippines-directory` | yes | 200 | https://startup.gov.ph/startups |  |
 | 47 | acquisition | `startup-bangladesh` | yes | 200 | https://startupbangladesh.gov.bd/en |  |
-| 48 | acquisition | `startup-bangladesh-portfolio` | **no** | 404 | https://startupbangladesh.gov.bd/en/portfolio | HTTP 404 |
+| 48 | acquisition | `startup-bangladesh-portfolio` | yes | 200 | https://startupbangladesh.gov.bd/en |  |
 | 49 | acquisition | `ignite-pakistan` | yes | 200 | https://ignite.org.pk/ |  |
 | 50 | acquisition | `pakistan-national-incubation-centres` | yes | 200 | https://ignite.org.pk/ |  |
 | 51 | acquisition | `startup-sri-lanka` | **no** | 502 | https://www.startupsl.lk/ | HTTP 502 |
 | 52 | acquisition | `astana-hub` | yes | 200 | https://astanahub.com/ |  |
 | 53 | acquisition | `astana-hub-startup-programmes` | **no** | 404 | https://astanahub.com/en/programs | HTTP 404 |
-| 54 | acquisition | `astana-hub-company-network` | **no** | 404 | https://astanahub.com/en/community | HTTP 404 |
+| 54 | acquisition | `astana-hub-company-network` | yes | 200 | https://astanahub.com/en/startup/ |  |
 | 55 | acquisition | `hub71` | yes | 200 | https://www.hub71.com/ |  |
 | 56 | acquisition | `hub71-startup-directory` | yes | 200 | https://www.hub71.com/startups |  |
 | 57 | acquisition | `sheraa` | yes | 200 | https://sheraa.ae/ |  |
@@ -67,16 +67,16 @@ Generated: 2026-10-06T21:55:40.235Z
 | 61 | acquisition | `kaust-taqadam` | yes | 200 | https://entrepreneurship.kaust.edu.sa/ |  |
 | 62 | acquisition | `kaust-scalex-portfolio` | yes | 200 | https://entrepreneurship.kaust.edu.sa/portfolio/scalex |  |
 | 63 | acquisition | `kaust-entrepreneurial-spinouts` | yes | 200 | https://innovation.kaust.edu.sa/spinouts |  |
-| 64 | acquisition | `china-innovation-entrepreneurship-competition` | **no** | error | http://www.cxcyds.com/ | The operation was aborted due to timeout |
+| 64 | acquisition | `china-innovation-entrepreneurship-competition` | **no** | error | https://www.cxcyds.com/ | fetch failed |
 | 65 | acquisition | `startup-in-shanghai` | yes | 200 | https://www.shanghai.gov.cn/ |  |
-| 66 | acquisition | `china-college-students-innovation-competition` | yes | 200 | http://www.moe.gov.cn/ |  |
+| 66 | acquisition | `china-college-students-innovation-competition` | yes | 200 | https://www.moe.gov.cn/ |  |
 | 67 | acquisition | `hicool` | yes | 200 | https://www.hicool.com/ |  |
-| 68 | acquisition | `adb-ventures-portfolio` | **no** | 403 | https://www.adb.org/what-we-do/private-sector/adb-ventures | HTTP 403 |
-| 69 | acquisition | `circulate-capital` | **no** | 404 | https://www.circulatecapital.com/portfolio | HTTP 404 |
+| 68 | acquisition | `adb-ventures-portfolio` | **no** | 403 | https://www.adb.org/what-we-do/private-sector/adb-ventures/impact | HTTP 403 |
+| 69 | acquisition | `circulate-capital` | **no** | 404 | https://www.circulatecapital.com/our-portfolio | HTTP 404 |
 | 70 | acquisition | `accelerating-asia` | yes | 200 | https://www.acceleratingasia.com/portfolio |  |
 | 71 | acquisition | `iterative` | yes | 200 | https://www.iterative.vc/ |  |
 | 72 | acquisition | `iterative-demo-day` | yes | 200 | https://www.iterative.vc/companies |  |
-| 73 | acquisition | `appworks-accelerator` | **no** | 404 | https://appworks.tw/portfolio | HTTP 404 |
+| 73 | acquisition | `appworks-accelerator` | **no** | 404 | https://appworks.tw/companies | HTTP 404 |
 | 74 | acquisition | `wavemaker-impact-portfolio` | yes | 200 | https://wavemakerimpact.com/portfolio |  |
 | 75 | acquisition | `wavemaker-partners-portfolio` | yes | 200 | https://wavemaker.vc/portfolio |  |
 | 76 | acquisition | `thinkzone-ventures` | **no** | error | https://thinkzone.vc/portfolio | fetch failed |
@@ -89,7 +89,6 @@ Generated: 2026-10-06T21:55:40.235Z
 | 83 | university | `nus-enterprise-innovation` | yes | 200 | https://enterprise.nus.edu.sg/startups |  |
 | 84 | university | `ntu-innovation` | **no** | 404 | https://www.ntuitive.sg/portfolio | HTTP 404 |
 | 85 | university | `hkust-innovation` | **no** | 404 | https://ec.hkust.edu.hk/startups | HTTP 404 |
-| 86 | university | `kaust-innovation` | yes | 200 | https://scalex.kaust.edu.sa/portfolio |  |
 | 87 | blocked | `e27` | yes | 200 | https://e27.co/ |  |
 | 88 | blocked | `tech-in-asia` | **no** | 403 | https://www.techinasia.com/ | HTTP 403 |
 | 89 | blocked | `crunchbase` | yes | 200 | https://www.crunchbase.com/ |  |
@@ -98,7 +97,7 @@ Generated: 2026-10-06T21:55:40.235Z
 | 92 | blocked | `pitchbook` | **no** | 403 | https://pitchbook.com/ | HTTP 403 |
 | 93 | blocked | `cb-insights` | yes | 200 | https://www.cbinsights.com/ |  |
 
-Checked 93 URL probes | failed: 32
+Checked 92 URL probes | failed: 29
 
 ## Next ingest wave
 
