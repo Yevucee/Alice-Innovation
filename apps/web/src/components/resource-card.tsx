@@ -77,6 +77,7 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
           resourceId={resource.resource_id}
           title={title}
           summary={resource.short_summary || "\u00a0"}
+          language={resource.language}
           translateEnabled={translateEnabled}
           sourcePageUrl={resource.source_urls[0] ?? null}
         />

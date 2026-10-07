@@ -13,6 +13,8 @@ import {
   runRestoreTitleMatchedOrganisationsBatch,
   runAllCapsTitleRepairBatch,
   backfillReviewReasonCodesBatch,
+  cleanJStartupResourceSummariesBatch,
+  quarantineAsiaCatalogueJunkBatch,
   setPostDeployJobLastRun,
   updatePostDeployJobProgress,
   type PostDeployJobLastRun,
@@ -340,32 +342,47 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
   const minInterval = Math.ceil(60000 / Math.max(1, source.limits.requests_per_minute));
   let lastRequest = 0;
   const tracker = getImageBackfillFailureTracker();
-  const ctx: AdapterContext = {
+  const fetchWithTracker = async (url: string) => {
+    const skip = tracker.shouldSkipUrl(url);
+    if (skip) {
+      throw new HttpStatusError(`skipped:${skip}`, 0);
+    }
+    const wait = minInterval - (Date.now() - lastRequest);
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    lastRequest = Date.now();
+    try {
+      const result = await fetchText(url, { userAgent, timeoutMs, maxAttempts: 1 });
+      tracker.recordSuccess(url);
+      return result;
+    } catch (error) {
+      const status = error instanceof HttpStatusError ? error.status : null;
+      tracker.recordFailure(url, status);
+      throw error;
+    }
+  };
+  const discoverCtx: AdapterContext = {
     source,
     userAgent,
     timeoutMs,
     limit: null,
     fetchText: async (url) => {
-      const skip = tracker.shouldSkipUrl(url);
-      if (skip) {
-        throw new HttpStatusError(`skipped:${skip}`, 0);
-      }
       const wait = minInterval - (Date.now() - lastRequest);
       if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
       lastRequest = Date.now();
-      try {
-        const result = await fetchText(url, { userAgent, timeoutMs, maxAttempts: 1 });
-        tracker.recordSuccess(url);
-        return result;
-      } catch (error) {
-        const status = error instanceof HttpStatusError ? error.status : null;
-        tracker.recordFailure(url, status);
-        throw error;
-      }
+      return fetchText(url, { userAgent, timeoutMs, maxAttempts: 1 });
     },
   };
+  const itemCtx: AdapterContext = { ...discoverCtx, fetchText: fetchWithTracker };
 
-  const discovered = await adapter.discover(ctx);
+  let discovered: Awaited<ReturnType<NonNullable<typeof adapter.discover>>> = [];
+  try {
+    discovered = await adapter.discover(discoverCtx);
+  } catch (error) {
+    log("warn", "post_deploy_listing_discover_failed", {
+      source_slug: sourceSlug,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
   const byExternalId = new Map(
     discovered.filter((ref) => ref.externalId).map((ref) => [ref.externalId!, ref]),
   );
@@ -376,7 +393,7 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
     const ref = byExternalId.get(row.external_id);
     if (!ref?.listingHtml) continue;
     try {
-      const page = await adapter.fetch(ref, ctx);
+      const page = await adapter.fetch(ref, itemCtx);
       const draft = adapter.parse(page);
       const imageUrl = draft.imageUrl?.trim();
       if (!imageUrl || imageUrl.startsWith("data:")) continue;
@@ -417,12 +434,13 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
 
 function shouldAdvanceImageSourceIndex(
   rowCount: number,
-  summary: { updated: number; skipped: number },
+  summary: { updated: number; skipped: number; failed?: number },
 ): boolean {
   const perRun = imageBackfillPerRun();
   if (rowCount < perRun) return true;
   if (summary.updated > 0) return false;
-  if (rowCount > 0 && summary.skipped === rowCount) return true;
+  const failed = summary.failed ?? 0;
+  if (rowCount > 0 && summary.skipped + failed >= rowCount) return true;
   return false;
 }
 
@@ -505,6 +523,27 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
     };
   }
   return guarded.progress;
+}
+
+async function runAsiaCatalogueQualityStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const totals = { ...((progress.totals as Record<string, number>) ?? {}) };
+  const offset = Number(progress.offset ?? 0);
+  const batchSize = 120;
+  const quarantine = await quarantineAsiaCatalogueJunkBatch(db, batchSize);
+  bumpTotal(totals, "quarantined", quarantine.quarantined);
+  const cleaned = await cleanJStartupResourceSummariesBatch(db, batchSize);
+  bumpTotal(totals, "j_startup_summaries_cleaned", cleaned.cleaned);
+  bumpTotal(totals, "j_startup_sensors_cleared", cleaned.cleared_sensors_only);
+  const complete = quarantine.quarantined === 0 && cleaned.cleaned === 0 && cleaned.cleared_sensors_only === 0;
+  return {
+    offset: offset + batchSize,
+    totals,
+    complete,
+    last_quarantine_ids: quarantine.resource_ids.slice(0, 20),
+  };
 }
 
 async function runTitleCaseRepairStep(
@@ -938,6 +977,12 @@ async function executePostDeployJobStep(
       }
       case "needs_review_reconcile_202510": {
         nextProgress = await runNeedsReviewReconcileStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = { ...(nextProgress.totals as Record<string, unknown>) };
+        break;
+      }
+      case "asia_catalogue_quality_202510": {
+        nextProgress = await runAsiaCatalogueQualityStep(db, progress);
         complete = Boolean(nextProgress.complete);
         result = { ...(nextProgress.totals as Record<string, unknown>) };
         break;

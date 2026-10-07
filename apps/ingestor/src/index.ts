@@ -1,4 +1,10 @@
-import { closePool, getPool, loadPromotedSourceRecords, markInterruptedIngestionRuns } from "@alice/database";
+import {
+  closePool,
+  getPool,
+  loadPromotedSourceRecords,
+  markInterruptedIngestionRuns,
+  resetStalePostDeployJobs,
+} from "@alice/database";
 import {
   completeQualityReviewBacklogRun,
   sampleNeedsReviewBySources,
@@ -90,6 +96,10 @@ async function main(): Promise<void> {
   const interrupted = await markInterruptedIngestionRuns(pool, ingestProcessStartedAt);
   if (interrupted > 0) {
     log("info", "ingestion_runs_interrupted", { count: interrupted });
+  }
+  const resetJobs = await resetStalePostDeployJobs(pool, ingestProcessStartedAt);
+  if (resetJobs > 0) {
+    log("info", "post_deploy_jobs_reset_stale", { count: resetJobs });
   }
   const only = argValues("--source");
   const previewEnv = process.env.INGEST_SOURCE_PREVIEW_SLUG?.trim();

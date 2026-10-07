@@ -35,6 +35,7 @@ export interface CompactResource {
   resource_id: string;
   title: string;
   resource_type: string;
+  language: string | null;
   short_summary: string;
   why_matched: string;
   countries: string[];
@@ -349,9 +350,10 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
     updated_at: Date;
     created_at: Date;
     review_status: string;
+    language: string | null;
     organisation: string | null;
   }>(
-    `SELECT r.id::text, r.canonical_title, r.resource_type, r.source_summary,
+    `SELECT r.id::text, r.canonical_title, r.resource_type, r.source_summary, r.language,
             r.maturity_stage, r.evidence_stage, r.updated_at, r.created_at, r.review_status,
             (
               SELECT o.name FROM resource_organisations ro
@@ -453,6 +455,7 @@ async function hydrate(db: Queryable, hits: FusedHit[]): Promise<CompactResource
       resource_id: row.id,
       title: sanitizeDisplayTitle(row.canonical_title),
       resource_type: row.resource_type,
+      language: row.language,
       short_summary: row.source_summary,
       why_matched: why,
       countries: placeMap.get(hit.id) ?? [],

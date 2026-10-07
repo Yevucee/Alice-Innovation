@@ -38,6 +38,7 @@ export function buildAsiaQueueCatalogueAdapters(skipAdapterIds: ReadonlySet<stri
           id: source.adapter,
           siteOrigin: config.siteOrigin,
           pathPattern: new RegExp(config.pathPattern, "i"),
+          excludePathPattern: /^\/(author|authors|team|staff|people|profile|member|bio|event|events|calendar|news|blog|category|tag|page)(\/|$)/i,
           resourceType: "ORGANISATION",
           evidenceBasis: "PROGRAMME_SELECTED",
         }),

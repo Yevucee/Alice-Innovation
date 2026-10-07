@@ -6,6 +6,13 @@ export { classifyDuplicate, nearDuplicateKey } from "./dedupe.js";
 export { evaluateDraftQuality } from "./quality-gate.js";
 export type { QualityGateResult } from "./quality-gate.js";
 export {
+  catalogueJunkReasons,
+  cleanJStartupSummary,
+  isCatalogueNavBoilerplate,
+  isCataloguePlaceholderSummary,
+  isNonInnovationCataloguePath,
+} from "./catalogue-junk.js";
+export {
   isLegalFormText,
   isQualityBrowsePandemicJunk,
   sanitizeDisplayTitle,

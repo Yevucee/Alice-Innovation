@@ -96,6 +96,7 @@ export {
   listPostDeployJobs,
   markPostDeployJobInProgress,
   notePostDeployJobError,
+  resetStalePostDeployJobs,
   setPostDeployJobLastRun,
   updatePostDeployJobProgress,
   type PostDeployJobRow,
@@ -111,6 +112,10 @@ export {
   type PostDeployLastRunBudget,
 } from "./post-deploy-admin.js";
 export { asiaIngestAdminSummary, type AsiaIngestAdminSummary, type AsiaSourceIngestRow } from "./asia-ingest-admin.js";
+export {
+  cleanJStartupResourceSummariesBatch,
+  quarantineAsiaCatalogueJunkBatch,
+} from "./asia-catalogue-quality.js";
 export {
   readResourceUiTranslation,
   resourceTranslationFingerprint,

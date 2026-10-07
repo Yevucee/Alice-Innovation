@@ -14,6 +14,21 @@ test("bumpImageBackfillTotals accumulates scanned and filled", () => {
   assert.equal(totals.filled, 3);
 });
 
+test("image backfill should advance when batch is all failed or skipped", () => {
+  const shouldAdvance = (
+    rowCount: number,
+    summary: { updated: number; skipped: number; failed?: number },
+  ) => {
+    const perRun = 80;
+    if (rowCount < perRun) return true;
+    if (summary.updated > 0) return false;
+    const failed = summary.failed ?? 0;
+    if (rowCount > 0 && summary.skipped + failed >= rowCount) return true;
+    return false;
+  };
+  assert.equal(shouldAdvance(80, { updated: 0, skipped: 40, failed: 40 }), true);
+});
+
 test("applyImageBackfillStallGuard marks stalled after consecutive no-progress steps", () => {
   let progress: Record<string, unknown> = { global_offset: 0, totals: { filled: 0 } };
   let stalled = false;

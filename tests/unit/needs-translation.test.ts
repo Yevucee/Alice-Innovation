@@ -13,3 +13,9 @@ test("likelyNeedsTranslation respects non-en language code", () => {
 test("likelyNeedsTranslation skips plain English", () => {
   assert.equal(likelyNeedsTranslation("Solar irrigation for smallholders", "en"), false);
 });
+
+test("likelyNeedsTranslation detects German Latin script without language metadata", () => {
+  const german =
+    "PaySpot Autor: Wir sind ein Team von Redakteuren und können Ihnen bei Fragen zu Online-Casinos helfen.";
+  assert.equal(likelyNeedsTranslation(german, "en"), true);
+});
