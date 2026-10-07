@@ -51,14 +51,10 @@ Post-deploy image backfill no longer uses ingest **`RunFailureTracker`** host bl
 2. Ingest with bootstrap only: `ASIA_INGEST_FULL=0 bash scripts/ingest-production-asia-all-enabled.sh`
 3. Watch **Admin → Asia ingest** for zero-discover and failed sources before enabling `--full`.
 
-## Keep disabled until adapter discover > 0
+## Ingest expectations (all Asia sources stay `enabled: true` in config)
 
-Dry-run (`docs/asia-adapter-ready-slugs.json`, Oct 2026) — **only these enabled slugs had `discovered > 0`:**
+Dry-run snapshot: `docs/asia-adapter-ready-slugs.json`. Full failure matrix: `docs/asia-source-failure-matrix.md`.
 
-- `j-startup`
-- `j-startup-impact`
-- `wavemaker-partners-portfolio`
+Most slugs still return **discover 0** until listing paths or bespoke adapters land; ingest is safe (quality gate + `NEEDS_REVIEW`) but noisy. Prefer `adapter:sample-dry-run` per slug before full `--full` passes.
 
-All other **enabled** `asia-innovation` sources in `config/sources.yaml` should stay **`status: PAUSED`** (or not promoted) until listing HTML is verified and `npm run adapter:sample-dry-run -- --source=<slug>` returns items. Generic `asia-queue-adapters` configs are not safe for production ingest without per-site verification.
-
-**Do not enable without bespoke fixes:** `hkust-entrepreneurship-center` (event/nav junk until path filters + quarantine), and any PaySpot-style third-party author bio domains ingested via generic catalogue patterns.
+**Quality note:** `hkust-entrepreneurship-center` and generic catalogue slugs may ingest event/nav junk until adapters and `asia_catalogue_quality_202510` quarantine run; PaySpot-style author bios match `%payspot%` quarantine rules.
