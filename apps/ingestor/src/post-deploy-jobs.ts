@@ -33,8 +33,15 @@ import type { AdapterContext } from "./adapters/types.js";
 import { runOrgRecoveryFromSourceBatch } from "./org-recovery-job.js";
 import { runQualityContentBackfillBatch } from "./quality-content-backfill-job.js";
 import { runNeedsReviewReconcileJobBatch, reembedReconcileBatch } from "./needs-review-reconcile-job.js";
-import { resetImageBackfillFailureTracker } from "./image-backfill-failure-tracker.js";
+import { getImageBackfillFailureTracker, resetImageBackfillFailureTracker } from "./image-backfill-failure-tracker.js";
 import { getRunFailureTracker, resetRunFailureTracker } from "./run-failure-tracker.js";
+import {
+  applyImageBackfillStallGuard,
+  bumpImageBackfillTotals,
+  imageBackfillProgressFingerprint,
+  postDeployJobMaxMinutesPerJob,
+  readImageBackfillTotals,
+} from "./post-deploy-image-backfill.js";
 
 const REINGEST_SOURCES = [
   "su-launchlab",
@@ -332,7 +339,7 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
   const minInterval = Math.ceil(60000 / Math.max(1, source.limits.requests_per_minute));
   let lastRequest = 0;
-  const tracker = getRunFailureTracker();
+  const tracker = getImageBackfillFailureTracker();
   const ctx: AdapterContext = {
     source,
     userAgent,
@@ -386,15 +393,26 @@ async function runListingCardImageStep(db: Queryable, progress: Record<string, u
   const listingRuns = Number(progress.listing_runs ?? 0) + 1;
   const listingUpdated = Number(progress.listing_updated ?? 0) + updated;
   const nextIndex = rows.length < imageBackfillPerRun() || updated === 0 ? sourceIndex + 1 : sourceIndex;
-  return {
+  const fingerprintBefore = imageBackfillProgressFingerprint(progress);
+  const totals = bumpImageBackfillTotals(readImageBackfillTotals(progress), {
+    candidates: rows.length,
+    updated,
+    skipped: Math.max(0, rows.length - updated),
+    failed: 0,
+  });
+  const merged = {
     ...progress,
+    totals,
     listing_source_index: nextIndex,
     listing_runs: listingRuns,
     listing_updated: listingUpdated,
     listing_complete: nextIndex >= LISTING_IMAGE_SOURCES.length,
     last_listing_source: sourceSlug,
     last_listing_updated: updated,
+    skip_reasons: tracker.skipReasonsSummary(),
   };
+  const madeProgress = imageBackfillProgressFingerprint(merged) !== fingerprintBefore || updated > 0;
+  return applyImageBackfillStallGuard(merged, madeProgress).progress;
 }
 
 function shouldAdvanceImageSourceIndex(
@@ -409,6 +427,11 @@ function shouldAdvanceImageSourceIndex(
 }
 
 async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const fingerprintBefore = imageBackfillProgressFingerprint(progress);
+  const failureTracker = getImageBackfillFailureTracker();
+  const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
+  const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
+
   if (!progress.listing_complete) {
     return runListingCardImageStep(db, progress);
   }
@@ -417,47 +440,92 @@ async function runBulkImageBackfillStep(db: Queryable, progress: Record<string, 
   if (pageIndex < PAGE_IMAGE_SOURCES.length) {
     const sourceSlug = PAGE_IMAGE_SOURCES[pageIndex];
     const rows = await loadSourceItemsMissingImages(db, { sourceSlug, limit: imageBackfillPerRun() });
-    const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
-    const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
     const summary = await backfillSourceItemImages(db, rows, {
       userAgent,
       timeoutMs,
       validateRemote: true,
       minIntervalMs: 800,
-      failureTracker: resetImageBackfillFailureTracker(),
+      failureTracker,
     });
     const nextIndex = shouldAdvanceImageSourceIndex(rows.length, summary) ? pageIndex + 1 : pageIndex;
-    return {
+    const totals = bumpImageBackfillTotals(readImageBackfillTotals(progress), summary);
+    const merged = {
       ...progress,
+      totals,
       page_source_index: nextIndex,
       page_backfill_runs: Number(progress.page_backfill_runs ?? 0) + 1,
       page_backfill_updated: Number(progress.page_backfill_updated ?? 0) + summary.updated,
       page_sources_done: nextIndex >= PAGE_IMAGE_SOURCES.length,
       last_page_source: sourceSlug,
       last_page_summary: summary,
+      skip_reasons: failureTracker.skipReasonsSummary(),
     };
+    const madeProgress =
+      imageBackfillProgressFingerprint(merged) !== fingerprintBefore || summary.updated > 0;
+    return applyImageBackfillStallGuard(merged, madeProgress).progress;
   }
 
-  const globalRows = await loadSourceItemsMissingImages(db, { limit: imageBackfillPerRun() });
+  const globalOffset = Number(progress.global_offset ?? 0);
+  const globalRows = await loadSourceItemsMissingImages(db, {
+    limit: imageBackfillPerRun(),
+    offset: globalOffset,
+  });
   if (globalRows.length === 0) {
     return { ...progress, complete: true, global_remaining: 0 };
   }
-  const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
-  const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
   const summary = await backfillSourceItemImages(db, globalRows, {
     userAgent,
     timeoutMs,
     validateRemote: true,
     minIntervalMs: 800,
-    failureTracker: resetImageBackfillFailureTracker(),
+    failureTracker,
   });
-  return {
+  const nextGlobalOffset = globalOffset + globalRows.length;
+  const totals = bumpImageBackfillTotals(readImageBackfillTotals(progress), summary);
+  const merged = {
     ...progress,
+    totals,
+    global_offset: nextGlobalOffset,
     global_backfill_runs: Number(progress.global_backfill_runs ?? 0) + 1,
     global_backfill_updated: Number(progress.global_backfill_updated ?? 0) + summary.updated,
     global_remaining: globalRows.length - summary.updated,
     last_global_summary: summary,
-    complete: globalRows.length < imageBackfillPerRun() || (summary.updated === 0 && summary.skipped === globalRows.length),
+    skip_reasons: failureTracker.skipReasonsSummary(),
+    complete: globalRows.length < imageBackfillPerRun(),
+  };
+  const madeProgress =
+    imageBackfillProgressFingerprint(merged) !== fingerprintBefore || summary.updated > 0;
+  const guarded = applyImageBackfillStallGuard(merged, madeProgress);
+  if (guarded.stalled && !merged.complete) {
+    return {
+      ...guarded.progress,
+      global_offset: nextGlobalOffset,
+      consecutive_stall_steps: 0,
+      stall_skip_advanced: globalRows.length,
+    };
+  }
+  return guarded.progress;
+}
+
+async function runTitleCaseRepairStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const totals = { ...(progress.totals as Record<string, number> | undefined) };
+  const offset = Number(progress.offset ?? 0);
+  const repair = await runAllCapsTitleRepairBatch(db, offset);
+  bumpTotal(totals, "scanned", repair.scanned);
+  bumpTotal(totals, "titles_repaired", repair.titles_repaired);
+  bumpTotal(totals, "cleared_review", repair.cleared_review);
+  if (repair.reembed_resource_ids.length > 0) {
+    await reembedReconcileBatch(db, repair.reembed_resource_ids);
+    bumpTotal(totals, "reembedded", repair.reembed_resource_ids.length);
+  }
+  return {
+    offset: repair.next_offset,
+    totals,
+    complete: repair.complete,
+    titles_repaired_total: totals.titles_repaired ?? 0,
   };
 }
 
@@ -842,10 +910,18 @@ async function executePostDeployJobStep(
         nextProgress = await runBulkImageBackfillStep(db, progress);
         complete = Boolean(nextProgress.complete);
         result = {
+          totals: nextProgress.totals,
           listing_updated: nextProgress.listing_updated,
           page_backfill_updated: nextProgress.page_backfill_updated,
           global_backfill_updated: nextProgress.global_backfill_updated,
+          global_offset: nextProgress.global_offset,
         };
+        break;
+      }
+      case "title_case_repair_202610": {
+        nextProgress = await runTitleCaseRepairStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = { ...(nextProgress.totals as Record<string, unknown>), titles_repaired_total: nextProgress.titles_repaired_total };
         break;
       }
       case "data_quality_repair_202510": {
@@ -936,6 +1012,7 @@ export async function runPostDeployJobsStep(
     trigger,
     session_id: sessionId,
     max_minutes: maxMinutes,
+    per_job_max_minutes: postDeployJobMaxMinutesPerJob(),
     pending_jobs: pendingKeys.length,
     pending_job_keys: pendingKeys,
   });
@@ -946,7 +1023,10 @@ export async function runPostDeployJobsStep(
   }
 
   resetRunFailureTracker();
+  resetImageBackfillFailureTracker();
   const deadlineMs = startedMs + maxMinutes * 60 * 1000;
+  const perJobBudgetMs = postDeployJobMaxMinutesPerJob() * 60 * 1000;
+  const jobSessionMs = new Map<string, number>();
   let rounds = 0;
   let steps = 0;
   const jobStats = new Map<string, JobStepStats>();
@@ -970,13 +1050,25 @@ export async function runPostDeployJobsStep(
       }
 
       runContext.rounds = rounds + 1;
+      let ranJobStep = false;
       for (const job of jobs) {
         if (Date.now() >= deadlineMs) {
           stopReason = "budget";
           break;
         }
+        const jobMs = jobSessionMs.get(job.job_key) ?? 0;
+        if (jobMs >= perJobBudgetMs) {
+          continue;
+        }
+        const stepStarted = Date.now();
         await executePostDeployJobStep(db, job, runContext);
+        jobSessionMs.set(job.job_key, jobMs + (Date.now() - stepStarted));
         steps += 1;
+        ranJobStep = true;
+      }
+      if (!ranJobStep) {
+        stopReason = "budget";
+        break;
       }
       rounds += 1;
       if (Date.now() >= deadlineMs) {

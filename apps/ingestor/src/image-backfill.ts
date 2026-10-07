@@ -14,9 +14,10 @@ export interface ImageBackfillRow {
 
 export async function loadSourceItemsMissingImages(
   db: Queryable,
-  input: { resourceIds?: string[] | null; sourceSlug?: string | null; limit: number },
+  input: { resourceIds?: string[] | null; sourceSlug?: string | null; limit: number; offset?: number },
 ): Promise<ImageBackfillRow[]> {
   const resourceIds = input.resourceIds && input.resourceIds.length > 0 ? input.resourceIds : null;
+  const offset = Math.max(0, Number(input.offset ?? 0));
   const result = await db.query<ImageBackfillRow>(
     `SELECT si.id::text,
             si.canonical_url,
@@ -28,9 +29,10 @@ export async function loadSourceItemsMissingImages(
        AND (si.image_url IS NULL OR btrim(si.image_url) = '' OR si.image_url LIKE 'data:%')
        AND ($1::uuid[] IS NULL OR si.resource_id = ANY($1::uuid[]))
        AND ($2::text IS NULL OR s.slug = $2::text)
-     ORDER BY si.updated_at DESC
+     ORDER BY si.id ASC
+     OFFSET $4
      LIMIT $3`,
-    [resourceIds, input.sourceSlug ?? null, input.limit],
+    [resourceIds, input.sourceSlug ?? null, input.limit, offset],
   );
   return result.rows;
 }

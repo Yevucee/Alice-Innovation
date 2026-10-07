@@ -9,6 +9,7 @@ import {
   latestSourcePreviewReports,
   postDeployJobsAdminPanel,
   qualityAdminStatus,
+  asiaIngestAdminSummary,
 } from "@alice/database";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
@@ -16,7 +17,7 @@ import { SourceCandidateForm } from "@/components/source-candidate-form";
 import { SourceCandidateList } from "@/components/source-candidate-list";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas, asiaIngest] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
@@ -26,6 +27,7 @@ export default async function AdminPage() {
     latestSourcePreviewReports(pool(), 6).catch(() => []),
     postDeployJobsAdminPanel(pool()).catch(() => null),
     listSourceCandidates(pool(), 12).catch(() => []),
+    asiaIngestAdminSummary(pool()).catch(() => null),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -161,6 +163,62 @@ export default async function AdminPage() {
         </section>
       ) : null}
 
+      {asiaIngest ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">Asia ingest</h2>
+          <p className="mt-1 text-xs text-muted">
+            Enabled <code className="text-ink">asia-innovation</code> sources: {asiaIngest.enabled_sources}. First-run
+            ingest caps at <code className="text-ink">INGEST_FIRST_RUN_ITEM_LIMIT</code> (default 80) with quality gate
+            on. See <code className="text-ink">docs/asia-ingest-expected-failures.md</code>.
+          </p>
+          {asiaIngest.failed_latest.length > 0 ? (
+            <div className="mt-3 text-xs text-amber-900">
+              <p className="font-medium text-ink">Latest run failed ({asiaIngest.failed_latest.length})</p>
+              <ul className="mt-1 space-y-1">
+                {asiaIngest.failed_latest.slice(0, 12).map((row) => (
+                  <li key={row.slug}>
+                    {row.slug}
+                    {row.error_summary ? ` — ${row.error_summary}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {asiaIngest.zero_discover_slugs.length > 0 ? (
+            <div className="mt-3 text-xs text-muted">
+              <p className="font-medium text-ink">Zero discover on last run ({asiaIngest.zero_discover_slugs.length})</p>
+              <p className="mt-1 break-words">{asiaIngest.zero_discover_slugs.slice(0, 20).join(", ")}</p>
+            </div>
+          ) : null}
+          <div className="mt-4 max-h-64 overflow-y-auto text-xs text-muted">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-line text-ink">
+                  <th className="py-1 pr-2 font-medium">Source</th>
+                  <th className="py-1 pr-2 font-medium">Items</th>
+                  <th className="py-1 pr-2 font-medium">New 7d</th>
+                  <th className="py-1 font-medium">Last run</th>
+                </tr>
+              </thead>
+              <tbody>
+                {asiaIngest.per_source.slice(0, 40).map((row) => (
+                  <tr key={row.slug} className="border-b border-line/60">
+                    <td className="py-1 pr-2 text-ink">{row.slug}</td>
+                    <td className="py-1 pr-2">{row.item_count}</td>
+                    <td className="py-1 pr-2">{row.items_new_7d}</td>
+                    <td className="py-1">
+                      {row.last_run_status ?? "—"}
+                      {row.last_run_discovered != null ? ` · disc ${row.last_run_discovered}` : ""}
+                      {row.last_run_new != null ? ` · new ${row.last_run_new}` : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
       {postDeploy ? (
         <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
           <h2 className="text-sm font-medium">Post-deploy jobs</h2>
@@ -177,7 +235,8 @@ export default async function AdminPage() {
               {postDeploy.last_run_budget.ingest_completed_at
                 ? ` · after ingest ${formatDateTime(String(postDeploy.last_run_budget.ingest_completed_at))}`
                 : ""}
-              ). Cap: <code className="text-ink">POST_DEPLOY_JOBS_MAX_MINUTES</code> (default 30).
+              ). Session cap: <code className="text-ink">POST_DEPLOY_JOBS_MAX_MINUTES</code> (default 30); per job{" "}
+              <code className="text-ink">POST_DEPLOY_JOB_MAX_MINUTES</code> (default 15).
             </p>
           ) : null}
           <ul className="mt-4 space-y-4">
