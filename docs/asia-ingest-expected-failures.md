@@ -50,3 +50,15 @@ Post-deploy image backfill no longer uses ingest **`RunFailureTracker`** host bl
 1. `npm run asia:verify` on Railway MCP.
 2. Ingest with bootstrap only: `ASIA_INGEST_FULL=0 bash scripts/ingest-production-asia-all-enabled.sh`
 3. Watch **Admin → Asia ingest** for zero-discover and failed sources before enabling `--full`.
+
+## Keep disabled until adapter discover > 0
+
+Dry-run (`docs/asia-adapter-ready-slugs.json`, Oct 2026) — **only these enabled slugs had `discovered > 0`:**
+
+- `j-startup`
+- `j-startup-impact`
+- `wavemaker-partners-portfolio`
+
+All other **enabled** `asia-innovation` sources in `config/sources.yaml` should stay **`status: PAUSED`** (or not promoted) until listing HTML is verified and `npm run adapter:sample-dry-run -- --source=<slug>` returns items. Generic `asia-queue-adapters` configs are not safe for production ingest without per-site verification.
+
+**Do not enable without bespoke fixes:** `hkust-entrepreneurship-center` (event/nav junk until path filters + quarantine), and any PaySpot-style third-party author bio domains ingested via generic catalogue patterns.

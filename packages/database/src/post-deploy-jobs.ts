@@ -109,6 +109,27 @@ export async function notePostDeployJobError(
   );
 }
 
+/** Reset jobs stuck in_progress after a deploy crash so the queue can resume. */
+export async function resetStalePostDeployJobs(
+  db: Queryable,
+  currentProcessStartedAt: Date,
+): Promise<number> {
+  const result = await db.query<{ job_key: string }>(
+    `UPDATE post_deploy_jobs
+     SET status = 'pending',
+         last_error = COALESCE(
+           NULLIF(last_error, ''),
+           'Reset to pending after ingestor restart (was in_progress)'
+         ),
+         updated_at = now()
+     WHERE status = 'in_progress'
+       AND updated_at < $1
+     RETURNING job_key`,
+    [currentProcessStartedAt],
+  );
+  return result.rowCount ?? 0;
+}
+
 export async function setPostDeployJobLastRun(
   db: Queryable,
   jobKey: string,

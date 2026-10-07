@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import { htmlToText, type NormalisedDraft, type ResourceType } from "@alice/shared";
+import { catalogueJunkReasons, cleanJStartupSummary, htmlToText, type NormalisedDraft, type ResourceType } from "@alice/shared";
 import { buildDraft, ogImageFromPage } from "./draft.js";
 import { resolveCatalogueTitle } from "./catalogue-parse-helpers.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
@@ -103,15 +103,31 @@ export function parseHtmlCataloguePage(page: FetchedPage, config: HtmlCatalogueC
   let title = resolveCatalogueTitle($, page.html, config.titleSuffixStrip);
   if (!title) throw new Error(`${config.id} page has no title: ${page.url}`);
 
-  const summary = $("meta[property='og:description']").attr("content")?.replace(/&#xA0;/g, " ").trim()
+  const pageUrl = page.finalUrl || page.url;
+  const pathname = new URL(pageUrl).pathname;
+
+  let summary = $("meta[property='og:description']").attr("content")?.replace(/&#xA0;/g, " ").trim()
     || $("meta[name='description']").attr("content")?.trim()
     || title;
+  if (config.id === "j-startup" || config.id === "j-startup-impact") {
+    summary = cleanJStartupSummary(summary);
+  }
   const mainText = htmlToText($("main, article, .entry-content, .content").first().html() ?? "").slice(0, 4000);
-  const externalId = slugFromPath(new URL(page.finalUrl || page.url).pathname);
+  const externalId = slugFromPath(pathname);
+
+  const junkReasons = catalogueJunkReasons({
+    pathname,
+    title,
+    summary,
+    body: mainText,
+  });
+  if (junkReasons.length > 0) {
+    throw new Error(`catalogue_junk:${junkReasons.join(",")}:${pageUrl}`);
+  }
 
   return buildDraft({
     title,
-    url: page.finalUrl || page.url,
+    url: pageUrl,
     externalId,
     summary,
     text: mainText || summary,
