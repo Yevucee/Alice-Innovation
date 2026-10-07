@@ -16,6 +16,7 @@ import { classifyResource } from "./classifier.js";
 import { embedTexts, embeddingSettings, embeddingVersion } from "./embeddings.js";
 import { enrichOnIngest, enrichResourceOnIngest } from "./enrich.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
+import { maybeTranslateSummaryForIngest } from "./ingest-summary-translate.js";
 import { enhanceDraftWithQualityDetailIfNeeded } from "./quality-detail-fetch.js";
 import { getRunFailureTracker } from "./run-failure-tracker.js";
 
@@ -97,6 +98,7 @@ export async function processIngestItem(
   const steps: string[] = [];
   let draft = prepareIngestDraft(parsedDraft, source);
   draft = await enhanceDraftWithQualityDetailIfNeeded(source, draft, getRunFailureTracker());
+  await maybeTranslateSummaryForIngest(draft);
   steps.push("prepare");
 
   const quality = evaluateDraftQuality(draft);

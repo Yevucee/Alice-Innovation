@@ -112,12 +112,6 @@ export {
 } from "./post-deploy-admin.js";
 export { asiaIngestAdminSummary, type AsiaIngestAdminSummary, type AsiaSourceIngestRow } from "./asia-ingest-admin.js";
 export {
-  readResourceUiTranslation,
-  resourceTranslationFingerprint,
-  writeResourceUiTranslation,
-  type ResourceTranslationPayload,
-} from "./resource-translation.js";
-export {
   primaryProgressOffset,
   readLastRunFromProgress,
   mergeLastRunIntoProgress,
