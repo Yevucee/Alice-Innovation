@@ -1,5 +1,5 @@
 import { loadSources } from "@alice/source-registry";
-import { inferPromotedCatalogueConfig } from "@alice/database";
+import { inferCataloguePathPatternFromCollectionUrl, inferPromotedCatalogueConfig } from "@alice/database";
 import { resolve } from "node:path";
 import { createHtmlCatalogueAdapter } from "./html-catalogue.js";
 import type { SourceAdapter } from "./types.js";
@@ -18,6 +18,7 @@ const EXPLICIT_ASIA_ADAPTER_IDS = new Set([
   "iterative-demo-day",
   "appworks-accelerator",
   "kaust-scalex-portfolio",
+  "hkust-entrepreneurship-center",
 ]);
 
 /** Generic html-catalogue adapters for asia-innovation rows without a bespoke adapter. */
@@ -33,11 +34,12 @@ export function buildAsiaQueueCatalogueAdapters(skipAdapterIds: ReadonlySet<stri
     if (!listing) continue;
     try {
       const config = inferPromotedCatalogueConfig(listing);
+      const pathPattern = inferCataloguePathPatternFromCollectionUrl(listing);
       adapters.push(
         createHtmlCatalogueAdapter({
           id: source.adapter,
           siteOrigin: config.siteOrigin,
-          pathPattern: new RegExp(config.pathPattern, "i"),
+          pathPattern: new RegExp(pathPattern, "i"),
           excludePathPattern: /^\/(author|authors|team|staff|people|profile|member|bio|event|events|calendar|news|blog|category|tag|page)(\/|$)/i,
           resourceType: "ORGANISATION",
           evidenceBasis: "PROGRAMME_SELECTED",

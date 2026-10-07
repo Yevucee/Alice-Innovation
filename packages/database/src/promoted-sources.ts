@@ -18,6 +18,17 @@ function slugifyHostPart(value: string): string {
     .slice(0, 48);
 }
 
+/** Detail-page path pattern when collection_url is the listing page (not its parent). */
+export function inferCataloguePathPatternFromCollectionUrl(collectionUrl: string): string {
+  const url = new URL(collectionUrl);
+  const path = url.pathname.replace(/\/$/, "");
+  if (!path || path === "/") {
+    return "^/[^/]+/[^/]+/?$";
+  }
+  const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return `^${escaped}/[^/]+/?$`;
+}
+
 export function inferPromotedCatalogueConfig(homepage: string): {
   siteOrigin: string;
   collectionUrl: string;

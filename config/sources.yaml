@@ -3764,9 +3764,9 @@ sources:
   - id: hkust-entrepreneurship-center
     name: HKUST Entrepreneurship / Technology Commercialisation
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 30 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
+    description: "PARTIAL: Asia source (acquisition). Startup alumni Drupal nodes; events excluded in adapter. Verify via adapter:sample-dry-run."
     homepage: https://ec.hkust.edu.hk/
-    collection_url: https://ec.hkust.edu.hk/
+    collection_url: https://ec.hkust.edu.hk/startup-alumni
     enabled: true
     status: PARTIAL
     resource_types:
@@ -5524,9 +5524,9 @@ sources:
   - id: hkust-innovation
     name: "HKUST Innovation & Entrepreneurship"
     category: asia-innovation
-    description: "PAUSED: Asia source (university). Asia acquisition queue seq 85 (university). duplicate_of=hkust-entrepreneurship-center. Verify collection_url via npm run asia:verify before enabling."
+    description: "PARTIAL: duplicate_of=hkust-entrepreneurship-center. Shares startup-alumni catalogue."
     homepage: https://www.hkust.edu.hk/
-    collection_url: https://ec.hkust.edu.hk/startups
+    collection_url: https://ec.hkust.edu.hk/startup-alumni
     enabled: true
     status: PARTIAL
     resource_types:

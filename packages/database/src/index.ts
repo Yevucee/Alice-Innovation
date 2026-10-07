@@ -220,6 +220,7 @@ export {
 } from "./source-candidates.js";
 export {
   inferPromotedCatalogueConfig,
+  inferCataloguePathPatternFromCollectionUrl,
   loadPromotedCatalogueConfigs,
   loadPromotedSourceRecords,
   uniquePromotedSourceSlug,
