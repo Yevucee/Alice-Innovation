@@ -23,6 +23,7 @@ import { createIngestSourceLoopBudget } from "./ingest-loop-budget.js";
 import { processIngestItem } from "./item-pipeline.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
 import { buildSourcePreviewReport, type SourcePreviewReport } from "./source-preview.js";
+import { resolveIngestItemLimit } from "./ingest-limits.js";
 
 const LOCK_KEY = 84261001;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -131,6 +132,10 @@ export async function runIngestion(
           "SELECT id::text, last_successful_run FROM sources WHERE slug = $1",
           [source.id],
         );
+        const sourceItemLimit = resolveIngestItemLimit({
+          cliLimit: options.limit,
+          lastSuccessfulRun: meta.rows[0]?.last_successful_run ?? null,
+        });
         if (!meta.rows[0]) {
           log("error", "source_not_seeded", { source_id: source.id });
           failedSources.push(source.id);
@@ -181,7 +186,7 @@ export async function runIngestion(
             source,
             userAgent,
             timeoutMs,
-            limit: options.limit,
+            limit: sourceItemLimit,
             fetchText: pacedFetch,
           };
           const detailCtx: AdapterContext = {
@@ -193,7 +198,7 @@ export async function runIngestion(
           const checkpoint = options.full ? await readCheckpoint(pool, source.id) : "";
           const catalogue = refs.map((ref) => canonicaliseUrl(ref.url));
           if (checkpoint) refs = refs.filter((ref) => ref.url > checkpoint);
-          if (options.limit !== null) refs = refs.slice(0, options.limit);
+          if (sourceItemLimit !== null) refs = refs.slice(0, sourceItemLimit);
           let cursor = checkpoint;
           const progressEvery = ingestProgressEvery();
           const refetchDays = ingestDetailRefetchDays();
@@ -205,7 +210,8 @@ export async function runIngestion(
             discovered: counts.discovered,
             to_process: refs.length,
             full: options.full,
-            limit: options.limit,
+            limit: sourceItemLimit,
+            first_run_cap: meta.rows[0]?.last_successful_run == null && options.limit === null,
             detail_refetch_days: refetchDays,
             detail_bootstrap_days: bootstrapDays,
             detail_concurrency: detailConcurrency,

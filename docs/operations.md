@@ -12,7 +12,11 @@ Processes write one JSON object per line: `time`, `severity`, `service`, `event`
 
 A session advisory lock stops a second ingestor from starting while one is running. The second process logs `ingest_skipped` and exits 0 **without** running post-ingest maintenance (enrichment, re-embed, org repair), so overlapping cron/manual runs do not record spurious zero-count backfills.
 
-After deploy **#46** (migration `010_post_deploy_jobs`), each ingest run can advance the post-deploy queue within a time budget (`POST_DEPLOY_JOBS_MAX_MINUTES`, default 30). Progress lives in `post_deploy_jobs` (`progress`, `progress.last_run` per runner session). Logs emit `post_deploy_job_run_summary` (one line per job) and `post_deploy_jobs_run_complete`.
+After deploy **#46** (migration `010_post_deploy_jobs`), each ingest run can advance the post-deploy queue within a time budget (`POST_DEPLOY_JOBS_MAX_MINUTES`, default 30). Each job also stops after `POST_DEPLOY_JOB_MAX_MINUTES` (default 15) in the same session so one queue item cannot monopolize cleanup. Progress lives in `post_deploy_jobs` (`progress`, `progress.last_run` per runner session). Logs emit `post_deploy_job_run_summary` (one line per job) and `post_deploy_jobs_run_complete`.
+
+`bulk_image_backfill_202510` stores `progress.totals` (`scanned`, `filled`, `skipped`, `hosts_blocked`) and paginates the global pass with `global_offset`. It stops advancing after `POST_DEPLOY_IMAGE_BACKFILL_STALL_STEPS` consecutive no-progress steps. Standalone title repair: job `title_case_repair_202610` (migration `019`).
+
+Migration `018_quality_audit_verified`: see `docs/migration-018-production.md` for production checks.
 
 **Cleanup-only:** `npm run start:ingestor -- --cleanup-only` runs the post-deploy queue (30-minute budget) and post-ingest maintenance **without** catalogue ingest. Use this to drain NEEDS_REVIEW / org recovery without a 2-hour crawl.
 

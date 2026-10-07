@@ -27,6 +27,7 @@ const OFFSET_KEYS = [
   "review_reason_offset",
   "listing_source_index",
   "page_source_index",
+  "global_offset",
 ] as const;
 
 /** Primary progress cursor for one-line run summaries. */
