@@ -94,6 +94,12 @@ export const FILTER_SQL = `
     JOIN technologies t ON t.id = rt.technology_id
     WHERE rt.resource_id = r.id AND t.slug = ANY($8)
   ))
+  AND NOT EXISTS (
+    SELECT 1 FROM resource_source_links l_gr
+    JOIN source_items si_gr ON si_gr.id = l_gr.source_item_id
+    WHERE l_gr.resource_id = r.id
+      AND coalesce(si_gr.raw_metadata_json->>'grant_record', '') IN ('true', '1')
+  )
   AND ($10::boolean IS NOT TRUE OR (
     r.review_status NOT IN ('NEEDS_REVIEW', 'ARCHIVED', 'SOURCE_LIMITED')
     AND char_length(trim(coalesce(r.source_summary, ''))) >= 40

@@ -22,8 +22,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://cordis.europa.eu/",
     collection_url: "https://cordis.europa.eu/api/search/results",
     adapter: "cordis-eu-research-projects",
-    enabled: true,
-    notes: "CORDIS API contenttype=project. JSON adapter; skipRobotsGuard.",
+    enabled: false,
+    notes: "CORDIS API contenttype=project. Disabled overnight — use programme-specific CORDIS slugs.",
   },
   {
     id: "cordis-eu-research-results",
@@ -31,8 +31,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://cordis.europa.eu/",
     collection_url: "https://cordis.europa.eu/api/search/results",
     adapter: "cordis-eu-research-results",
-    enabled: true,
-    notes: "CORDIS API contenttype=result.",
+    enabled: false,
+    notes: "CORDIS API contenttype=result. Disabled (research outputs, not innovations).",
   },
   {
     id: "cordis-horizon-europe-projects",
@@ -49,8 +49,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://cordis.europa.eu/",
     collection_url: "https://cordis.europa.eu/api/search/results",
     adapter: "cordis-fp7-projects",
-    enabled: true,
-    notes: "CORDIS programme filter FP7.",
+    enabled: false,
+    notes: "CORDIS programme filter FP7. Disabled overnight.",
   },
   {
     id: "cordis-horizon-2020-projects",
@@ -85,8 +85,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://reporter.nih.gov/",
     collection_url: "https://api.reporter.nih.gov/v2/projects/search",
     adapter: "nih-sbir-sttr-portfolio",
-    enabled: true,
-    notes: "NIH RePORTER API; funding mechanisms SB/ST with recent fiscal years.",
+    enabled: false,
+    notes: "NIH RePORTER SB/ST — disabled overnight (enable later).",
   },
   {
     id: "nih-reporter-innovation-grants",
@@ -94,8 +94,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://reporter.nih.gov/",
     collection_url: "https://api.reporter.nih.gov/v2/projects/search",
     adapter: "nih-reporter-innovation-grants",
-    enabled: true,
-    notes: "NIH RePORTER advanced text search for innovation (2020–2025).",
+    enabled: false,
+    notes: "NIH innovation grants — disabled overnight.",
   },
   {
     id: "nsf-awards-catalogue",
@@ -103,8 +103,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://www.nsf.gov/",
     collection_url: "https://api.nsf.gov/services/v1/awards.json",
     adapter: "nsf-awards-catalogue",
-    enabled: true,
-    notes: "NSF public awards.json API.",
+    enabled: false,
+    notes: "NSF awards — disabled overnight.",
   },
   {
     id: "usaspending-sbir-awards",
@@ -112,8 +112,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://www.usaspending.gov/",
     collection_url: "https://api.usaspending.gov/api/v2/search/spending_by_award/",
     adapter: "usaspending-sbir-awards",
-    enabled: true,
-    notes: "USAspending API keyword SBIR.",
+    enabled: false,
+    notes: "USAspending SBIR — disabled overnight.",
   },
   {
     id: "usaspending-sttr-awards",
@@ -121,8 +121,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://www.usaspending.gov/",
     collection_url: "https://api.usaspending.gov/api/v2/search/spending_by_award/",
     adapter: "usaspending-sttr-awards",
-    enabled: true,
-    notes: "USAspending API keyword STTR.",
+    enabled: false,
+    notes: "USAspending STTR — disabled overnight.",
   },
   {
     id: "ukri-gtr-research-projects",
@@ -130,8 +130,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://gtr.ukri.org/",
     collection_url: "https://gtr.ukri.org/gtr/api/projects",
     adapter: "ukri-gtr-research-projects",
-    enabled: true,
-    notes: "UKRI GTR JSON API (Accept application/json).",
+    enabled: false,
+    notes: "UKRI GTR — disabled overnight.",
   },
   {
     id: "world-bank-development-projects",
@@ -139,8 +139,8 @@ const DEFINITIONS: SourceDef[] = [
     homepage: "https://projects.worldbank.org/",
     collection_url: "https://search.worldbank.org/api/v2/projects",
     adapter: "world-bank-development-projects",
-    enabled: true,
-    notes: "World Bank projects API v2.",
+    enabled: false,
+    notes: "World Bank projects — disabled overnight.",
   },
 ];
 
@@ -173,6 +173,8 @@ function block(def: SourceDef): string {
     limits:
       requests_per_minute: 30
       concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
     coverage:
       historical_backfill: not-started
       notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
