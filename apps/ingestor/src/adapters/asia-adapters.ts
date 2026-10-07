@@ -59,7 +59,17 @@ export const asiaAdapters: SourceAdapter[] = [
   createHtmlCatalogueAdapter({
     id: "circulate-capital",
     siteOrigin: "https://www.circulatecapital.com",
-    pathPattern: /^\/portfolio\/[^/]+\/?$/i,
+    pathPattern: /^\/investments\/[^/]+\/?$/i,
+    extraListingUrls: ["https://www.circulatecapital.com/investments"],
+    resourceType: "ORGANISATION",
+    evidenceBasis: "PROGRAMME_SELECTED",
+  }),
+  createHtmlCatalogueAdapter({
+    id: "hkstp-company-directory",
+    siteOrigin: "https://www.hkstp.org",
+    pathPattern: /^\/en\/directory\/[^/]+\/?$/i,
+    extraListingUrls: ["https://www.hkstp.org/en/directory"],
+    excludePathPattern: /^\/en\/(discover|programmes|insights|news)(\/|$)/i,
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
