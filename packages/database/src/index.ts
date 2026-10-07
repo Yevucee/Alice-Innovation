@@ -112,6 +112,10 @@ export {
 } from "./post-deploy-admin.js";
 export { asiaIngestAdminSummary, type AsiaIngestAdminSummary, type AsiaSourceIngestRow } from "./asia-ingest-admin.js";
 export {
+  resourcesMissingImageAdminSummary,
+  type ResourcesMissingImageAdminSummary,
+} from "./image-admin.js";
+export {
   primaryProgressOffset,
   readLastRunFromProgress,
   mergeLastRunIntoProgress,
