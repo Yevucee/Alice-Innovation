@@ -115,12 +115,16 @@ export function parseHtmlCataloguePage(page: FetchedPage, config: HtmlCatalogueC
   const mainText = htmlToText($("main, article, .entry-content, .content").first().html() ?? "").slice(0, 4000);
   const externalId = slugFromPath(pathname);
 
-  const junkReasons = catalogueJunkReasons({
+  let junkReasons = catalogueJunkReasons({
     pathname,
     title,
     summary,
     body: mainText,
   });
+  if (junkReasons.includes("catalogue_nav_boilerplate") && mainText.length >= 80) {
+    summary = mainText.slice(0, 500);
+    junkReasons = junkReasons.filter((reason) => reason !== "catalogue_nav_boilerplate");
+  }
   if (junkReasons.length > 0) {
     throw new Error(`catalogue_junk:${junkReasons.join(",")}:${pageUrl}`);
   }
