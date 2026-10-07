@@ -4,9 +4,9 @@ import { loadSources } from "../../packages/source-registry/src/load.ts";
 
 test("the registry contains all sources with homepages and no invented blanks", () => {
   const sources = loadSources(new URL("../../config/sources.yaml", import.meta.url).pathname);
-  assert.equal(sources.length, 186);
+  assert.equal(sources.length, 193);
   const ids = new Set(sources.map((source) => source.id));
-  assert.equal(ids.size, 186);
+  assert.equal(ids.size, 193);
   for (const source of sources) {
     const homepage = new URL(source.homepage);
     assert.equal(homepage.protocol, "https:");
@@ -43,6 +43,6 @@ test("the registry contains all sources with homepages and no invented blanks", 
   assert.equal(byId["gitex-africa-supernova"].enabled, false);
   assert.equal(byId["afrilabs"].enabled, true);
   assert.equal(byId["afrilabs"].status, "PARTIAL");
-  assert.equal(paused.length, 28);
+  assert.equal(paused.length, 29);
   assert.ok(paused.every((source) => source.enabled === false));
 });
