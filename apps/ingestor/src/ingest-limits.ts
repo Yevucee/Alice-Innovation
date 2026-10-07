@@ -7,8 +7,13 @@ export function firstSourceIngestItemLimit(): number {
 export function resolveIngestItemLimit(input: {
   cliLimit: number | null;
   lastSuccessfulRun: Date | null;
+  perSourceFirstRunLimit?: number | null;
 }): number | null {
   if (input.cliLimit !== null) return input.cliLimit;
-  if (input.lastSuccessfulRun === null) return firstSourceIngestItemLimit();
+  if (input.lastSuccessfulRun === null) {
+    const perSource = input.perSourceFirstRunLimit;
+    if (perSource != null && Number.isFinite(perSource) && perSource > 0) return perSource;
+    return firstSourceIngestItemLimit();
+  }
   return null;
 }

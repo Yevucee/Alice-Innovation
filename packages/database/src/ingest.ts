@@ -9,6 +9,8 @@ export interface UpsertResult {
   resourceId: string;
   sourceItemId: string;
   contentHash: string;
+  /** Resource already existed from another source (same canonical URL). */
+  reusedResourceFromOtherSource?: boolean;
 }
 
 export interface UpsertDraftOptions {
@@ -141,6 +143,7 @@ export async function upsertDraft(
         resourceId,
         sourceItemId: row.id,
         contentHash: hash,
+        reusedResourceFromOtherSource: false,
       };
     }
 
@@ -151,6 +154,9 @@ export async function upsertDraft(
       [draftWithMeta.canonicalUrl],
     );
 
+    const reusedResourceFromOtherSource = Boolean(
+      sameUrl.rows[0]?.resource_id && !existing.rows[0]?.resource_id,
+    );
     let resourceId = sameUrl.rows[0]?.resource_id ?? existing.rows[0]?.resource_id ?? null;
     let createdResource = false;
     const summary = truncate(draftWithMeta.sourceSummary, 500);
@@ -363,6 +369,7 @@ export async function upsertDraft(
       resourceId,
       sourceItemId,
       contentHash: hash,
+      reusedResourceFromOtherSource,
     };
   } catch (error) {
     await client.query("ROLLBACK");
