@@ -2966,7 +2966,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 5 (india). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://aim.gov.in/
-    collection_url: https://aim.gov.in/
+    collection_url: https://aim.gov.in/atal-incubation-centres.php
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3254,7 +3254,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 14 (singapore). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://enterprise.nus.edu.sg/
-    collection_url: https://enterprise.nus.edu.sg/
+    collection_url: https://enterprise.nus.edu.sg/startups
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3801,7 +3801,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 31 (thailand). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://startupthailand.org/
-    collection_url: https://startupthailand.org/
+    collection_url: https://startupthailand.org/directory
     enabled: true
     status: PARTIAL
     resource_types:
@@ -4219,7 +4219,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 44 (vietnam). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://nic.gov.vn/
-    collection_url: https://nic.gov.vn/
+    collection_url: https://nic.gov.vn/en/startup-ecosystem
     enabled: true
     status: PARTIAL
     resource_types:
@@ -4539,7 +4539,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 54 (central-asia). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://astanahub.com/
-    collection_url: https://astanahub.com/en/community
+    collection_url: https://astanahub.com/en/startup
     enabled: true
     status: PARTIAL
     resource_types:
@@ -4827,7 +4827,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 63 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://innovation.kaust.edu.sa/
-    collection_url: https://innovation.kaust.edu.sa/spinouts
+    collection_url: https://innovation.kaust.edu.sa/entrepreneurship/spinouts
     enabled: true
     status: PARTIAL
     resource_types:
@@ -5276,7 +5276,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 77 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.insignia.vc/
-    collection_url: https://www.insignia.vc/portfolio
+    collection_url: https://www.insignia.vc/companies
     enabled: true
     status: PARTIAL
     resource_types:
@@ -5308,7 +5308,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 78 (university). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.iitb.ac.in/
-    collection_url: https://www.sineiitb.org/
+    collection_url: https://www.sineiitb.org/portfolio
     enabled: true
     status: PARTIAL
     resource_types:
