@@ -7,20 +7,33 @@
 3. `npx tsx scripts/asia-adapter-dry-run-wave.ts` — discover counts for priority + VC slugs
 4. `npx tsx scripts/asia-enable-source.ts <slug> --note "..."` — enable after dry-run
 
-## Enabled sources (wave 1)
+## Enabled sources
 
-| Slug | Discover (dry-run) | Notes |
-|------|-------------------|--------|
-| `j-startup` | 269+ | `/en/startups/*.html` |
-| `wavemaker-partners-portfolio` | many | `wavemaker.vc/portfolio/*` |
+All **85** `asia-innovation` queue rows are **`enabled: true`** (generic html-catalogue adapters + bespoke adapters). Re-list:
+
+```bash
+npm run asia:list-enabled
+```
+
+Bespoke adapters with strong discover: `j-startup`, `wavemaker-partners-portfolio`. Many government/hub rows use **generic catalogue** adapters (`asia-queue-adapters.ts`) — dry-run per slug before expecting full catalogues.
 
 ## Production ingest
 
+**Quick wave (2 sources):**
+
 ```bash
 bash scripts/ingest-production-asia-wave.sh
-# or remote:
-bash scripts/run-with-production-env.sh bash scripts/ingest-production-asia-wave.sh
 ```
+
+**All enabled Asia sources (long):**
+
+```bash
+bash scripts/ingest-production-asia-all-enabled.sh
+# remote:
+bash scripts/run-with-production-env.sh bash scripts/ingest-production-asia-all-enabled.sh
+```
+
+Copy-paste ops prompt for Claude on Railway: **`docs/railway-asia-ingest-prompt.md`**
 
 ## SPAs / blocked (adapter backlog)
 

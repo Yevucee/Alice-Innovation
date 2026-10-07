@@ -14,6 +14,7 @@ import { catalogueAdapters } from "./catalogue-adapters.js";
 import { africaAdapters } from "./africa-adapters.js";
 import { africaSecondPassAdapters } from "./africa-second-pass-adapters.js";
 import { asiaAdapters } from "./asia-adapters.js";
+import { buildAsiaQueueCatalogueAdapters } from "./asia-queue-adapters.js";
 import { pausedCatalogueAdapters } from "./paused-catalogue-adapters.js";
 import { buildPlaceholderAdapters, remainingCatalogueAdapters } from "./placeholder-adapters.js";
 import { seedstarsAdapter } from "./seedstars.js";
@@ -40,7 +41,10 @@ const adapterById = new Map<string, SourceAdapter>();
 for (const adapter of CORE_ADAPTERS) {
   adapterById.set(adapter.id, adapter);
 }
-for (const adapter of buildPlaceholderAdapters(new Set(CORE_ADAPTERS.map((item) => item.id)))) {
+for (const adapter of buildAsiaQueueCatalogueAdapters(new Set(adapterById.keys()))) {
+  if (!adapterById.has(adapter.id)) adapterById.set(adapter.id, adapter);
+}
+for (const adapter of buildPlaceholderAdapters(new Set(adapterById.keys()))) {
   if (!adapterById.has(adapter.id)) adapterById.set(adapter.id, adapter);
 }
 

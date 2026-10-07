@@ -1,0 +1,435 @@
+{
+  "generatedAt": "2026-10-07T07:24:43.426Z",
+  "ready": [
+    "j-startup",
+    "j-startup-impact",
+    "wavemaker-partners-portfolio"
+  ],
+  "rows": [
+    {
+      "id": "birac-technology-portal",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-india-showcase",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "national-startup-awards-india",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "ccamp",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "atal-innovation-mission",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "atal-incubation-centres",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "birac-bionest",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-sg",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "sginnovate-portfolio",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "open-innovation-network-singapore",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "switch-slingshot",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "ipi-singapore-innovation-marketplace",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "the-liveability-challenge",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "nus-enterprise",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "ntuitive",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "findit-taiwan",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-terrace-taiwan",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-terrace-kaohsiung",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "j-startup",
+      "discovered": 268,
+      "ok": true
+    },
+    {
+      "id": "j-startup-impact",
+      "discovered": 269,
+      "ok": true
+    },
+    {
+      "id": "seoul-startup-plus",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "dcamp-startup-directory",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "seoul-bio-hub",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "k-startup-grand-challenge",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "kised",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "hkstp-company-directory",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "hkstp-elite-portfolio",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "cyberport",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "cyberport-incubation-programme",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "hkust-entrepreneurship-center",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-thailand-ecosystem",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "nia-thailand",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "nia-innovation-catalogue",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "mystartup-malaysia",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "mystartup-startup-directory",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "cradle-fund",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "cradle-seed-ventures",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-studio-indonesia",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "1000-startup-digital",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "climate-impact-innovations-challenge",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "indigo-indonesia",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-wheel",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "techfest-vietnam",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "vietnam-nic",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-philippines",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-philippines-directory",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-bangladesh",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-bangladesh-portfolio",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "ignite-pakistan",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "pakistan-national-incubation-centres",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-sri-lanka",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "astana-hub",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "astana-hub-startup-programmes",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "astana-hub-company-network",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "hub71",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "hub71-startup-directory",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "sheraa",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "in5-dubai",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "kaust-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "kaust-innovation-ventures",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "kaust-taqadam",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "kaust-scalex-portfolio",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "kaust-entrepreneurial-spinouts",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "china-innovation-entrepreneurship-competition",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "startup-in-shanghai",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "china-college-students-innovation-competition",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "hicool",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "adb-ventures-portfolio",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "circulate-capital",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "accelerating-asia",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "iterative",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "iterative-demo-day",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "appworks-accelerator",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "wavemaker-impact-portfolio",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "wavemaker-partners-portfolio",
+      "discovered": 12,
+      "ok": true
+    },
+    {
+      "id": "thinkzone-ventures",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "insignia-ventures-partners",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "iit-bombay-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "iit-delhi-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "iit-madras-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "iit-kanpur-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "iit-kharagpur-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "nus-enterprise-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "ntu-innovation",
+      "discovered": 0,
+      "ok": false
+    },
+    {
+      "id": "hkust-innovation",
+      "discovered": 0,
+      "ok": false
+    }
+  ]
+}
