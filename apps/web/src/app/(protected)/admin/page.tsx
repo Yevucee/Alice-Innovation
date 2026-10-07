@@ -10,6 +10,7 @@ import {
   postDeployJobsAdminPanel,
   qualityAdminStatus,
   asiaIngestAdminSummary,
+  resourcesMissingImageAdminSummary,
 } from "@alice/database";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
@@ -17,7 +18,7 @@ import { SourceCandidateForm } from "@/components/source-candidate-form";
 import { SourceCandidateList } from "@/components/source-candidate-list";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas, asiaIngest] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas, asiaIngest, imageCoverage] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
@@ -28,6 +29,7 @@ export default async function AdminPage() {
     postDeployJobsAdminPanel(pool()).catch(() => null),
     listSourceCandidates(pool(), 12).catch(() => []),
     asiaIngestAdminSummary(pool()).catch(() => null),
+    resourcesMissingImageAdminSummary(pool()).catch(() => null),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -70,6 +72,37 @@ export default async function AdminPage() {
           </div>
         ))}
       </dl>
+
+      {imageCoverage ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">Images</h2>
+          <p className="mt-1 text-xs text-muted">
+            Active resources with no usable image on any linked source item (same rule as quality browse).
+          </p>
+          <p className="mt-2 text-muted">
+            Missing image:{" "}
+            <span className="font-medium text-ink">
+              {imageCoverage.total_active_resources_missing_image.toLocaleString()}
+            </span>
+          </p>
+          <table className="mt-4 w-full text-left text-xs text-muted">
+            <thead>
+              <tr className="border-b border-line text-ink">
+                <th className="py-1 pr-2 font-medium">Source</th>
+                <th className="py-1 font-medium">Resources missing image</th>
+              </tr>
+            </thead>
+            <tbody>
+              {imageCoverage.top_sources.map((row) => (
+                <tr key={row.slug} className="border-b border-line/60">
+                  <td className="py-1 pr-2 text-ink">{row.slug}</td>
+                  <td className="py-1">{row.missing.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ) : null}
 
       {quality ? (
         <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
