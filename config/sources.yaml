@@ -5786,3 +5786,213 @@ sources:
       historical_backfill: not-started
       notes: Added from asia-acquisition-queue.json; adapter not verified.
 
+  - id: cordis-eu-research-projects
+    name: CORDIS EU research projects
+    category: general-innovation
+    description: "OPEN DATA: CORDIS API contenttype=project. JSON adapter; skipRobotsGuard."
+    homepage: https://cordis.europa.eu/
+    collection_url: https://cordis.europa.eu/api/search/results
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: cordis-eu-research-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "CORDIS API contenttype=project. JSON adapter; skipRobotsGuard."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: cordis-eu-research-results
+    name: CORDIS EU research results
+    category: general-innovation
+    description: "OPEN DATA: CORDIS API contenttype=result."
+    homepage: https://cordis.europa.eu/
+    collection_url: https://cordis.europa.eu/api/search/results
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: cordis-eu-research-results
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "CORDIS API contenttype=result."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: cordis-horizon-europe-projects
+    name: CORDIS Horizon Europe projects
+    category: general-innovation
+    description: "OPEN DATA: CORDIS programme filter HORIZON."
+    homepage: https://cordis.europa.eu/
+    collection_url: https://cordis.europa.eu/api/search/results
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: cordis-horizon-europe-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "CORDIS programme filter HORIZON."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: cordis-fp7-projects
+    name: CORDIS FP7 projects
+    category: general-innovation
+    description: "OPEN DATA: CORDIS programme filter FP7."
+    homepage: https://cordis.europa.eu/
+    collection_url: https://cordis.europa.eu/api/search/results
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: cordis-fp7-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "CORDIS programme filter FP7."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: cordis-horizon-2020-projects
+    name: CORDIS Horizon 2020 projects
+    category: general-innovation
+    description: "OPEN DATA: CORDIS programme filter H2020."
+    homepage: https://cordis.europa.eu/
+    collection_url: https://cordis.europa.eu/api/search/results
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: cordis-horizon-2020-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "CORDIS programme filter H2020."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: cordis-eic-accelerator-projects
+    name: CORDIS EIC Accelerator projects
+    category: general-innovation
+    description: "OPEN DATA: CORDIS programme filter EIC."
+    homepage: https://cordis.europa.eu/
+    collection_url: https://cordis.europa.eu/api/search/results
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: cordis-eic-accelerator-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "CORDIS programme filter EIC."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: eu-innovation-radar
+    name: EU Innovation Radar
+    category: general-innovation
+    description: "OPEN DATA: Official Innovation Radar API. Enable after dry-run passes from ingestor egress (some clients see HTTP 403)."
+    homepage: https://innovation-radar.ec.europa.eu/
+    collection_url: https://innovation-radar.ec.europa.eu/innoradar-api/v1/innovations
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: eu-innovation-radar
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "Official Innovation Radar API. Enable after dry-run passes from ingestor egress (some clients see HTTP 403)."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.

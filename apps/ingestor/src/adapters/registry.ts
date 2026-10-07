@@ -18,6 +18,7 @@ import { buildAsiaQueueCatalogueAdapters } from "./asia-queue-adapters.js";
 import { pausedCatalogueAdapters } from "./paused-catalogue-adapters.js";
 import { buildPlaceholderAdapters, remainingCatalogueAdapters } from "./placeholder-adapters.js";
 import { seedstarsAdapter } from "./seedstars.js";
+import { openDataAdapters } from "./open-data/index.js";
 
 const CORE_ADAPTERS: SourceAdapter[] = [
   solarImpulseAdapter,
@@ -29,6 +30,7 @@ const CORE_ADAPTERS: SourceAdapter[] = [
   challengeWorksAdapter,
   wipoGreenAdapter,
   seedstarsAdapter,
+  ...openDataAdapters,
   ...catalogueAdapters,
   ...africaAdapters,
   ...africaSecondPassAdapters,
