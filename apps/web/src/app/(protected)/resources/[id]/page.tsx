@@ -8,6 +8,8 @@ import {
 } from "@alice/database";
 import { AddToCollection } from "@/components/add-to-collection";
 import { ResourceCard } from "@/components/resource-card";
+import { ResourceTranslatePanel } from "@/components/resource-translate-panel";
+import { translateOnDemandEnabled } from "@/lib/translate-openrouter";
 import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, sourceExcerptDuplicatesSummary } from "@/lib/format";
 import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared";
 import { pool } from "@/lib/db";
@@ -57,36 +59,40 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
     && !sourceExcerptDuplicatesSummary(String(resource.source_summary), String(resource.excerpt));
   const evidenceLabel = formatEvidence(String(resource.evidence_stage));
   const evidenceBasisLabel = formatEvidenceBasis(String(resource.evidence_basis));
+  const translateEnabled = translateOnDemandEnabled();
+  const translationOriginal = {
+    title: sanitizeDisplayTitle(formatDisplayTitle(String(resource.title))),
+    summary: String(resource.source_summary),
+    excerpt: showSourceInformation ? String(resource.excerpt) : undefined,
+    problem_statement: interpretation?.problem_statement ? String(interpretation.problem_statement) : undefined,
+    how_it_works: interpretation?.how_it_works ? String(interpretation.how_it_works) : undefined,
+    why_it_is_interesting: interpretation?.why_it_is_interesting
+      ? String(interpretation.why_it_is_interesting)
+      : undefined,
+    intended_users: interpretation?.intended_users ? String(interpretation.intended_users) : undefined,
+    implementation_requirements: interpretation?.implementation_requirements
+      ? String(interpretation.implementation_requirements)
+      : undefined,
+  };
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10 md:px-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="text-[11px] font-medium tracking-wide text-muted uppercase">
-          {formatResourceType(String(resource.resource_type))}
-        </p>
-        {isPick ? (
-          <span className="rounded bg-ink px-2 py-0.5 text-[10px] font-medium tracking-wide text-white">
-            ALICE PICK
-          </span>
-        ) : null}
-      </div>
-      <h1 className="mt-2 text-3xl font-medium tracking-tight">
-        {sanitizeDisplayTitle(formatDisplayTitle(String(resource.title)))}
-      </h1>
-      <p className="mt-4 text-base leading-relaxed text-muted">{String(resource.source_summary)}</p>
-      <p className="mt-3 text-sm text-muted">
-        {metaLine([
+      <ResourceTranslatePanel
+        resourceId={id}
+        language={resource.language ? String(resource.language) : null}
+        original={translationOriginal}
+        translateEnabled={translateEnabled}
+        typeLabel={formatResourceType(String(resource.resource_type))}
+        isPick={isPick}
+        metaLineText={metaLine([
           ...locationLine.slice(0, 3),
           ...sectors.slice(0, 2).map((s) => s.name),
           ...technologies.slice(0, 2).map((t) => t.name),
           evidenceLabel,
         ])}
-      </p>
-      {evidenceBasisLabel ? (
-        <p className="mt-2 text-xs text-muted" title="How we know this maturity level">
-          Evidence: {evidenceBasisLabel}
-        </p>
-      ) : null}
+        evidenceBasisLabel={evidenceBasisLabel}
+        showExcerptSection={Boolean(showSourceInformation)}
+      />
 
       {problems.length > 0 ? (
         <p className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -108,45 +114,6 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           <img src={String(resource.image_url)} alt="" className="w-full object-cover" />
         </div>
       ) : null}
-
-      <div className="mt-10 space-y-8 text-sm leading-relaxed">
-        {interpretation?.problem_statement ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">The problem</h2>
-            <p className="mt-2">{String(interpretation.problem_statement)}</p>
-          </section>
-        ) : null}
-        {interpretation?.how_it_works ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">How it works</h2>
-            <p className="mt-2">{String(interpretation.how_it_works)}</p>
-          </section>
-        ) : null}
-        {interpretation?.why_it_is_interesting ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Why it is interesting</h2>
-            <p className="mt-2">{String(interpretation.why_it_is_interesting)}</p>
-          </section>
-        ) : null}
-        {interpretation?.intended_users ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Who it is for</h2>
-            <p className="mt-2">{String(interpretation.intended_users)}</p>
-          </section>
-        ) : null}
-        {interpretation?.implementation_requirements ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Implementation</h2>
-            <p className="mt-2">{String(interpretation.implementation_requirements)}</p>
-          </section>
-        ) : null}
-        {showSourceInformation ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Source information</h2>
-            <p className="mt-2 whitespace-pre-wrap text-muted">{String(resource.excerpt)}</p>
-          </section>
-        ) : null}
-      </div>
 
       {locationLine.length > 0 ? (
         <section className="mt-8 text-sm">
