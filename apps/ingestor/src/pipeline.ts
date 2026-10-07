@@ -135,6 +135,7 @@ export async function runIngestion(
         const sourceItemLimit = resolveIngestItemLimit({
           cliLimit: options.limit,
           lastSuccessfulRun: meta.rows[0]?.last_successful_run ?? null,
+          perSourceFirstRunLimit: source.limits.first_run_item_limit ?? null,
         });
         if (!meta.rows[0]) {
           log("error", "source_not_seeded", { source_id: source.id });
@@ -163,7 +164,34 @@ export async function runIngestion(
           enrich_applied: 0,
           detail_skipped: 0,
           detail_skipped_bootstrap: 0,
+          cross_source_reuse: 0,
+          dropped_checkpoint: 0,
+          dropped_limit: 0,
+          skipped_duplicate_of: false,
         };
+        if (source.duplicate_of) {
+          const sibling = await pool.query<{ item_count: number }>(
+            `SELECT item_count FROM sources WHERE slug = $1`,
+            [source.duplicate_of],
+          );
+          const siblingItems = Number(sibling.rows[0]?.item_count ?? 0);
+          if (siblingItems > 0) {
+            counts.skipped_duplicate_of = true;
+            await finishRun(
+              runId,
+              "SUCCESS",
+              counts,
+              Date.now() - started,
+              `skipped_duplicate_of:${source.duplicate_of};sibling_items=${siblingItems}`,
+            );
+            log("info", "source_skipped_duplicate_of", {
+              source_id: source.id,
+              duplicate_of: source.duplicate_of,
+              sibling_items: siblingItems,
+            });
+            continue;
+          }
+        }
         try {
           const adapter = getAdapter(source.adapter);
           if (!adapter) {
@@ -197,8 +225,15 @@ export async function runIngestion(
           counts.discovered = refs.length;
           const checkpoint = options.full ? await readCheckpoint(pool, source.id) : "";
           const catalogue = refs.map((ref) => canonicaliseUrl(ref.url));
-          if (checkpoint) refs = refs.filter((ref) => ref.url > checkpoint);
-          if (sourceItemLimit !== null) refs = refs.slice(0, sourceItemLimit);
+          if (checkpoint) {
+            const before = refs.length;
+            refs = refs.filter((ref) => ref.url > checkpoint);
+            counts.dropped_checkpoint = before - refs.length;
+          }
+          if (sourceItemLimit !== null && refs.length > sourceItemLimit) {
+            counts.dropped_limit = refs.length - sourceItemLimit;
+            refs = refs.slice(0, sourceItemLimit);
+          }
           let cursor = checkpoint;
           const progressEvery = ingestProgressEvery();
           const refetchDays = ingestDetailRefetchDays();
@@ -260,6 +295,7 @@ export async function runIngestion(
             if (saved.outcome === "unchanged") counts.unchanged += 1;
             else if (saved.outcome === "created") counts.created += 1;
             else counts.updated += 1;
+            if (saved.reusedResourceFromOtherSource) counts.cross_source_reuse += 1;
             if (processed.steps.includes("enrich")) {
               counts.enrich_attempted += 1;
               counts.enrich_applied += 1;
@@ -395,19 +431,48 @@ export async function runIngestion(
   return { failedSources, touchedResourceIds: [...touchedResourceIds], ingestSkippedDueToLock: false, sourcePreviewReport };
 }
 
+type IngestRunCounts = {
+  discovered: number;
+  fetched: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  failed: number;
+  duplicates: number;
+  enrich_attempted?: number;
+  enrich_applied?: number;
+  detail_skipped?: number;
+  detail_skipped_bootstrap?: number;
+  cross_source_reuse?: number;
+  dropped_checkpoint?: number;
+  dropped_limit?: number;
+  skipped_duplicate_of?: boolean;
+};
+
 async function finishRun(
   runId: string,
   status: string,
-  counts: { discovered: number; fetched: number; created: number; updated: number; unchanged: number; failed: number; duplicates: number },
+  counts: IngestRunCounts,
   durationMs: number,
   errorSummary: string | null,
 ): Promise<void> {
+  const pipelineStats = {
+    detail_skipped: counts.detail_skipped ?? 0,
+    detail_skipped_bootstrap: counts.detail_skipped_bootstrap ?? 0,
+    cross_source_reuse: counts.cross_source_reuse ?? 0,
+    dropped_checkpoint: counts.dropped_checkpoint ?? 0,
+    dropped_limit: counts.dropped_limit ?? 0,
+    skipped_duplicate_of: counts.skipped_duplicate_of ?? false,
+    enrich_attempted: counts.enrich_attempted ?? 0,
+    enrich_applied: counts.enrich_applied ?? 0,
+  };
   await getPool().query(
     `UPDATE ingestion_runs SET
        status = $2, completed_at = now(), items_discovered = $3, items_fetched = $4,
        items_new = $5, items_updated = $6, items_unchanged = $7, items_failed = $8,
        resources_created = $5, resources_updated = $6, duplicates_found = $9,
-       error_summary = $10, duration_ms = $11
+       error_summary = $10, duration_ms = $11,
+       pipeline_stats = $12::jsonb
      WHERE id = $1`,
     [
       runId,
@@ -421,6 +486,7 @@ async function finishRun(
       counts.duplicates,
       errorSummary,
       durationMs,
+      JSON.stringify(pipelineStats),
     ],
   );
 }

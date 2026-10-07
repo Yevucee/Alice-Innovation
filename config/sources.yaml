@@ -3379,6 +3379,7 @@ sources:
 
   - id: startup-terrace-kaohsiung
     name: Startup Terrace Kaohsiung / Asia New Bay Area
+    duplicate_of: startup-terrace-taiwan
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 18 (taiwan). duplicate_of=startup-terrace-taiwan. Kaohsiung / ANBA listing on Startup Terrace. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://startupterrace.tw/
@@ -3443,6 +3444,7 @@ sources:
 
   - id: j-startup-impact
     name: J-Startup Impact
+    duplicate_of: j-startup
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 20 (japan). duplicate_of=j-startup. Ingest Impact designation separately from core J-Startup list. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.j-startup.go.jp/en/
@@ -3859,6 +3861,7 @@ sources:
 
   - id: nia-innovation-catalogue
     name: NIA Innovation Product / Innovation Catalogue
+    duplicate_of: nia-thailand
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 33 (thailand). Locate current public product catalogue during audit. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.nia.or.th/
@@ -3987,6 +3990,7 @@ sources:
 
   - id: cradle-seed-ventures
     name: Cradle Seed Ventures
+    duplicate_of: cradle-fund
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 37 (malaysia). Verify current portfolio route from Cradle site during audit. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.cradle.com.my/
@@ -5459,6 +5463,7 @@ sources:
 
   - id: nus-enterprise-innovation
     name: NUS Enterprise Innovation
+    duplicate_of: nus-enterprise
     category: asia-innovation
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 83 (university). duplicate_of=nus-enterprise. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://enterprise.nus.edu.sg/
@@ -5491,6 +5496,7 @@ sources:
 
   - id: ntu-innovation
     name: "NTU Innovation & Entrepreneurship"
+    duplicate_of: ntuitive
     category: asia-innovation
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 84 (university). duplicate_of=ntuitive-portfolio. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.ntu.edu.sg/
@@ -5523,6 +5529,7 @@ sources:
 
   - id: hkust-innovation
     name: "HKUST Innovation & Entrepreneurship"
+    duplicate_of: hkust-entrepreneurship-center
     category: asia-innovation
     description: "PARTIAL: duplicate_of=hkust-entrepreneurship-center. Shares startup-alumni catalogue."
     homepage: https://www.hkust.edu.hk/

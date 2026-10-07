@@ -14,3 +14,10 @@ test("resolveIngestItemLimit respects explicit CLI limit", () => {
 test("resolveIngestItemLimit is unlimited after first success", () => {
   assert.equal(resolveIngestItemLimit({ cliLimit: null, lastSuccessfulRun: new Date() }), null);
 });
+
+test("resolveIngestItemLimit uses per-source first-run override", () => {
+  assert.equal(
+    resolveIngestItemLimit({ cliLimit: null, lastSuccessfulRun: null, perSourceFirstRunLimit: 400 }),
+    400,
+  );
+});

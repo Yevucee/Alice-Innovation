@@ -23,6 +23,7 @@
     "ingest:cleanup-only": "tsx apps/ingestor/src/index.ts -- --cleanup-only",
     "check:image-coverage": "tsx scripts/check-image-coverage.ts",
     "adapter:sample-dry-run": "tsx scripts/adapter-sample-dry-run.ts",
+    "report:ingest-losses": "tsx scripts/report-ingest-source-losses.ts",
     "ingest:production-backfill-images": "bash scripts/ingest-production-backfill-images.sh",
     "ingest:production-backfill-images:remote": "bash scripts/run-with-production-env.sh npm run ingest:production-backfill-images",
     "backfill:images-from-db": "tsx scripts/backfill-images-from-db.ts",
