@@ -2,6 +2,9 @@ import { buildDraft } from "../draft.js";
 import type { AdapterContext, DiscoveredRef, FetchedPage, SourceAdapter } from "../types.js";
 import type { NormalisedDraft } from "@alice/shared";
 import { fetchJson, listingPageFromJson } from "./http-json.js";
+import { cordisHitLooksInnovationRelevant } from "./innovation-filter.js";
+
+const PHASE2_DISCOVER_CAP = 500;
 
 const CORDIS_SEARCH = "https://cordis.europa.eu/api/search/results";
 
@@ -50,6 +53,9 @@ export function parseCordisRecord(page: FetchedPage): NormalisedDraft {
   }
   const title = hit.title?.replace(/\s+/g, " ").trim();
   if (!title) throw new Error(`CORDIS record has no title: ${page.url}`);
+  if (!cordisHitLooksInnovationRelevant(hit)) {
+    throw new Error(`cordis_not_innovation_relevant:${page.url}`);
+  }
   const summary = hit.teaser?.replace(/\s+/g, " ").trim() || title;
   const externalId = hit.relatedProjectReference?.trim() || hit.id?.trim() || page.url;
   return buildDraft({
@@ -58,11 +64,11 @@ export function parseCordisRecord(page: FetchedPage): NormalisedDraft {
     externalId,
     summary,
     text: summary,
-    resourceType: "PROJECT",
+    resourceType: "PROGRAMME",
     organisationName: hit.relatedProjectAcronym?.trim() || null,
-    evidenceBasis: "INDEPENDENT_ASSESSMENT",
+    evidenceBasis: "FUNDER_SELECTED",
     evidenceStage: "UNKNOWN",
-    rawMetadata: { cordis: true, contentType: hit.contentType },
+    rawMetadata: { cordis: true, contentType: hit.contentType, grant_record: true },
     etag: page.etag,
     lastModified: page.lastModified,
   });
@@ -77,8 +83,8 @@ export function createCordisAdapter(config: CordisAdapterConfig): SourceAdapter 
       const refs: DiscoveredRef[] = [];
       const seenProjectRefs = new Set<string>();
       const pageSize = config.pageSize;
-      const maxRefs = ctx.limit ?? config.maxPagesDefault * pageSize;
-      const maxPages = config.maxPagesDefault;
+      const maxRefs = Math.min(ctx.limit ?? PHASE2_DISCOVER_CAP, PHASE2_DISCOVER_CAP);
+      const maxPages = Math.ceil(PHASE2_DISCOVER_CAP / pageSize) + 5;
       const timeoutMs = Math.max(ctx.timeoutMs, 45_000);
 
       for (let page = 1; page <= maxPages; page += 1) {
@@ -94,6 +100,7 @@ export function createCordisAdapter(config: CordisAdapterConfig): SourceAdapter 
             const projectRef = hit.relatedProjectReference?.trim();
             const dedupeKey = projectRef || hit.id?.trim();
             if (!dedupeKey || seenProjectRefs.has(dedupeKey)) continue;
+            if (!cordisHitLooksInnovationRelevant(hit)) continue;
             seenProjectRefs.add(dedupeKey);
             const publicUrl = cordisPublicUrl(hit);
             refs.push({

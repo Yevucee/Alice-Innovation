@@ -29,6 +29,8 @@ export interface SourceRecord {
     concurrency: number;
     /** Overrides INGEST_FIRST_RUN_ITEM_LIMIT for first ingest of this source. */
     first_run_item_limit?: number | null;
+    /** Hard cap on items processed every ingest run (phase-2 open-data). */
+    max_items_per_run?: number | null;
   };
   /** When set, catalogue overlaps another slug (e.g. j-startup-impact → j-startup). Ingest skips when sibling has items. */
   duplicate_of?: string | null;

@@ -132,11 +132,15 @@ export async function runIngestion(
           "SELECT id::text, last_successful_run FROM sources WHERE slug = $1",
           [source.id],
         );
-        const sourceItemLimit = resolveIngestItemLimit({
+        let sourceItemLimit = resolveIngestItemLimit({
           cliLimit: options.limit,
           lastSuccessfulRun: meta.rows[0]?.last_successful_run ?? null,
           perSourceFirstRunLimit: source.limits.first_run_item_limit ?? null,
         });
+        const perRunCap = source.limits.max_items_per_run;
+        if (perRunCap != null && Number.isFinite(perRunCap) && perRunCap > 0) {
+          sourceItemLimit = sourceItemLimit === null ? perRunCap : Math.min(sourceItemLimit, perRunCap);
+        }
         if (!meta.rows[0]) {
           log("error", "source_not_seeded", { source_id: source.id });
           failedSources.push(source.id);

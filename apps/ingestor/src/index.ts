@@ -102,15 +102,26 @@ async function main(): Promise<void> {
     log("info", "post_deploy_jobs_reset_stale", { count: resetJobs });
   }
   const only = argValues("--source");
+  const onlyEnv = process.env.INGEST_ONLY_SOURCES?.split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean) ?? [];
+  if (onlyEnv.length > 0 && only.length === 0) {
+    only.push(...onlyEnv);
+  }
   const previewEnv = process.env.INGEST_SOURCE_PREVIEW_SLUG?.trim();
   if (previewEnv && only.length === 0) {
     only.push(previewEnv);
   }
   const cleanupOnly = process.argv.includes("--cleanup-only");
-  const dueOnly = process.argv.includes("--due") || (only.length === 0 && !previewEnv && !cleanupOnly);
-  const full = process.argv.includes("--full");
+  const forcedOnly = only.length > 0;
+  const dueOnly = !forcedOnly && (process.argv.includes("--due") || (!previewEnv && !cleanupOnly));
+  const full = process.argv.includes("--full")
+    || process.env.INGEST_FULL === "1"
+    || process.env.INGEST_FULL?.toLowerCase() === "true";
   const dryRun = process.argv.includes("--dry-run") || Boolean(previewEnv);
-  const limit = argNumber("--limit") ?? (previewEnv ? Number(process.env.INGEST_SOURCE_PREVIEW_LIMIT ?? "20") : null);
+  const envItemLimit = process.env.INGEST_ITEM_LIMIT?.trim();
+  const parsedEnvLimit = envItemLimit ? Number(envItemLimit) : null;
+  const limit = argNumber("--limit")
+    ?? (Number.isFinite(parsedEnvLimit) && parsedEnvLimit! > 0 ? parsedEnvLimit : null)
+    ?? (previewEnv ? Number(process.env.INGEST_SOURCE_PREVIEW_LIMIT ?? "20") : null);
   const registrySources = loadSources();
   const promotedSources = await loadPromotedSourceRecords(pool).catch(() => [] as SourceRecord[]);
   const sources = mergeSourceRegistry(registrySources, promotedSources);
@@ -124,6 +135,8 @@ async function main(): Promise<void> {
     cleanup_only: cleanupOnly,
     limit,
     sources: only,
+    ingest_only_env: onlyEnv.length > 0,
+    ingest_full_env: full && !process.argv.includes("--full"),
   });
 
   let skipPostDeploy = false;

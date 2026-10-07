@@ -5792,7 +5792,7 @@ sources:
     description: "OPEN DATA: CORDIS API contenttype=project. JSON adapter; skipRobotsGuard."
     homepage: https://cordis.europa.eu/
     collection_url: https://cordis.europa.eu/api/search/results
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -5813,6 +5813,8 @@ sources:
     limits:
       requests_per_minute: 30
       concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
     coverage:
       historical_backfill: not-started
       notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
@@ -5822,7 +5824,7 @@ sources:
     description: "OPEN DATA: CORDIS API contenttype=result."
     homepage: https://cordis.europa.eu/
     collection_url: https://cordis.europa.eu/api/search/results
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -5882,7 +5884,7 @@ sources:
     description: "OPEN DATA: CORDIS programme filter FP7."
     homepage: https://cordis.europa.eu/
     collection_url: https://cordis.europa.eu/api/search/results
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -5993,6 +5995,230 @@ sources:
     limits:
       requests_per_minute: 30
       concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: nih-sbir-sttr-portfolio
+    name: NIH RePORTER SBIR/STTR portfolio
+    category: general-innovation
+    description: "OPEN DATA: NIH RePORTER SB/ST — disabled overnight (enable later)."
+    homepage: https://reporter.nih.gov/
+    collection_url: https://api.reporter.nih.gov/v2/projects/search
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: nih-sbir-sttr-portfolio
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "NIH RePORTER SB/ST — disabled overnight (enable later)."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: nih-reporter-innovation-grants
+    name: NIH RePORTER innovation grants
+    category: general-innovation
+    description: "OPEN DATA: NIH innovation grants — disabled overnight."
+    homepage: https://reporter.nih.gov/
+    collection_url: https://api.reporter.nih.gov/v2/projects/search
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: nih-reporter-innovation-grants
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "NIH innovation grants — disabled overnight."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: nsf-awards-catalogue
+    name: NSF awards catalogue
+    category: general-innovation
+    description: "OPEN DATA: NSF awards — disabled overnight."
+    homepage: https://www.nsf.gov/
+    collection_url: https://api.nsf.gov/services/v1/awards.json
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: nsf-awards-catalogue
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "NSF awards — disabled overnight."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: usaspending-sbir-awards
+    name: USAspending SBIR awards
+    category: general-innovation
+    description: "OPEN DATA: USAspending SBIR — disabled overnight."
+    homepage: https://www.usaspending.gov/
+    collection_url: https://api.usaspending.gov/api/v2/search/spending_by_award/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: usaspending-sbir-awards
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "USAspending SBIR — disabled overnight."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: usaspending-sttr-awards
+    name: USAspending STTR awards
+    category: general-innovation
+    description: "OPEN DATA: USAspending STTR — disabled overnight."
+    homepage: https://www.usaspending.gov/
+    collection_url: https://api.usaspending.gov/api/v2/search/spending_by_award/
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: usaspending-sttr-awards
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "USAspending STTR — disabled overnight."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: ukri-gtr-research-projects
+    name: UKRI Gateway to Research projects
+    category: general-innovation
+    description: "OPEN DATA: UKRI GTR — disabled overnight."
+    homepage: https://gtr.ukri.org/
+    collection_url: https://gtr.ukri.org/gtr/api/projects
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: ukri-gtr-research-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "UKRI GTR — disabled overnight."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: world-bank-development-projects
+    name: World Bank development projects
+    category: general-innovation
+    description: "OPEN DATA: World Bank projects — disabled overnight."
+    homepage: https://projects.worldbank.org/
+    collection_url: https://search.worldbank.org/api/v2/projects
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: world-bank-development-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "World Bank projects — disabled overnight."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
     coverage:
       historical_backfill: not-started
       notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
