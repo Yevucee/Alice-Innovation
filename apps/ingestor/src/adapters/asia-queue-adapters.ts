@@ -19,6 +19,8 @@ const EXPLICIT_ASIA_ADAPTER_IDS = new Set([
   "appworks-accelerator",
   "kaust-scalex-portfolio",
   "hkust-entrepreneurship-center",
+  "hkstp-company-directory",
+  "circulate-capital",
 ]);
 
 /** Generic html-catalogue adapters for asia-innovation rows without a bespoke adapter. */

@@ -4507,7 +4507,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 53 (central-asia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://astanahub.com/
-    collection_url: https://astanahub.com/en/programs
+    collection_url: https://astanahub.com/en/startup
     enabled: true
     status: PARTIAL
     resource_types:
@@ -4516,7 +4516,7 @@ sources:
       - TECHNOLOGY
       - PROJECT
     update_class: MONTHLY
-    adapter: astana-hub-startup-programmes
+    adapter: astana-hub-company-network
     access:
       class: PUBLIC
       status: UNVERIFIED_COLLECTION
@@ -5019,7 +5019,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 69 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.circulatecapital.com/
-    collection_url: https://www.circulatecapital.com/portfolio
+    collection_url: https://www.circulatecapital.com/investments
     enabled: true
     status: PARTIAL
     resource_types:
