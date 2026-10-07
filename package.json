@@ -84,6 +84,8 @@
     "asia:verify": "tsx scripts/asia-source-verify.ts",
     "asia:register-sources": "tsx scripts/asia-register-sources.ts",
     "asia:dry-run-wave": "tsx scripts/asia-adapter-dry-run-wave.ts",
+    "asia:dry-run-all": "tsx scripts/asia-dry-run-all.ts",
+    "asia:list-enabled": "tsx scripts/asia-list-enabled-sources.ts",
     "report:africa-browse-funnel": "tsx scripts/africa-browse-funnel.ts",
     "report:africa-browse-funnel:remote": "bash scripts/run-with-production-env.sh npm run report:africa-browse-funnel",
     "classify:batch": "tsx scripts/classify-batch.ts",

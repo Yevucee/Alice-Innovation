@@ -6,6 +6,7 @@ import {
   listRecentResources,
   randomQualityBrowseResource,
   resourcesFromAfrica,
+  resourcesFromAsia,
 } from "@alice/database";
 import { RandomShowcase } from "@/components/random-showcase";
 import { ResourceCard } from "@/components/resource-card";
@@ -25,10 +26,11 @@ const problemLinks = [
 
 export default async function DiscoverPage() {
   const db = pool();
-  const [stats, recent, africa, categories, sources, spotlight] = await Promise.all([
+  const [stats, recent, africa, asia, categories, sources, spotlight] = await Promise.all([
     libraryStats(db),
     listRecentResources(db, 8),
     resourcesFromAfrica(db, 8),
+    resourcesFromAsia(db, 8),
     browseCategories(db),
     browseSources(db, {}),
     randomQualityBrowseResource(db),
@@ -101,6 +103,10 @@ export default async function DiscoverPage() {
 
       <Section title="From Africa" href="/search?continent=africa&sort=newest" linkLabel="See more">
         <CardGrid resources={africa} empty="No African resources indexed yet." />
+      </Section>
+
+      <Section title="From Asia" href="/search?continent=asia&sort=newest" linkLabel="See more">
+        <CardGrid resources={asia} empty="No Asian resources indexed yet." />
       </Section>
 
       <Section title="Sources">
