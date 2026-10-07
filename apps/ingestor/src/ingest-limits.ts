@@ -1,6 +1,6 @@
 /** Default cap for a source's first successful ingest when no explicit --limit is passed. */
 export function firstSourceIngestItemLimit(): number {
-  const parsed = Number(process.env.INGEST_FIRST_RUN_ITEM_LIMIT ?? "80");
+  const parsed = Number(process.env.INGEST_FIRST_RUN_ITEM_LIMIT ?? "500");
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 80;
 }
 
