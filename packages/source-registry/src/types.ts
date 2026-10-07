@@ -27,7 +27,7 @@ export interface SourceRecord {
   limits: {
     requests_per_minute: number;
     concurrency: number;
-    /** Override INGEST_FIRST_RUN_ITEM_LIMIT for this source when set. */
+    /** Overrides INGEST_FIRST_RUN_ITEM_LIMIT for first ingest of this source. */
     first_run_item_limit?: number | null;
   };
   /** When set, catalogue overlaps another slug (e.g. j-startup-impact → j-startup). Ingest skips when sibling has items. */

@@ -3438,6 +3438,7 @@ sources:
     limits:
       requests_per_minute: 8
       concurrency: 1
+      first_run_item_limit: 300
     coverage:
       historical_backfill: not-started
       notes: Added from asia-acquisition-queue.json; adapter not verified.
@@ -5233,6 +5234,7 @@ sources:
     limits:
       requests_per_minute: 8
       concurrency: 1
+      first_run_item_limit: 200
     coverage:
       historical_backfill: not-started
       notes: Added from asia-acquisition-queue.json; adapter not verified.

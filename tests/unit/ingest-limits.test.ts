@@ -17,7 +17,7 @@ test("resolveIngestItemLimit is unlimited after first success", () => {
 
 test("resolveIngestItemLimit uses per-source first-run override", () => {
   assert.equal(
-    resolveIngestItemLimit({ cliLimit: null, lastSuccessfulRun: null, perSourceFirstRunLimit: 400 }),
-    400,
+    resolveIngestItemLimit({ cliLimit: null, lastSuccessfulRun: null, perSourceFirstRunLimit: 300 }),
+    300,
   );
 });
