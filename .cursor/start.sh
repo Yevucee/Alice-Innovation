@@ -34,4 +34,4 @@ npm run seed
 
 echo "[start] Ready — optional sample ingest:"
 echo "  npm run ingest -- --source project-drawdown --limit 5"
-echo "[start] Web UI password is in .env (WEB_AUTH_PASSWORD, same as MCP_AUTH_TOKEN when auto-generated)"
+echo "[start] Web UI: http://127.0.0.1:3000 (no sign-in)"

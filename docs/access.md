@@ -1,12 +1,11 @@
 # Access control (production web)
 
-The Innovation Library web app uses a shared team password (`WEB_AUTH_PASSWORD`) and an httpOnly session cookie. It is not anonymous public data.
+The Innovation Library web app has no application-level sign-in. Treat the catalogue as team-visible data and restrict the public hostname if you need network-level access control.
 
 Recommended production layers:
 
 1. **Railway networking** — restrict the `alice-web` public hostname to your VPN egress IPs or a corporate proxy where Railway supports it.
-2. **Password hygiene** — rotate `WEB_AUTH_PASSWORD` when team membership changes; never commit it or log it.
-3. **MCP** — keep `MCP_AUTH_TOKEN` only on MCP clients and server env; the web UI does not expose it to the browser.
+2. **MCP** — keep `MCP_AUTH_TOKEN` only on MCP clients and server env; the web UI does not expose it to the browser.
 4. **Ingestor** — no public domain on `alice-ingestor`.
 
 Springwise article URLs often return 403 to automated clients. The adapter ingests **listing metadata** from the homepage, top-level category pages, and the public RSS feed when those URLs return 200. It does not bypass Cloudflare or paywalls.

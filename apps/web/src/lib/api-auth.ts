@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
-import { verifySessionToken, sessionCookieName } from "./auth";
 
-export function requireSession(request: NextRequest): boolean {
-  const token = request.cookies.get(sessionCookieName())?.value;
-  return verifySessionToken(token);
+/** Web UI and API routes are open; MCP remains bearer-protected separately. */
+export function requireSession(_request: NextRequest): boolean {
+  return true;
 }
