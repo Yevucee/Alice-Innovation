@@ -6146,3 +6146,63 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: ukri-gtr-research-projects
+    name: UKRI Gateway to Research projects
+    category: general-innovation
+    description: "OPEN DATA: UKRI GTR JSON API (Accept application/json)."
+    homepage: https://gtr.ukri.org/
+    collection_url: https://gtr.ukri.org/gtr/api/projects
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: ukri-gtr-research-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "UKRI GTR JSON API (Accept application/json)."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: world-bank-development-projects
+    name: World Bank development projects
+    category: general-innovation
+    description: "OPEN DATA: World Bank projects API v2."
+    homepage: https://projects.worldbank.org/
+    collection_url: https://search.worldbank.org/api/v2/projects
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - RESEARCH
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: world-bank-development-projects
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "World Bank projects API v2."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
