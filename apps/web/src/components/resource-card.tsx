@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CompactResource } from "@alice/database";
 import { formatDisplayTitle, formatEvidence, formatResourceType, metaLine } from "@/lib/format";
 import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared/text";
+import { inlineTranslationConfigured } from "@/lib/translate-provider";
 import { ResourceCardSummaryBlock } from "./resource-card-summary-translate";
 
 const TYPE_ICONS: Record<string, string> = {
@@ -21,6 +22,7 @@ function typeIcon(resourceType: string): string {
 }
 
 export function ResourceCard({ resource }: { resource: CompactResource }) {
+  const translateEnabled = inlineTranslationConfigured();
   const location = resource.countries[0] || resource.continents?.[0];
   const tags = [
     ...resource.sectors.slice(0, 2),
@@ -72,8 +74,10 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
           {title}
         </h3>
         <ResourceCardSummaryBlock
+          resourceId={resource.resource_id}
           title={title}
           summary={resource.short_summary || "\u00a0"}
+          translateEnabled={translateEnabled}
           sourcePageUrl={resource.source_urls[0] ?? null}
         />
         <p className="line-clamp-1 min-h-[1.125rem] shrink-0 text-xs text-muted">

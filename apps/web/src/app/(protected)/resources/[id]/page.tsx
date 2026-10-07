@@ -8,7 +8,8 @@ import {
 } from "@alice/database";
 import { AddToCollection } from "@/components/add-to-collection";
 import { ResourceCard } from "@/components/resource-card";
-import { TranslateToEnglishLinks } from "@/components/translate-to-english-links";
+import { InlineEnglishResourceDetail } from "@/components/inline-english-translation";
+import { inlineTranslationConfigured } from "@/lib/translate-provider";
 import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, sourceExcerptDuplicatesSummary } from "@/lib/format";
 import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared";
 import { pool } from "@/lib/db";
@@ -61,6 +62,20 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   const displayTitle = sanitizeDisplayTitle(formatDisplayTitle(String(resource.title)));
   const displaySummary = String(resource.source_summary);
   const primarySourceUrl = sources[0]?.canonical_url ?? null;
+  const translationOriginal = {
+    title: displayTitle,
+    summary: displaySummary,
+    excerpt: showSourceInformation ? String(resource.excerpt) : undefined,
+    problem_statement: interpretation?.problem_statement ? String(interpretation.problem_statement) : undefined,
+    how_it_works: interpretation?.how_it_works ? String(interpretation.how_it_works) : undefined,
+    why_it_is_interesting: interpretation?.why_it_is_interesting
+      ? String(interpretation.why_it_is_interesting)
+      : undefined,
+    intended_users: interpretation?.intended_users ? String(interpretation.intended_users) : undefined,
+    implementation_requirements: interpretation?.implementation_requirements
+      ? String(interpretation.implementation_requirements)
+      : undefined,
+  };
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10 md:px-6">
@@ -74,27 +89,30 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           </span>
         ) : null}
       </div>
-      <h1 className="mt-2 text-3xl font-medium tracking-tight">{displayTitle}</h1>
-      <p className="mt-4 text-base leading-relaxed text-muted">{displaySummary}</p>
-      <TranslateToEnglishLinks
-        title={displayTitle}
-        summary={displaySummary}
+      <InlineEnglishResourceDetail
+        resourceId={id}
         language={resource.language ? String(resource.language) : null}
+        original={translationOriginal}
+        translateEnabled={inlineTranslationConfigured()}
         sourcePageUrl={primarySourceUrl}
+        metaAfterSummary={
+          <>
+            <p className="mt-3 text-sm text-muted">
+              {metaLine([
+                ...locationLine.slice(0, 3),
+                ...sectors.slice(0, 2).map((s) => s.name),
+                ...technologies.slice(0, 2).map((t) => t.name),
+                evidenceLabel,
+              ])}
+            </p>
+            {evidenceBasisLabel ? (
+              <p className="mt-2 text-xs text-muted" title="How we know this maturity level">
+                Evidence: {evidenceBasisLabel}
+              </p>
+            ) : null}
+          </>
+        }
       />
-      <p className="mt-3 text-sm text-muted">
-        {metaLine([
-          ...locationLine.slice(0, 3),
-          ...sectors.slice(0, 2).map((s) => s.name),
-          ...technologies.slice(0, 2).map((t) => t.name),
-          evidenceLabel,
-        ])}
-      </p>
-      {evidenceBasisLabel ? (
-        <p className="mt-2 text-xs text-muted" title="How we know this maturity level">
-          Evidence: {evidenceBasisLabel}
-        </p>
-      ) : null}
 
       {problems.length > 0 ? (
         <p className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -116,45 +134,6 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           <img src={String(resource.image_url)} alt="" className="w-full object-cover" />
         </div>
       ) : null}
-
-      <div className="mt-10 space-y-8 text-sm leading-relaxed">
-        {interpretation?.problem_statement ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">The problem</h2>
-            <p className="mt-2">{String(interpretation.problem_statement)}</p>
-          </section>
-        ) : null}
-        {interpretation?.how_it_works ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">How it works</h2>
-            <p className="mt-2">{String(interpretation.how_it_works)}</p>
-          </section>
-        ) : null}
-        {interpretation?.why_it_is_interesting ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Why it is interesting</h2>
-            <p className="mt-2">{String(interpretation.why_it_is_interesting)}</p>
-          </section>
-        ) : null}
-        {interpretation?.intended_users ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Who it is for</h2>
-            <p className="mt-2">{String(interpretation.intended_users)}</p>
-          </section>
-        ) : null}
-        {interpretation?.implementation_requirements ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Implementation</h2>
-            <p className="mt-2">{String(interpretation.implementation_requirements)}</p>
-          </section>
-        ) : null}
-        {showSourceInformation ? (
-          <section>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Source information</h2>
-            <p className="mt-2 whitespace-pre-wrap text-muted">{String(resource.excerpt)}</p>
-          </section>
-        ) : null}
-      </div>
 
       {locationLine.length > 0 ? (
         <section className="mt-8 text-sm">

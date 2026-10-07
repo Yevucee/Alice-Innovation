@@ -1,23 +1,28 @@
-import { TranslateToEnglishLinks } from "./translate-to-english-links";
+import { InlineEnglishCardSummary } from "./inline-english-translation";
 
 export function ResourceCardSummaryBlock({
+  resourceId,
   title,
   summary,
+  language,
+  translateEnabled,
   sourcePageUrl,
 }: {
+  resourceId: string;
   title: string;
   summary: string;
+  language?: string | null;
+  translateEnabled: boolean;
   sourcePageUrl?: string | null;
 }) {
   return (
-    <>
-      <p className="line-clamp-3 min-h-[4.125rem] shrink-0 text-sm leading-relaxed text-muted">{summary}</p>
-      <TranslateToEnglishLinks
-        title={title}
-        summary={summary}
-        sourcePageUrl={sourcePageUrl}
-        compact
-      />
-    </>
+    <InlineEnglishCardSummary
+      resourceId={resourceId}
+      title={title}
+      summary={summary}
+      language={language}
+      translateEnabled={translateEnabled}
+      sourcePageUrl={sourcePageUrl}
+    />
   );
 }
