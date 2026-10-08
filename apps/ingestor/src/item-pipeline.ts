@@ -19,6 +19,7 @@ import { prepareIngestDraft } from "./prepare-draft.js";
 import { maybeTranslateSummaryForIngest } from "./ingest-summary-translate.js";
 import { enhanceDraftWithQualityDetailIfNeeded } from "./quality-detail-fetch.js";
 import { getRunFailureTracker } from "./run-failure-tracker.js";
+import { IngestQualityDropError } from "./ingest-quality-drop.js";
 
 export interface ProcessIngestItemResult {
   saved: UpsertResult;
@@ -103,6 +104,9 @@ export async function processIngestItem(
 
   const quality = evaluateDraftQuality(draft);
   steps.push("quality_gate");
+  if (source.id === "ycombinator-oss-companies" && quality.needsReview) {
+    throw new IngestQualityDropError(quality.reasons);
+  }
   const reviewStatus = quality.needsReview ? "NEEDS_REVIEW" : "AUTO_INGESTED";
 
   const saved = await upsertDraft(db, source.id, draft, runId, {

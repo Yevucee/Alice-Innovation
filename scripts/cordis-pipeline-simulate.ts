@@ -6,14 +6,12 @@ import { loadSources } from "@alice/source-registry";
 import { fetchJson } from "../apps/ingestor/src/adapters/open-data/http-json.js";
 import { cordisHitLooksInnovationRelevant } from "../apps/ingestor/src/adapters/open-data/innovation-filter.js";
 
-const CORDIS_SEARCH = "https://cordis.europa.eu/api/search/results";
+const CORDIS_SEARCH_EN = "https://cordis.europa.eu/search/en";
 const PAGE_SIZE = 50;
 const SAMPLE_PAGES = 10;
 
 const QUERIES: Record<string, string> = {
-  "cordis-horizon-europe-projects": "contenttype='project' AND programme/term='HORIZON'",
-  "cordis-horizon-2020-projects": "contenttype='project' AND programme/term='H2020'",
-  "cordis-eic-accelerator-projects": "contenttype='project' AND programme/term='EIC'",
+  "cordis-eu-research-projects": "contenttype=project",
 };
 
 async function simulate(slug: string, query: string): Promise<void> {
@@ -24,18 +22,28 @@ async function simulate(slug: string, query: string): Promise<void> {
   let totalApi: number | null = null;
 
   for (let page = 1; page <= SAMPLE_PAGES; page += 1) {
-    const url = `${CORDIS_SEARCH}?query=${encodeURIComponent(query)}&p=${page}&num=${PAGE_SIZE}`;
+    const params = new URLSearchParams({ format: "json", q: query, p: String(page), num: String(PAGE_SIZE) });
+    const url = `${CORDIS_SEARCH_EN}?${params.toString()}`;
     const payload = await fetchJson<{
-      payload?: { total?: number; results?: Array<{ id?: string; title?: string; teaser?: string; relatedProjectReference?: string; relatedProjectAcronym?: string }> };
+      result?: { header?: { totalHits?: string } };
+      hits?: { hit?: Array<{ project?: { id?: string; title?: string; teaser?: string; acronym?: string } }> };
     }>(url, { userAgent: ua, timeoutMs: 45_000 });
-    if (totalApi === null) totalApi = payload.payload?.total ?? null;
-    const hits = payload.payload?.results ?? [];
-    if (hits.length === 0) break;
-    for (const hit of hits) {
+    if (totalApi === null) totalApi = Number(payload.result?.header?.totalHits ?? 0) || null;
+    const rows = payload.hits?.hit ?? [];
+    if (rows.length === 0) break;
+    for (const row of rows) {
+      const p = row.project;
+      if (!p) continue;
       rawHits += 1;
+      const hit = {
+        title: p.title,
+        teaser: p.teaser,
+        relatedProjectAcronym: p.acronym,
+        relatedProjectReference: p.id,
+      };
       if (!cordisHitLooksInnovationRelevant(hit)) continue;
       afterFilter += 1;
-      const key = hit.relatedProjectReference?.trim() || hit.id?.trim() || "";
+      const key = p.id?.trim() || "";
       if (key) seen.add(key);
     }
   }
@@ -47,6 +55,10 @@ async function simulate(slug: string, query: string): Promise<void> {
 
 async function main(): Promise<void> {
   const sources = loadSources().filter((s) => s.enabled && s.id.startsWith("cordis-"));
+  if (sources.length === 0) {
+    console.log("No enabled cordis-* sources in sources.yaml");
+    return;
+  }
   console.log("# CORDIS filter simulation (first", SAMPLE_PAGES, "pages ×", PAGE_SIZE, "hits)\n");
   console.log("| slug | api_total | raw_sample | pass_filter | unique_sample | discover_cap |");
   console.log("|------|-----------|--------------|-------------|---------------|--------------|");

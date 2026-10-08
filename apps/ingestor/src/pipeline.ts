@@ -24,6 +24,7 @@ import { processIngestItem } from "./item-pipeline.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
 import { buildSourcePreviewReport, type SourcePreviewReport } from "./source-preview.js";
 import { resolveIngestItemLimit } from "./ingest-limits.js";
+import { IngestQualityDropError } from "./ingest-quality-drop.js";
 
 const LOCK_KEY = 84261001;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -330,6 +331,11 @@ export async function runIngestion(
               try {
                 return await processRef(ref);
               } catch (error) {
+                if (error instanceof IngestQualityDropError) {
+                  counts.failed += 1;
+                  failureSummaries.push({ url: ref.url, reason: error.message });
+                  return { ref, cursor: ref.url };
+                }
                 counts.failed += 1;
                 const reason = failureReason(error);
                 failureSummaries.push({ url: ref.url, reason });

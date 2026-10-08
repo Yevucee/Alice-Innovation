@@ -54,22 +54,21 @@ export function parseMitSolve(page: FetchedPage): NormalisedDraft {
   });
 }
 
+const MIT_SOLVE_SOLUTION_URL = /^https:\/\/solve\.mit\.edu\/solutions\/\d+$/;
+
 export const mitSolveAdapter: SourceAdapter = {
   id: "mit-solve",
   fullCatalogue: true,
   async discover(ctx) {
     const sitemapUrl = ctx.source.discovery.sitemap ?? "https://solve.mit.edu/sitemap.xml";
     const sitemap = await ctx.fetchText(sitemapUrl);
-    let locs = sitemapLocs(sitemap.body);
-    const indexes = locs.filter((url) => url.endsWith(".xml"));
-    for (const child of indexes.slice(0, 8)) {
-      const extra = await ctx.fetchText(child);
-      locs = locs.concat(sitemapLocs(extra.body));
-    }
-    return [...new Set(locs)]
-      .filter((url) => /\/solutions\/\d+\/?$/.test(url))
+    const locs = sitemapLocs(sitemap.body);
+    const refs = [...new Set(locs)]
+      .filter((url) => MIT_SOLVE_SOLUTION_URL.test(url))
       .sort()
-      .map((url) => ({ url, externalId: url.match(/(\d+)\/?$/)?.[1] }));
+      .map((url) => ({ url, externalId: url.match(/(\d+)$/)?.[1] }));
+    if (ctx.limit !== null) return refs.slice(0, ctx.limit);
+    return refs;
   },
   fetch: defaultFetch,
   parse: parseMitSolve,

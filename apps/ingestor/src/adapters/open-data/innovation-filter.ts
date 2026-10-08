@@ -23,15 +23,33 @@ const INNOVATION_SIGNALS = [
   /\bsttr\b/i,
 ];
 
+export function cordisInnovationFilterReasons(input: {
+  title?: string;
+  teaser?: string;
+  relatedProjectAcronym?: string;
+}): string[] {
+  const blob = [input.title, input.teaser, input.relatedProjectAcronym].filter(Boolean).join(" ");
+  const reasons: string[] = [];
+  if (!blob.trim()) {
+    reasons.push("empty_text");
+    return reasons;
+  }
+  for (const re of ADMIN_PATTERNS) {
+    if (re.test(blob)) reasons.push(`admin_pattern:${re.source}`);
+  }
+  if (reasons.length > 0) return reasons;
+  if (!INNOVATION_SIGNALS.some((re) => re.test(blob))) {
+    reasons.push("no_innovation_signal");
+  }
+  return reasons;
+}
+
 export function cordisHitLooksInnovationRelevant(input: {
   title?: string;
   teaser?: string;
   relatedProjectAcronym?: string;
 }): boolean {
-  const blob = [input.title, input.teaser, input.relatedProjectAcronym].filter(Boolean).join(" ");
-  if (!blob.trim()) return false;
-  if (ADMIN_PATTERNS.some((re) => re.test(blob))) return false;
-  return INNOVATION_SIGNALS.some((re) => re.test(blob));
+  return cordisInnovationFilterReasons(input).length === 0;
 }
 
 export function usaspendingAwardLooksSbirInnovation(description: string, recipient: string): boolean {

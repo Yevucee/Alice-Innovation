@@ -12,7 +12,7 @@ import type { SourceAdapter } from "../types.js";
 export const openDataAdapters: SourceAdapter[] = [
   createCordisAdapter({
     id: "cordis-eu-research-projects",
-    query: "contenttype='project'",
+    query: "contenttype=project",
     pageSize: 50,
     maxPagesDefault: 80,
   }),
