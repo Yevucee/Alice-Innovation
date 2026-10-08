@@ -26,6 +26,7 @@ sources:
     limits:
       requests_per_minute: 20
       concurrency: 1
+      complete_catalogue_per_run: true
     coverage:
       historical_backfill: checkpointed
       notes: "PARTIAL: the public sitemap listed about 100 English solution URLs when checked, which may be less than the historic labelled catalogue. Sample then checkpointed backfill. No full HTML stored."
@@ -115,6 +116,9 @@ sources:
     limits:
       requests_per_minute: 20
       concurrency: 1
+      max_items_per_run: 1000
+      first_run_item_limit: 1000
+      resume_pending_only: true
     coverage:
       historical_backfill: checkpointed
       notes: "PARTIAL: solution pages in the sitemap, not every article or challenge narrative. Evidence stage stays UNKNOWN; selection is recorded as PROGRAMME_SELECTED."
@@ -1778,6 +1782,7 @@ sources:
     limits:
       requests_per_minute: 10
       concurrency: 1
+      complete_catalogue_per_run: true
     coverage:
       historical_backfill: not-started
       notes: PAUSED until an adapter exists. Discovery notes record what was verified. The source is not omitted.

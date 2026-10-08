@@ -31,6 +31,10 @@ export interface SourceRecord {
     first_run_item_limit?: number | null;
     /** Hard cap on items processed every ingest run (phase-2 open-data). */
     max_items_per_run?: number | null;
+    /** When true, each run processes the full discovered catalogue (no first-run 500 default). */
+    complete_catalogue_per_run?: boolean;
+    /** Skip refs whose canonical URL already exists in source_items (resume backfill). */
+    resume_pending_only?: boolean;
   };
   /** When set, catalogue overlaps another slug (e.g. j-startup-impact → j-startup). Ingest skips when sibling has items. */
   duplicate_of?: string | null;

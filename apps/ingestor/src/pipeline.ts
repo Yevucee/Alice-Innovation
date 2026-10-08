@@ -4,6 +4,7 @@ import {
   ingestDetailBootstrapDays,
   ingestDetailRefetchDays,
   listingContentHash,
+  loadActiveCanonicalUrlsForSource,
   loadSourceItemListingStateMap,
   lookupListingState,
   readCheckpoint,
@@ -137,6 +138,7 @@ export async function runIngestion(
           cliLimit: options.limit,
           lastSuccessfulRun: meta.rows[0]?.last_successful_run ?? null,
           perSourceFirstRunLimit: source.limits.first_run_item_limit ?? null,
+          completeCataloguePerRun: source.limits.complete_catalogue_per_run === true,
         });
         const perRunCap = source.limits.max_items_per_run;
         if (perRunCap != null && Number.isFinite(perRunCap) && perRunCap > 0) {
@@ -172,6 +174,7 @@ export async function runIngestion(
           cross_source_reuse: 0,
           dropped_checkpoint: 0,
           dropped_limit: 0,
+          dropped_existing: 0,
           skipped_duplicate_of: false,
         };
         if (source.duplicate_of) {
@@ -228,6 +231,12 @@ export async function runIngestion(
           };
           let refs = await adapter.discover(ctx);
           counts.discovered = refs.length;
+          if (source.limits.resume_pending_only) {
+            const existing = await loadActiveCanonicalUrlsForSource(pool, source.id);
+            const beforeExisting = refs.length;
+            refs = refs.filter((ref) => !existing.has(canonicaliseUrl(ref.url)));
+            counts.dropped_existing = beforeExisting - refs.length;
+          }
           const checkpoint = options.full ? await readCheckpoint(pool, source.id) : "";
           const catalogue = refs.map((ref) => canonicaliseUrl(ref.url));
           if (checkpoint) {
@@ -456,6 +465,7 @@ type IngestRunCounts = {
   cross_source_reuse?: number;
   dropped_checkpoint?: number;
   dropped_limit?: number;
+  dropped_existing?: number;
   skipped_duplicate_of?: boolean;
 };
 
@@ -472,6 +482,7 @@ async function finishRun(
     cross_source_reuse: counts.cross_source_reuse ?? 0,
     dropped_checkpoint: counts.dropped_checkpoint ?? 0,
     dropped_limit: counts.dropped_limit ?? 0,
+    dropped_existing: counts.dropped_existing ?? 0,
     skipped_duplicate_of: counts.skipped_duplicate_of ?? false,
     enrich_attempted: counts.enrich_attempted ?? 0,
     enrich_applied: counts.enrich_applied ?? 0,

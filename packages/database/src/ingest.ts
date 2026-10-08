@@ -452,3 +452,18 @@ export async function writeCheckpoint(db: Queryable, sourceSlug: string, cursor:
     [sourceSlug, cursor],
   );
 }
+
+/** Canonical URLs already stored for a source (active items). */
+export async function loadActiveCanonicalUrlsForSource(
+  db: Queryable,
+  sourceSlug: string,
+): Promise<Set<string>> {
+  const rows = await db.query<{ canonical_url: string }>(
+    `SELECT DISTINCT si.canonical_url
+     FROM source_items si
+     JOIN sources s ON s.id = si.source_id
+     WHERE s.slug = $1 AND si.active`,
+    [sourceSlug],
+  );
+  return new Set(rows.rows.map((row) => row.canonical_url));
+}
