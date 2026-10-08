@@ -58,19 +58,59 @@ export function parseBaobabCard(page: FetchedPage): NormalisedDraft {
   const summary = $(".portfolio-card__company-text").first().text().trim();
   if (!title) throw new Error(`baobab-network card has no title: ${page.url}`);
   const externalId = slugify(title);
+  const website = $("a[data-baobab-website]").attr("href")?.trim() || page.url;
   return buildDraft({
     title,
-    url: page.url,
+    url: website,
     externalId,
     summary: summary || title,
     text: summary,
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
     evidenceStage: "UNKNOWN",
-    rawMetadata: { listing_only: true },
+    rawMetadata: { listing_only: true, baobab_portfolio: true },
     etag: page.etag,
     lastModified: page.lastModified,
   });
+}
+
+export interface BaobabPortfolioRow {
+  name: string;
+  description: string;
+  country: string;
+  sector: string;
+  url: string;
+}
+
+/** Portfolio companies are embedded in the Vite bundle (site is a client-rendered SPA). */
+export function parseBaobabPortfolioFromScript(js: string): BaobabPortfolioRow[] {
+  const re = /\{name:"([^"]+)",description:"([^"]*)",country:"([^"]*)",sector:"([^"]*)",url:"([^"]*)"\}/g;
+  const rows: BaobabPortfolioRow[] = [];
+  const seen = new Set<string>();
+  for (const match of js.matchAll(re)) {
+    const row: BaobabPortfolioRow = {
+      name: match[1],
+      description: match[2],
+      country: match[3],
+      sector: match[4],
+      url: match[5],
+    };
+    const key = slugify(row.name);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function baobabListingHtml(row: BaobabPortfolioRow): string {
+  const website = row.url.trim();
+  const summary = [row.description, row.sector, row.country].filter(Boolean).join(" · ");
+  return `<div class="portfolio-rollup__card">
+  <div class="portfolio-card__company-name">${row.name}</div>
+  <div class="portfolio-card__company-text">${summary}</div>
+  <a data-baobab-website href="${website}">${website}</a>
+</div>`;
 }
 
 async function discoverBaobab(ctx: AdapterContext): Promise<DiscoveredRef[]> {
@@ -90,7 +130,23 @@ async function discoverBaobab(ctx: AdapterContext): Promise<DiscoveredRef[]> {
       listingHtml: $.html(element),
     });
   });
-  return refs;
+  if (refs.length > 0) return refs;
+
+  const scriptSrc = $("script[src*='/assets/index-']").attr("src");
+  if (!scriptSrc) return [];
+  const scriptUrl = new URL(scriptSrc, collection).toString();
+  const scriptPage = await ctx.fetchText(scriptUrl);
+  const portfolio = parseBaobabPortfolioFromScript(scriptPage.body);
+  return portfolio.map((row) => {
+    const slug = slugify(row.name);
+    const listingHtml = baobabListingHtml(row);
+    const itemUrl = row.url.trim() || listingItemUrl(collection, slug);
+    return {
+      url: itemUrl,
+      externalId: slug,
+      listingHtml,
+    };
+  });
 }
 
 export function parseCchubSyndicateCard(page: FetchedPage): NormalisedDraft {

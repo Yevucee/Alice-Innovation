@@ -2000,7 +2000,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Preflight: /portfolio/ HTTP 200 with portfolio-rollup cards in HTML (~65 companies publicised). robots.txt HTTP 200."
+      notes: "Preflight: /portfolio/ is Vite SPA; ~62 companies embedded in /assets/index-*.js (discover reads bundle). robots.txt HTTP 200."
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -2156,7 +2156,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Preflight: /100 HTTP 200 with company names embedded in Webflow HTML. robots.txt HTTP 200. EDITORIALLY_CURATED."
+      notes: "Preflight Oct 2026: /100 returns HTTP 401 (Webflow auth wall) from ingest egress; use norrsken-accelerator for portfolio until a public export exists."
     limits:
       requests_per_minute: 10
       concurrency: 1
@@ -2531,8 +2531,8 @@ sources:
     name: Kenya Climate Innovation Centre
     category: africa-innovation
     description: "PARTIAL second-pass Africa source. Preflight: kenyacic."
-    homepage: https://kenyacic.org/
-    collection_url: https://kenyacic.org/
+    homepage: https://www.kenyacic.org/
+    collection_url: https://www.kenyacic.org/
     enabled: true
     status: PARTIAL
     resource_types:
@@ -2551,7 +2551,7 @@ sources:
       preferred_method: html
       sitemap: null
       rss: null
-      notes: "Preflight: kenyacic.org HTTP 200. PARTIAL: venture paths discovered via sitemap when present; no single clean alumni directory verified."
+      notes: "Preflight: www.kenyacic.org HTTP 200. Discover venture/enterprise stories via /news/* URLs in sitemap (~47); legacy /venture/* paths removed in 2026 site rebuild."
     limits:
       requests_per_minute: 8
       concurrency: 1
