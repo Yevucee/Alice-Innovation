@@ -21,3 +21,14 @@ test("resolveIngestItemLimit uses per-source first-run override", () => {
     300,
   );
 });
+
+test("resolveIngestItemLimit complete_catalogue_per_run is unlimited without CLI limit", () => {
+  assert.equal(
+    resolveIngestItemLimit({ cliLimit: null, lastSuccessfulRun: null, completeCataloguePerRun: true }),
+    null,
+  );
+  assert.equal(
+    resolveIngestItemLimit({ cliLimit: null, lastSuccessfulRun: new Date(), completeCataloguePerRun: true }),
+    null,
+  );
+});

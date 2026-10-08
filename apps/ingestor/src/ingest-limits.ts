@@ -8,8 +8,10 @@ export function resolveIngestItemLimit(input: {
   cliLimit: number | null;
   lastSuccessfulRun: Date | null;
   perSourceFirstRunLimit?: number | null;
+  completeCataloguePerRun?: boolean;
 }): number | null {
   if (input.cliLimit !== null) return input.cliLimit;
+  if (input.completeCataloguePerRun) return null;
   if (input.lastSuccessfulRun === null) {
     const perSource = input.perSourceFirstRunLimit;
     if (perSource != null && Number.isFinite(perSource) && perSource > 0) return perSource;

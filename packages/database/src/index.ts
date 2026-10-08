@@ -9,6 +9,7 @@ export {
   confirmDisappearances,
   readCheckpoint,
   writeCheckpoint,
+  loadActiveCanonicalUrlsForSource,
 } from "./ingest.js";
 export type { UpsertDraftOptions, UpsertResult } from "./ingest.js";
 export {
