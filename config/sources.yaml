@@ -3446,7 +3446,6 @@ sources:
   - id: j-startup-impact
     name: J-Startup Impact
     duplicate_of: j-startup
-    # True duplicate: same /en/startups/*.html catalogue as j-startup (see docs/asia-volume-step3-overlap-report.md).
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 20 (japan). duplicate_of=j-startup. Ingest Impact designation separately from core J-Startup list. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.j-startup.go.jp/en/
