@@ -2870,7 +2870,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 2 (india). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.startupindia.gov.in/
-    collection_url: https://www.startupindia.gov.in/content/sih/en/startup-schemes/startup-india-showcase.html
+    collection_url: https://web.archive.org/web/20231201000000/https://www.startupindia.gov.in/content/sih/en/startup-schemes/startup-india-showcase.html
     enabled: true
     status: PARTIAL
     resource_types:
@@ -2902,7 +2902,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 3 (india). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.startupindia.gov.in/
-    collection_url: https://www.startupindia.gov.in/content/sih/en/startup-india-awards.html
+    collection_url: https://web.archive.org/web/20231201000000/https://www.startupindia.gov.in/content/sih/en/awards/national-startup-awards.html
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3062,7 +3062,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 8 (singapore). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.startupsg.gov.sg/
-    collection_url: https://www.startupsg.gov.sg/
+    collection_url: https://www.startupsg.gov.sg/programmes/startup-sg-founder
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3094,7 +3094,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 9 (singapore). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.sginnovate.com/
-    collection_url: https://www.sginnovate.com/our-portfolio
+    collection_url: https://www.sginnovate.com/full-portfolio
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3126,7 +3126,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 10 (singapore). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.openinnovationnetwork.gov.sg/
-    collection_url: https://www.openinnovationnetwork.gov.sg/
+    collection_url: https://www.openinnovationnetwork.gov.sg/success-stories/success-stories
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3833,7 +3833,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 32 (thailand). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.nia.or.th/
-    collection_url: https://www.nia.or.th/
+    collection_url: https://www.nia.or.th/advance_search/StartUp
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3866,7 +3866,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 33 (thailand). Locate current public product catalogue during audit. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.nia.or.th/
-    collection_url: https://www.nia.or.th/
+    collection_url: https://www.nia.or.th/advance_search/Innovation
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3898,7 +3898,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 34 (malaysia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://mystartup.my/
-    collection_url: https://mystartup.my/
+    collection_url: https://mystartup.my/directory
     enabled: true
     status: PARTIAL
     resource_types:
@@ -3962,7 +3962,7 @@ sources:
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 36 (malaysia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.cradle.com.my/
-    collection_url: https://www.cradle.com.my/
+    collection_url: https://www.cradle.com.my/portfolio
     enabled: true
     status: PARTIAL
     resource_types:
