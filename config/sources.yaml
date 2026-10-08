@@ -3862,7 +3862,6 @@ sources:
 
   - id: nia-innovation-catalogue
     name: NIA Innovation Product / Innovation Catalogue
-    duplicate_of: nia-thailand
     category: asia-innovation
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 33 (thailand). Locate current public product catalogue during audit. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.nia.or.th/
