@@ -6339,6 +6339,37 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+  - id: ycombinator-oss-companies
+    name: Y Combinator companies (OSS JSON)
+    category: general-innovation
+    description: "OPEN DATA: Community YC company list (yc-oss/api) — disabled pending sample approval."
+    homepage: https://www.ycombinator.com/
+    collection_url: https://yc-oss.github.io/api/companies/all.json
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - STARTUP
+    update_class: MONTHLY
+    adapter: ycombinator-oss-companies
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: api
+      sitemap: null
+      rss: null
+      notes: "JSON mirror; skipRobots in adapter. Enable after dry-run sample review."
+    limits:
+      requests_per_minute: 30
+      concurrency: 1
+      max_items_per_run: 500
+      first_run_item_limit: 500
+    coverage:
+      historical_backfill: not-started
+      notes: Added open-volume probe; keep disabled until approved.
   - id: ukri-gtr-research-projects
     name: UKRI Gateway to Research projects
     category: general-innovation
