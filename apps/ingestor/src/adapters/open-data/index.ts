@@ -6,6 +6,7 @@ import { ukriGtrProjectsAdapter } from "./ukri-gtr.js";
 import { usaspendingSbirAdapter } from "./usaspending-sbir.js";
 import { usaspendingSttrAdapter } from "./usaspending-sttr.js";
 import { worldBankProjectsAdapter } from "./world-bank.js";
+import { ycombinatorOssCompaniesAdapter } from "./ycombinator-oss.js";
 import type { SourceAdapter } from "../types.js";
 
 export const openDataAdapters: SourceAdapter[] = [
@@ -69,4 +70,5 @@ export const openDataAdapters: SourceAdapter[] = [
   ukriGtrProjectsAdapter,
   worldBankProjectsAdapter,
   euInnovationRadarAdapter,
+  ycombinatorOssCompaniesAdapter,
 ];

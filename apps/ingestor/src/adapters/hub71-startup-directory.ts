@@ -1,7 +1,8 @@
 import { htmlToText } from "@alice/shared";
 import { load } from "cheerio";
 import { buildDraft } from "./draft.js";
-import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
+import { listingPageFromJson } from "./open-data/http-json.js";
+import type { AdapterContext, DiscoveredRef, FetchedPage, SourceAdapter } from "./types.js";
 import type { NormalisedDraft } from "@alice/shared";
 
 const LISTING_API = "https://www.hub71.com/all-startups";
@@ -53,7 +54,18 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
         const slug = pickEn(row.slug);
         if (!slug) continue;
         const detailUrl = startupDetailUrl(slug);
-        refs.push({ url: detailUrl, externalId: slug });
+        refs.push({
+          url: row.website?.trim() || detailUrl,
+          externalId: slug,
+          listingHtml: JSON.stringify({
+            slug,
+            title: pickEn(row.title),
+            description: pickEn(row.description),
+            website: row.website,
+            sector: row.sector,
+            detailUrl,
+          }),
+        });
       }
       if (ctx.limit !== null && refs.length >= ctx.limit) break;
       const lastPage = payload.last_page ?? page;
@@ -62,8 +74,53 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
     }
     return ctx.limit !== null ? refs.slice(0, ctx.limit) : refs;
   },
-  fetch: defaultFetch,
+  async fetch(ref: DiscoveredRef, ctx: AdapterContext): Promise<FetchedPage> {
+    if (ref.listingHtml) {
+      return listingPageFromJson(ref, JSON.parse(ref.listingHtml));
+    }
+    const result = await ctx.fetchText(ref.url);
+    return {
+      url: ref.url,
+      finalUrl: result.finalUrl,
+      status: result.status,
+      html: result.body,
+      etag: result.etag,
+      lastModified: result.lastModified,
+      listingOnly: false,
+    };
+  },
   parse(page: FetchedPage): NormalisedDraft {
+    let payload: {
+      slug?: string;
+      title?: string;
+      description?: string;
+      website?: string;
+      sector?: string;
+      detailUrl?: string;
+    };
+    try {
+      payload = JSON.parse(page.html) as typeof payload;
+    } catch {
+      payload = {};
+    }
+    if (payload.title) {
+      const summary = (payload.description ?? payload.title).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      const url = payload.website?.trim() || payload.detailUrl || page.url;
+      return buildDraft({
+        title: payload.title,
+        url,
+        externalId: payload.slug ?? url,
+        summary: summary.slice(0, 500),
+        text: summary,
+        resourceType: "ORGANISATION",
+        organisationName: payload.title,
+        evidenceBasis: "PROGRAMME_SELECTED",
+        evidenceStage: "UNKNOWN",
+        rawMetadata: { hub71_startup_directory: true, sector: payload.sector, hub71_detail_url: payload.detailUrl },
+        etag: page.etag,
+        lastModified: page.lastModified,
+      });
+    }
     const $ = load(page.html);
     const title = $("h1").first().text().replace(/\s+/g, " ").trim()
       || $("meta[property='og:title']").attr("content")?.trim()
