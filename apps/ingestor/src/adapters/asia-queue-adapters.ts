@@ -9,6 +9,8 @@ const EXPLICIT_ASIA_ADAPTER_IDS = new Set([
   "j-startup-impact",
   "sginnovate-portfolio",
   "hub71-startup-directory",
+  "open-innovation-network-singapore",
+  "nia-innovation-catalogue",
   "accelerating-asia",
   "wavemaker-partners-portfolio",
   "wavemaker-impact-portfolio",

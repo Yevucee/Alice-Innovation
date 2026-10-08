@@ -1,4 +1,6 @@
 import { createHtmlCatalogueAdapter } from "./html-catalogue.js";
+import { hub71StartupDirectoryAdapter } from "./hub71-startup-directory.js";
+import { niaInnovationCatalogueAdapter } from "./nia-innovation-catalogue.js";
 import type { SourceAdapter } from "./types.js";
 
 /** First-wave Asia html-catalogue adapters (expand after `asia:verify` + dry-run). */
@@ -23,15 +25,22 @@ export const asiaAdapters: SourceAdapter[] = [
     id: "sginnovate-portfolio",
     siteOrigin: "https://www.sginnovate.com",
     pathPattern: /^\/our-portfolio\/[^/]+\/?$/i,
-    extraListingUrls: ["https://www.sginnovate.com/full-portfolio"],
-    sitemap: { url: "https://www.sginnovate.com/sitemap.xml", followSitemapIndex: true, locPathPattern: /^\/our-portfolio\//i },
+    extraListingUrls: [
+      "https://www.sginnovate.com/full-portfolio",
+      "https://www.sginnovate.com/our-portfolio",
+    ],
+    htmlUrlPattern: /https:\/\/www\.sginnovate\.com\/our-portfolio\/[a-z0-9-]+(?:\?[^"'\s]*)?/gi,
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
+  hub71StartupDirectoryAdapter,
   createHtmlCatalogueAdapter({
-    id: "hub71-startup-directory",
-    siteOrigin: "https://www.hub71.com",
-    pathPattern: /^\/startups\/[^/]+\/?$/i,
+    id: "open-innovation-network-singapore",
+    siteOrigin: "https://www.openinnovationnetwork.gov.sg",
+    pathPattern: /^\/success-stories\/success-stories\/.+/i,
+    extraListingUrls: [
+      "https://www.openinnovationnetwork.gov.sg/success-stories/success-stories",
+    ],
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
@@ -59,24 +68,34 @@ export const asiaAdapters: SourceAdapter[] = [
   createHtmlCatalogueAdapter({
     id: "circulate-capital",
     siteOrigin: "https://www.circulatecapital.com",
-    pathPattern: /^\/investments\/[^/]+\/?$/i,
-    extraListingUrls: ["https://www.circulatecapital.com/investments"],
+    pathPattern: /^\/company\/[^/]+\/?$/i,
+    extraListingUrls: ["https://www.circulatecapital.com/companies/"],
+    sitemap: {
+      url: "https://www.circulatecapital.com/companies_pt-sitemap.xml",
+      locPathPattern: /^\/company\/[^/]+\/?$/i,
+    },
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
   createHtmlCatalogueAdapter({
     id: "hkstp-company-directory",
     siteOrigin: "https://www.hkstp.org",
-    pathPattern: /^\/en\/directory\/[^/]+\/?$/i,
+    pathPattern: /^\/en\/directory\/[^/]+\/[^/]+\/?$/i,
     extraListingUrls: ["https://www.hkstp.org/en/directory"],
     excludePathPattern: /^\/en\/(discover|programmes|insights|news)(\/|$)/i,
+    sitemap: {
+      url: "https://www.hkstp.org/sitemap.xml",
+      followSitemapIndex: true,
+      locPathPattern: /^\/en\/directory\/[^/]+\/[^/]+\/?$/i,
+    },
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
   createHtmlCatalogueAdapter({
     id: "insignia-ventures-partners",
     siteOrigin: "https://www.insignia.vc",
-    pathPattern: /^\/portfolio\/[^/]+\/?$/i,
+    pathPattern: /^\/(portfolio|companies)\/[^/]+\/?$/i,
+    extraListingUrls: ["https://www.insignia.vc/companies", "https://www.insignia.vc/portfolio"],
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
@@ -108,6 +127,7 @@ export const asiaAdapters: SourceAdapter[] = [
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
+  niaInnovationCatalogueAdapter,
   createHtmlCatalogueAdapter({
     id: "hkust-entrepreneurship-center",
     siteOrigin: "https://ec.hkust.edu.hk",
