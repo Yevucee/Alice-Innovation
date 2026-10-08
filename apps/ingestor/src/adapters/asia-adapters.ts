@@ -1,5 +1,6 @@
 import { createHtmlCatalogueAdapter } from "./html-catalogue.js";
 import { hub71StartupDirectoryAdapter } from "./hub71-startup-directory.js";
+import { asiaNewCatalogueAdapters } from "./asia-new-catalogues.js";
 import { niaInnovationCatalogueAdapter } from "./nia-innovation-catalogue.js";
 import type { SourceAdapter } from "./types.js";
 
@@ -128,6 +129,7 @@ export const asiaAdapters: SourceAdapter[] = [
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
   niaInnovationCatalogueAdapter,
+  ...asiaNewCatalogueAdapters,
   createHtmlCatalogueAdapter({
     id: "hkust-entrepreneurship-center",
     siteOrigin: "https://ec.hkust.edu.hk",
