@@ -111,7 +111,7 @@ sources:
       preferred_method: sitemap
       sitemap: https://solve.mit.edu/sitemap.xml
       rss: null
-      notes: robots.txt allows crawling. /solutions returned 404; solution records are /solutions/{id} URLs in sitemap.xml. Challenge index is https://solve.mit.edu/challenges and is not treated as the solution collection. Item HTML includes the title, one-line summary, team leader, and profile answers.
+      notes: robots.txt allows crawling. Discover uses only canonical https://solve.mit.edu/solutions/{numericId} URLs from sitemap.xml (~25k application profiles; not the smaller curated “Meet the Solvers” list). Challenge pages are excluded.
     limits:
       requests_per_minute: 20
       concurrency: 1
@@ -5970,10 +5970,10 @@ sources:
   - id: cordis-eu-research-projects
     name: CORDIS EU research projects
     category: general-innovation
-    description: "OPEN DATA: CORDIS API contenttype=project. JSON adapter; skipRobotsGuard."
+    description: "OPEN DATA: CORDIS search/en JSON (contenttype=project). Single enabled CORDIS source; grant_record browse-hidden."
     homepage: https://cordis.europa.eu/
-    collection_url: https://cordis.europa.eu/api/search/results
-    enabled: false
+    collection_url: https://cordis.europa.eu/search/en?format=json
+    enabled: true
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -5990,7 +5990,7 @@ sources:
       preferred_method: api
       sitemap: null
       rss: null
-      notes: "CORDIS API contenttype=project. JSON adapter; skipRobotsGuard."
+      notes: "CORDIS /search/en?format=json with q=contenttype=project (~59k projects). Legacy /api/search/results ignored programme filters."
     limits:
       requests_per_minute: 30
       concurrency: 1
@@ -6032,10 +6032,10 @@ sources:
   - id: cordis-horizon-europe-projects
     name: CORDIS Horizon Europe projects
     category: general-innovation
-    description: "OPEN DATA: CORDIS programme filter HORIZON."
+    description: "OPEN DATA: superseded by cordis-eu-research-projects (search/en API)."
     homepage: https://cordis.europa.eu/
-    collection_url: https://cordis.europa.eu/api/search/results
-    enabled: true
+    collection_url: https://cordis.europa.eu/search/en?format=json
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -6092,10 +6092,10 @@ sources:
   - id: cordis-horizon-2020-projects
     name: CORDIS Horizon 2020 projects
     category: general-innovation
-    description: "OPEN DATA: CORDIS programme filter H2020."
+    description: "OPEN DATA: superseded by cordis-eu-research-projects (search/en API)."
     homepage: https://cordis.europa.eu/
-    collection_url: https://cordis.europa.eu/api/search/results
-    enabled: true
+    collection_url: https://cordis.europa.eu/search/en?format=json
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -6122,10 +6122,10 @@ sources:
   - id: cordis-eic-accelerator-projects
     name: CORDIS EIC Accelerator projects
     category: general-innovation
-    description: "OPEN DATA: CORDIS programme filter EIC."
+    description: "OPEN DATA: superseded by cordis-eu-research-projects (search/en API)."
     homepage: https://cordis.europa.eu/
-    collection_url: https://cordis.europa.eu/api/search/results
-    enabled: true
+    collection_url: https://cordis.europa.eu/search/en?format=json
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
