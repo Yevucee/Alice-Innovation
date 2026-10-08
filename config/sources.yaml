@@ -5565,10 +5565,10 @@ sources:
   - id: edb-singapore-innovation-insights
     name: EDB Singapore innovation insights
     category: asia-innovation
-    description: "Asia step 2: EDB news & insights archive (sitemap). Programme-selected innovation stories."
+    description: "Asia step 2: EDB news & insights archive (sitemap). Disabled after sample review — press/lifestyle articles, not company innovations."
     homepage: https://www.edb.gov.sg/
     collection_url: https://www.edb.gov.sg/en/news-and-insights
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -5626,10 +5626,10 @@ sources:
   - id: imda-innovation-blog
     name: IMDA innovation blog
     category: asia-innovation
-    description: "Asia step 2: IMDA blog articles (sitemap)."
+    description: "Asia step 2: IMDA blog articles (sitemap). Disabled after sample review — editorial/policy blog, not innovation catalogue."
     homepage: https://www.imda.gov.sg/
     collection_url: https://www.imda.gov.sg/resources/blog/blog-articles
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -5687,10 +5687,10 @@ sources:
   - id: startupsg-events-archive
     name: Startup SG events archive
     category: asia-innovation
-    description: "Asia step 2: StartupSG public events calendar (sitemap)."
+    description: "Asia step 2: StartupSG public events calendar (sitemap). Disabled — event pages fail innovation junk filter; not companies."
     homepage: https://www.startupsg.gov.sg/
     collection_url: https://www.startupsg.gov.sg/events
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
