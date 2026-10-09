@@ -10,6 +10,8 @@ import {
   postDeployJobsAdminPanel,
   qualityAdminStatus,
   asiaIngestAdminSummary,
+  mitSolveBackfillAdminSummary,
+  sourceCatalogueIngestAdminRows,
 } from "@alice/database";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
@@ -17,7 +19,7 @@ import { SourceCandidateForm } from "@/components/source-candidate-form";
 import { SourceCandidateList } from "@/components/source-candidate-list";
 
 export default async function AdminPage() {
-  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas, asiaIngest] = await Promise.all([
+  const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas, asiaIngest, mitSolveBackfill, catalogueSources] = await Promise.all([
     libraryStats(pool()),
     browseSources(pool(), {}),
     listRecentIngestionRuns(pool(), 12),
@@ -28,6 +30,8 @@ export default async function AdminPage() {
     postDeployJobsAdminPanel(pool()).catch(() => null),
     listSourceCandidates(pool(), 12).catch(() => []),
     asiaIngestAdminSummary(pool()).catch(() => null),
+    mitSolveBackfillAdminSummary(pool()).catch(() => null),
+    sourceCatalogueIngestAdminRows(pool(), ["atlas-of-the-future", "solar-impulse"]).catch(() => []),
   ]);
   const failing = (sources as Array<Record<string, unknown>>).filter((s) =>
     s.status === "BLOCKED" || s.status === "BROKEN" || s.status === "PARTIAL",
@@ -70,6 +74,62 @@ export default async function AdminPage() {
           </div>
         ))}
       </dl>
+
+      {mitSolveBackfill ? (
+        <section className="mt-10 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">MIT Solve backfill progress</h2>
+          <p className="mt-1 text-xs text-muted">
+            From production <code className="text-ink">sources</code> / <code className="text-ink">ingestion_runs</code> (live DB).
+          </p>
+          <dl className="mt-3 grid gap-2 sm:grid-cols-2 text-xs">
+            <div>
+              <dt className="text-muted">Catalogue (last discover)</dt>
+              <dd className="text-ink">{mitSolveBackfill.catalogue_size?.toLocaleString() ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Ingested (active source_items)</dt>
+              <dd className="text-ink">{mitSolveBackfill.ingested_total.toLocaleString()}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Pending (estimate)</dt>
+              <dd className="text-ink">{mitSolveBackfill.pending_estimate?.toLocaleString() ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">New in last run</dt>
+              <dd className="text-ink">{mitSolveBackfill.last_run_new?.toLocaleString() ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Avg new / night (14d)</dt>
+              <dd className="text-ink">{mitSolveBackfill.avg_new_per_night?.toLocaleString() ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Est. nights to finish</dt>
+              <dd className="text-ink">{mitSolveBackfill.estimated_nights_remaining?.toLocaleString() ?? "—"}</dd>
+            </div>
+          </dl>
+          {mitSolveBackfill.note ? (
+            <p className="mt-2 text-xs text-muted">{mitSolveBackfill.note}</p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {catalogueSources.length > 0 ? (
+        <section className="mt-6 rounded border border-line bg-white p-4 text-sm">
+          <h2 className="text-sm font-medium">Full-catalogue sources (Atlas / Solar)</h2>
+          <ul className="mt-2 space-y-2 text-xs text-muted">
+            {catalogueSources.map((row) => (
+              <li key={row.slug}>
+                <Link href={`/sources/${row.slug}`} className="text-accent hover:underline">{row.slug}</Link>
+                {" — ingested "}{row.item_count.toLocaleString()}
+                {row.last_discovered != null ? ` / discover ${row.last_discovered.toLocaleString()}` : ""}
+                {row.gap_estimate != null && row.gap_estimate > 0
+                  ? ` (gap ~${row.gap_estimate.toLocaleString()})`
+                  : row.gap_estimate === 0 ? " (catalogue complete)" : ""}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {quality ? (
         <section className="mt-10 rounded border border-line bg-white p-4 text-sm">

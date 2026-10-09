@@ -101,7 +101,8 @@ sources:
       - PROJECT
       - PERSON
       - ORGANISATION
-    update_class: WEEKLY
+    # DAILY during ~25k backfill; switch update_class back to WEEKLY once pending ~0 (see Admin backfill line).
+    update_class: DAILY
     adapter: mit-solve
     access:
       class: PUBLIC
@@ -119,9 +120,11 @@ sources:
       max_items_per_run: 1000
       first_run_item_limit: 1000
       resume_pending_only: true
+      # ~55–75 min for 1k fetches at 20 rpm; dedicated cap so INGEST_SOURCE_LOOP_MAX_MINUTES=60 still leaves room for other sources.
+      source_loop_max_minutes: 85
     coverage:
       historical_backfill: checkpointed
-      notes: "PARTIAL: solution pages in the sitemap, not every article or challenge narrative. Evidence stage stays UNKNOWN; selection is recorded as PROGRAMME_SELECTED."
+      notes: "DAILY during backfill (~25k pending); revert to WEEKLY when pending ~0. PARTIAL: solution pages in the sitemap, not every article or challenge narrative."
   - id: wef-uplink
     name: World Economic Forum UpLink
     category: general-innovation

@@ -43,6 +43,13 @@
 
 `hkstp-company-directory` does **not** require `INGEST_FULL`. Without `--full`, checkpoint resume is off; **detail skip** (`shouldSkipDetailFetch` + listing hash) avoids refetching ~1,289 stored rows. Expect **~0–10 new/night** unless sitemap adds companies or listing hashes change.
 
+## MIT Solve backfill (added to #86)
+
+- `update_class: DAILY` with YAML comment + coverage note to revert to WEEKLY when pending ~0.
+- `source_loop_max_minutes: 85` — dedicated cap; **does not** consume `INGEST_SOURCE_LOOP_MAX_MINUTES` (default 60) for other sources.
+- **Time math:** 1,000 items × 3s min interval (20 rpm) ≈ **50 min** fetch floor; observed **55–75 min** with parse/enrich skip → **85 min** cap fits 1k; global **60 min** alone would truncate around **~800–900** items and block later sources if `mit-solve` ran under the shared cap.
+- Admin: **MIT Solve backfill progress** + Atlas/Solar catalogue lines (production DB).
+
 ## Expected 04:00 UTC cron (after deploy)
 
 - **Due-only** applies (`RAILWAY_CRON=1`).

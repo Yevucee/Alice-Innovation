@@ -114,6 +114,12 @@ export {
 } from "./post-deploy-admin.js";
 export { asiaIngestAdminSummary, type AsiaIngestAdminSummary, type AsiaSourceIngestRow } from "./asia-ingest-admin.js";
 export {
+  mitSolveBackfillAdminSummary,
+  type MitSolveBackfillAdminSummary,
+  sourceCatalogueIngestAdminRows,
+  type SourceCatalogueIngestAdminRow,
+} from "./mit-solve-backfill-admin.js";
+export {
   cleanJStartupResourceSummariesBatch,
   quarantineAsiaCatalogueJunkBatch,
 } from "./asia-catalogue-quality.js";

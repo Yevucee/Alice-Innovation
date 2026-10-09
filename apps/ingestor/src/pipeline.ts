@@ -109,7 +109,19 @@ export async function runIngestion(
   let previewSource: SourceRecord | null = null;
   let previewLimit = options.limit ?? 20;
   const ingestLoopStartedAt = Date.now();
-  const sourceLoopBudget = createIngestSourceLoopBudget(ingestLoopStartedAt);
+  const globalLoopBudget = createIngestSourceLoopBudget(ingestLoopStartedAt);
+  let dedicatedSourceWallMs = 0;
+
+  function hasDedicatedSourceLoopCap(source: SourceRecord): boolean {
+    const minutes = source.limits.source_loop_max_minutes;
+    return minutes != null && Number.isFinite(minutes) && minutes > 0;
+  }
+
+  function globalIngestLoopExhausted(): boolean {
+    const elapsed = Date.now() - ingestLoopStartedAt - dedicatedSourceWallMs;
+    return elapsed >= globalLoopBudget.maxMinutes() * 60_000;
+  }
+
   try {
     await ensurePromotedCatalogueAdapters(pool);
     const selected = options.sources.filter((source) => {
@@ -118,10 +130,11 @@ export async function runIngestion(
     });
     let sourcesStarted = 0;
     for (const source of selected) {
-      if (sourceLoopBudget.exhausted()) {
+      if (!hasDedicatedSourceLoopCap(source) && globalIngestLoopExhausted()) {
         log("info", "ingest_source_loop_time_budget", {
-          max_minutes: sourceLoopBudget.maxMinutes(),
-          elapsed_ms: Date.now() - ingestLoopStartedAt,
+          max_minutes: globalLoopBudget.maxMinutes(),
+          elapsed_ms: Date.now() - ingestLoopStartedAt - dedicatedSourceWallMs,
+          dedicated_wall_ms: dedicatedSourceWallMs,
           sources_started: sourcesStarted,
           sources_remaining: selected.length - sourcesStarted,
         });
@@ -129,6 +142,10 @@ export async function runIngestion(
       }
       sourcesStarted += 1;
       const started = Date.now();
+      const dedicatedCap = hasDedicatedSourceLoopCap(source);
+      const activeLoopBudget = dedicatedCap
+        ? createIngestSourceLoopBudget(started, source.limits.source_loop_max_minutes!)
+        : globalLoopBudget;
       try {
         const meta = await pool.query<{ last_successful_run: Date | null; id: string }>(
           "SELECT id::text, last_successful_run FROM sources WHERE slug = $1",
@@ -267,7 +284,8 @@ export async function runIngestion(
             detail_refetch_days: refetchDays,
             detail_bootstrap_days: bootstrapDays,
             detail_concurrency: detailConcurrency,
-            source_loop_budget_remaining_ms: sourceLoopBudget.remainingMs(),
+            source_loop_budget_remaining_ms: activeLoopBudget.remainingMs(),
+            source_loop_dedicated_cap: dedicatedCap,
           });
           let itemsProcessed = 0;
           const listingStateMap = options.dryRun
@@ -326,12 +344,16 @@ export async function runIngestion(
           };
 
           for (let offset = 0; offset < refs.length; offset += detailConcurrency) {
-            if (sourceLoopBudget.exhausted()) {
+            const hitGlobalCap = !dedicatedCap && globalIngestLoopExhausted();
+            const hitSourceCap = dedicatedCap && activeLoopBudget.exhausted();
+            if (hitGlobalCap || hitSourceCap) {
               sourceTimeBudgetExhausted = true;
               log("info", "ingest_source_time_budget", {
                 source_id: source.id,
                 run_id: runId,
-                max_minutes: sourceLoopBudget.maxMinutes(),
+                max_minutes: activeLoopBudget.maxMinutes(),
+                dedicated_cap: dedicatedCap,
+                global_cap_hit: hitGlobalCap,
                 items_processed: itemsProcessed,
                 to_process: refs.length,
                 elapsed_ms: Date.now() - ingestLoopStartedAt,
@@ -398,7 +420,7 @@ export async function runIngestion(
             toProcess: refs.length,
           });
           if (sourceTimeBudgetExhausted) {
-            runErrorSummary = `source_loop_time_budget_minutes=${sourceLoopBudget.maxMinutes()}; items_processed=${itemsProcessed}; to_process=${refs.length}; ${runOutcome}`;
+            runErrorSummary = `source_loop_time_budget_minutes=${activeLoopBudget.maxMinutes()}; dedicated=${dedicatedCap}; items_processed=${itemsProcessed}; to_process=${refs.length}; ${runOutcome}`;
           } else {
             runErrorSummary = runOutcome;
           }
@@ -419,10 +441,21 @@ export async function runIngestion(
             source_time_budget_exhausted: sourceTimeBudgetExhausted,
             duration_ms: Date.now() - started,
           });
-          if (sourceTimeBudgetExhausted) {
+          if (sourceTimeBudgetExhausted && dedicatedCap) {
             log("info", "ingest_source_loop_time_budget", {
-              max_minutes: sourceLoopBudget.maxMinutes(),
-              elapsed_ms: Date.now() - ingestLoopStartedAt,
+              max_minutes: activeLoopBudget.maxMinutes(),
+              dedicated: true,
+              elapsed_ms: Date.now() - started,
+              stopped_at_source: source.id,
+              items_processed: itemsProcessed,
+              to_process: refs.length,
+            });
+            break;
+          }
+          if (sourceTimeBudgetExhausted && !dedicatedCap) {
+            log("info", "ingest_source_loop_time_budget", {
+              max_minutes: globalLoopBudget.maxMinutes(),
+              elapsed_ms: Date.now() - ingestLoopStartedAt - dedicatedSourceWallMs,
               stopped_at_source: source.id,
               items_processed: itemsProcessed,
               to_process: refs.length,
@@ -442,6 +475,10 @@ export async function runIngestion(
           source_id: source.id,
           message: error instanceof Error ? error.message : String(error),
         });
+      } finally {
+        if (dedicatedCap) {
+          dedicatedSourceWallMs += Date.now() - started;
+        }
       }
     }
   } finally {
