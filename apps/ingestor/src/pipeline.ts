@@ -12,7 +12,7 @@ import {
   touchSourceItemWithoutDetailFetch,
   writeCheckpoint,
 } from "@alice/database";
-import { canonicaliseUrl, log } from "@alice/shared";
+import { canonicaliseUrl, log, tryCanonicaliseUrl } from "@alice/shared";
 import type { NormalisedDraft } from "@alice/shared";
 import type { SourceRecord } from "@alice/source-registry";
 import { fetchText, HttpStatusError } from "./http.js";
@@ -254,11 +254,16 @@ export async function runIngestion(
           if (source.limits.resume_pending_only) {
             const existing = await loadActiveCanonicalUrlsForSource(pool, source.id);
             const beforeExisting = refs.length;
-            refs = refs.filter((ref) => !existing.has(canonicaliseUrl(ref.url)));
+            refs = refs.filter((ref) => {
+              const key = tryCanonicaliseUrl(ref.url);
+              return key ? !existing.has(key) : true;
+            });
             counts.dropped_existing = beforeExisting - refs.length;
           }
           const checkpoint = options.full ? await readCheckpoint(pool, source.id) : "";
-          const catalogue = refs.map((ref) => canonicaliseUrl(ref.url));
+          const catalogue = refs
+            .map((ref) => tryCanonicaliseUrl(ref.url))
+            .filter((url): url is string => Boolean(url));
           if (checkpoint) {
             const before = refs.length;
             refs = refs.filter((ref) => ref.url > checkpoint);

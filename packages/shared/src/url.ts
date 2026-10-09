@@ -19,6 +19,17 @@ const TRACKING_PARAMS = new Set([
  * Lowercases the host, drops the fragment and tracking parameters,
  * sorts the remaining query, and strips a trailing slash.
  */
+/** Returns null instead of throwing when the input is empty or not a valid absolute URL. */
+export function tryCanonicaliseUrl(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  try {
+    return canonicaliseUrl(trimmed);
+  } catch {
+    return null;
+  }
+}
+
 export function canonicaliseUrl(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) {

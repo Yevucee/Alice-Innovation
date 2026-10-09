@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import { asEvidenceBasis, asEvidenceStage, asResourceType, canonicaliseUrl, truncate, type NormalisedDraft, type ResourceType } from "@alice/shared";
+import { asEvidenceBasis, asEvidenceStage, asResourceType, canonicaliseUrl, tryCanonicaliseUrl, truncate, type NormalisedDraft, type ResourceType } from "@alice/shared";
 import { countryCodeFor } from "@alice/taxonomy";
 
 export function isUsableImageUrl(value: string | null | undefined): boolean {
@@ -119,7 +119,14 @@ export function buildDraft(input: {
   etag?: string | null;
   lastModified?: string | null;
 }): NormalisedDraft {
-  const canonicalUrl = canonicaliseUrl(input.url);
+  const canonicalUrl = tryCanonicaliseUrl(input.url);
+  if (!canonicalUrl) {
+    throw new Error(`Cannot canonicalise URL: ${input.url}`);
+  }
+  let imageUrl = input.imageUrl ?? null;
+  if (imageUrl) {
+    imageUrl = tryCanonicaliseUrl(imageUrl) ?? null;
+  }
   const summary = truncate(input.summary ?? "", 500);
   const countryName = input.countryName ?? null;
   const continentName = input.continentName ?? null;
@@ -132,7 +139,7 @@ export function buildDraft(input: {
     canonicalUrl,
     originalUrl: input.url,
     language: input.language ?? "en",
-    imageUrl: input.imageUrl ?? null,
+    imageUrl,
     publishedAt: input.publishedAt ?? null,
     organisationName: input.organisationName ?? null,
     personName: input.personName ?? null,

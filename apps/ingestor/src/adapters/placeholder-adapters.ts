@@ -38,8 +38,9 @@ export const remainingCatalogueAdapters: SourceAdapter[] = [
   createHtmlCatalogueAdapter({
     id: "third-derivative",
     siteOrigin: "https://www.third-derivative.org",
-    pathPattern: /^\/portfolio\/[^/]+\/?$/i,
-    htmlUrlPattern: /https:\/\/www\.third-derivative\.org\/portfolio\/[a-z0-9-]+/gi,
+    pathPattern: /^\/portfolio\/[a-z0-9][a-z0-9-]{2,}\/?$/i,
+    excludePathPattern: /^\/portfolio\/(rss|tag)$/i,
+    htmlUrlPattern: /https:\/\/www\.third-derivative\.org\/portfolio\/[a-z0-9][a-z0-9-]{2,}/gi,
     resourceType: "ORGANISATION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),

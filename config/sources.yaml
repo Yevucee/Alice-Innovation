@@ -101,8 +101,8 @@ sources:
       - PROJECT
       - PERSON
       - ORGANISATION
-    # DAILY during ~25k backfill; switch update_class back to WEEKLY once pending ~0 (see Admin backfill line).
-    update_class: DAILY
+    # Backfill complete (pending ~0 in Admin); WEEKLY maintenance with dedicated cap below.
+    update_class: WEEKLY
     adapter: mit-solve
     access:
       class: PUBLIC
@@ -124,7 +124,7 @@ sources:
       source_loop_max_minutes: 85
     coverage:
       historical_backfill: checkpointed
-      notes: "DAILY during backfill (~25k pending); revert to WEEKLY when pending ~0. PARTIAL: solution pages in the sitemap, not every article or challenge narrative."
+      notes: "WEEKLY maintenance after backfill (~25k ingested). PARTIAL: solution pages in the sitemap, not every article or challenge narrative."
   - id: wef-uplink
     name: World Economic Forum UpLink
     category: general-innovation

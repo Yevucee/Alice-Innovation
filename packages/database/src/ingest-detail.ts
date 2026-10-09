@@ -1,4 +1,4 @@
-import { canonicaliseUrl, contentHash } from "@alice/shared";
+import { canonicaliseUrl, contentHash, tryCanonicaliseUrl } from "@alice/shared";
 import type { Queryable } from "./pool.js";
 
 export interface ListingRef {
@@ -15,8 +15,9 @@ export interface SourceItemListingState {
 }
 
 export function listingContentHash(ref: ListingRef): string {
+  const urlKey = tryCanonicaliseUrl(ref.url) ?? ref.url.trim();
   return contentHash([
-    canonicaliseUrl(ref.url),
+    urlKey,
     ref.externalId?.trim() ?? "",
     ref.listingHtml ?? "",
   ]);
@@ -89,8 +90,9 @@ export async function loadSourceItemListingStateMap(
       listing_content_hash: row.listing_content_hash,
       last_fetched_at: row.last_fetched_at,
     };
-    map.set(canonicaliseUrl(row.canonical_url), state);
-    map.set(row.external_id, state);
+    const canonicalKey = tryCanonicaliseUrl(row.canonical_url);
+    if (canonicalKey) map.set(canonicalKey, state);
+    if (row.external_id) map.set(row.external_id, state);
   }
   return map;
 }
@@ -99,7 +101,8 @@ export function lookupListingState(
   map: Map<string, SourceItemListingState>,
   ref: ListingRef,
 ): SourceItemListingState | undefined {
-  return map.get(canonicaliseUrl(ref.url)) ?? (ref.externalId ? map.get(ref.externalId) : undefined);
+  const refKey = tryCanonicaliseUrl(ref.url);
+  return (refKey ? map.get(refKey) : undefined) ?? (ref.externalId ? map.get(ref.externalId) : undefined);
 }
 
 export async function touchSourceItemWithoutDetailFetch(
@@ -126,7 +129,7 @@ export async function touchSourceItemWithoutDetailFetch(
          OR ($5 <> '' AND si.external_id = $5)
        )
      RETURNING si.id::text, si.resource_id::text`,
-    [sourceSlug, canonicaliseUrl(ref.url), runId, listingHash, ref.externalId ?? ""],
+    [sourceSlug, tryCanonicaliseUrl(ref.url) ?? ref.url.trim(), runId, listingHash, ref.externalId ?? ""],
   );
   const row = updated.rows[0];
   if (!row) return null;
