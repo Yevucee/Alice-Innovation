@@ -148,7 +148,8 @@ export async function diverseApproachesForResource(
 export async function listRecentIngestionRuns(db: Queryable, limit: number): Promise<unknown[]> {
   const rows = await db.query(
     `SELECT ir.id::text AS run_id, ir.status, ir.started_at, ir.completed_at,
-            ir.items_new, ir.items_updated, ir.items_failed, s.slug AS source_id, s.name AS source_name
+            ir.items_new, ir.items_updated, ir.items_failed, ir.items_discovered,
+            ir.error_summary, s.slug AS source_id, s.name AS source_name
      FROM ingestion_runs ir
      LEFT JOIN sources s ON s.id = ir.source_id
      ORDER BY ir.started_at DESC

@@ -1,5 +1,6 @@
 import { htmlToText } from "@alice/shared";
 import { load } from "cheerio";
+import { resolveHub71PublicUrl } from "../hub71-url.js";
 import { buildDraft } from "./draft.js";
 import { listingPageFromJson } from "./open-data/http-json.js";
 import type { AdapterContext, DiscoveredRef, FetchedPage, SourceAdapter } from "./types.js";
@@ -54,14 +55,15 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
         const slug = pickEn(row.slug);
         if (!slug) continue;
         const detailUrl = startupDetailUrl(slug);
+        const publicUrl = resolveHub71PublicUrl(row.website, detailUrl);
         refs.push({
-          url: row.website?.trim() || detailUrl,
+          url: detailUrl,
           externalId: slug,
           listingHtml: JSON.stringify({
             slug,
             title: pickEn(row.title),
             description: pickEn(row.description),
-            website: row.website,
+            website: publicUrl,
             sector: row.sector,
             detailUrl,
           }),
@@ -105,7 +107,7 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
     }
     if (payload.title) {
       const summary = (payload.description ?? payload.title).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-      const url = payload.website?.trim() || payload.detailUrl || page.url;
+      const url = resolveHub71PublicUrl(payload.website, payload.detailUrl || page.url);
       return buildDraft({
         title: payload.title,
         url,

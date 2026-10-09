@@ -101,7 +101,8 @@ sources:
       - PROJECT
       - PERSON
       - ORGANISATION
-    update_class: WEEKLY
+    # DAILY during ~25k backfill; switch update_class back to WEEKLY once pending ~0 (see Admin backfill line).
+    update_class: DAILY
     adapter: mit-solve
     access:
       class: PUBLIC
@@ -119,9 +120,11 @@ sources:
       max_items_per_run: 1000
       first_run_item_limit: 1000
       resume_pending_only: true
+      # ~55–75 min for 1k fetches at 20 rpm; dedicated cap so INGEST_SOURCE_LOOP_MAX_MINUTES=60 still leaves room for other sources.
+      source_loop_max_minutes: 85
     coverage:
       historical_backfill: checkpointed
-      notes: "PARTIAL: solution pages in the sitemap, not every article or challenge narrative. Evidence stage stays UNKNOWN; selection is recorded as PROGRAMME_SELECTED."
+      notes: "DAILY during backfill (~25k pending); revert to WEEKLY when pending ~0. PARTIAL: solution pages in the sitemap, not every article or challenge narrative."
   - id: wef-uplink
     name: World Economic Forum UpLink
     category: general-innovation
@@ -2940,7 +2943,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 4 (india). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.ccamp.res.in/
     collection_url: https://www.ccamp.res.in/startups
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3324,7 +3327,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 16 (taiwan). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://findit.org.tw/
     collection_url: https://findit.org.tw/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3679,7 +3682,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 27 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.hkstp.org/
     collection_url: https://www.hkstp.org/en/elite
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3711,7 +3714,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 28 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.cyberport.hk/
     collection_url: https://www.cyberport.hk/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3743,7 +3746,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 29 (hong-kong). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.cyberport.hk/
     collection_url: https://www.cyberport.hk/en/about_cyberport/cyberport_incubation_programme
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4096,7 +4099,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 40 (indonesia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://climateimpact.id/
     collection_url: https://climateimpact.id/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4864,7 +4867,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 64 (china). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.cxcyds.com/
     collection_url: https://www.cxcyds.com/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4992,7 +4995,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 68 (pan-asian). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.adb.org/
     collection_url: https://www.adb.org/what-we-do/private-sector/adb-ventures
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5152,7 +5155,7 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 73 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://appworks.tw/
     collection_url: https://appworks.tw/portfolio
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5345,7 +5348,7 @@ sources:
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 79 (university). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://home.iitd.ac.in/
     collection_url: https://www.iitd-incubation.org/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5441,7 +5444,7 @@ sources:
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 82 (university). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.iitkgp.ac.in/
     collection_url: https://www.iitkgp.ac.in/department/IP
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION

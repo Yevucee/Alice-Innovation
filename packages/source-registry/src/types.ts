@@ -35,6 +35,11 @@ export interface SourceRecord {
     complete_catalogue_per_run?: boolean;
     /** Skip refs whose canonical URL already exists in source_items (resume backfill). */
     resume_pending_only?: boolean;
+    /**
+     * Per-source ingest loop cap (minutes). Time does not count toward INGEST_SOURCE_LOOP_MAX_MINUTES
+     * so other sources still get the global budget after this source finishes.
+     */
+    source_loop_max_minutes?: number | null;
   };
   /** When set, catalogue overlaps another slug (e.g. j-startup-impact → j-startup). Ingest skips when sibling has items. */
   duplicate_of?: string | null;

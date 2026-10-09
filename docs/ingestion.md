@@ -27,7 +27,8 @@ Ordered steps:
 
 `npm run ingest` loads `config/sources.yaml` (seeded sources).
 
-- `--due` runs enabled sources whose update class is due. Default when no `--source` is passed.
+- `--due` runs enabled sources whose update class is due. **Scheduled cron** (`RAILWAY_CRON=1` + `--due` in `railway.ingestor.toml`) uses due-only. **Manual Railway “Run now”** uses the same argv but **does not** apply due-only (all enabled sources run) unless you set `RAILWAY_CRON=1` on the one-off.
+- Manual runs run **post-deploy after ingest** by default. Set `POST_DEPLOY_BEFORE_INGEST=true` to run cleanup first, or `false` to skip pre-ingest cleanup entirely.
 - `--source <id>` runs that source even if paused/blocked.
 - `--limit <n>` stops after *n* items.
 - `--full` uses `backfill_checkpoints` and may deactivate missing catalogue URLs (full-catalogue adapters only).
@@ -39,7 +40,7 @@ One advisory lock prevents overlapping runs.
 
 After discovery, each item compares a **listing snapshot hash** (`canonical URL` + `externalId` + optional `listingHtml` from the adapter) to `source_items.listing_content_hash`. When the hash matches, the row has a linked resource, and `last_fetched_at` is within **`INGEST_DETAIL_REFETCH_DAYS`** (default **7**), the ingestor **skips the detail HTTP fetch**, touches `last_seen_at`, and counts `detail_skipped` (progress logs show `pages_fetched` ≪ `items_processed` on steady-state runs). **Bootstrap:** when `listing_content_hash` is still null (e.g. first run after migration) but `last_fetched_at` is within **`INGEST_DETAIL_BOOTSTRAP_DAYS`** (default **30**), skip the detail fetch and only persist the listing hash + `last_seen_at` (`detail_skipped_bootstrap`). Detail pages are fetched with **`INGEST_DETAIL_CONCURRENCY`** (default **4**) and per-host rate limits from `sources.limits.requests_per_minute`.
 
-The full source loop is capped by **`INGEST_SOURCE_LOOP_MAX_MINUTES`** (default **60**). When the budget is reached, the current source run is finished as **`PARTIAL_SUCCESS`** (checkpoint written when `--full`), remaining sources are not started, and **post-ingest still runs**. The next **Run now** continues with fast skips for already-seen rows.
+The full source loop is capped by **`INGEST_SOURCE_LOOP_MAX_MINUTES`** (default **60**) for sources without a per-source cap. Time spent on sources with **`limits.source_loop_max_minutes`** (e.g. `mit-solve`: **85**) does **not** count toward that global budget, so a 1k MIT Solve pass can finish without starving other catalogues. When a budget is reached, the current source run is finished as **`PARTIAL_SUCCESS`** (checkpoint written when `--full`), remaining sources are not started, and **post-ingest still runs**.
 
 On ingestor start, any `ingestion_runs` row still **`RUNNING`** with `started_at` before this process start is marked **`INTERRUPTED`** so Admin does not show stale runs after deploy/kill.
 

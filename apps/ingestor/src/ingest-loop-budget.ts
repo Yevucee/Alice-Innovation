@@ -3,15 +3,19 @@ export function ingestSourceLoopMaxMinutes(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
 }
 
-export function createIngestSourceLoopBudget(startedAtMs: number): {
+export function createIngestSourceLoopBudget(
+  startedAtMs: number,
+  maxMinutes?: number,
+): {
   exhausted: () => boolean;
   remainingMs: () => number;
   maxMinutes: () => number;
 } {
-  const maxMs = ingestSourceLoopMaxMinutes() * 60_000;
+  const capMinutes = maxMinutes ?? ingestSourceLoopMaxMinutes();
+  const maxMs = capMinutes * 60_000;
   return {
     exhausted: () => Date.now() - startedAtMs >= maxMs,
     remainingMs: () => Math.max(0, maxMs - (Date.now() - startedAtMs)),
-    maxMinutes: () => ingestSourceLoopMaxMinutes(),
+    maxMinutes: () => capMinutes,
   };
 }

@@ -85,15 +85,19 @@ export function isManualIngestTrigger(): boolean {
   return !isRailwayCronRun();
 }
 
+function postDeployBeforeIngestDefault(): boolean {
+  return !isManualIngestTrigger();
+}
+
 export async function shouldRunPostDeployBeforeIngest(
   db: Queryable,
   input: { cleanupOnly: boolean },
 ): Promise<boolean> {
   if (process.argv.includes("--post-deploy-after-ingest")) return false;
   if (process.argv.includes("--post-deploy-first")) return true;
-  if (!envFlag("POST_DEPLOY_BEFORE_INGEST", true)) return false;
+  if (!envFlag("POST_DEPLOY_BEFORE_INGEST", postDeployBeforeIngestDefault())) return false;
   if (input.cleanupOnly) return true;
-  if (isManualIngestTrigger()) return true;
+  if (isManualIngestTrigger()) return envFlag("POST_DEPLOY_BEFORE_INGEST", false);
   if (await hasPendingPostDeployJobs(db)) return true;
   return false;
 }

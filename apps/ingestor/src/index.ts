@@ -13,6 +13,7 @@ import {
 import { loadDotEnv, log } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
 import type { SourceRecord } from "@alice/source-registry";
+import { resolveIngestDueOnly } from "./ingest-due-mode.js";
 import { runPostIngestMaintenance } from "./post-ingest.js";
 import { runPostDeployJobsStep, shouldRunPostDeployBeforeIngest } from "./post-deploy-jobs.js";
 import { resetSupplementalFetchHostPolicy } from "./enrichment-context-fetch.js";
@@ -112,7 +113,12 @@ async function main(): Promise<void> {
   }
   const cleanupOnly = process.argv.includes("--cleanup-only");
   const forcedOnly = only.length > 0;
-  const dueOnly = !forcedOnly && (process.argv.includes("--due") || (!previewEnv && !cleanupOnly));
+  const dueOnly = resolveIngestDueOnly({
+    forcedOnly,
+    cleanupOnly,
+    previewEnv,
+    argv: process.argv.slice(2),
+  });
   const full = process.argv.includes("--full")
     || process.env.INGEST_FULL === "1"
     || process.env.INGEST_FULL?.toLowerCase() === "true";
