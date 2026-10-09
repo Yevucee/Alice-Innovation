@@ -27,7 +27,8 @@ Ordered steps:
 
 `npm run ingest` loads `config/sources.yaml` (seeded sources).
 
-- `--due` runs enabled sources whose update class is due. Default when no `--source` is passed.
+- `--due` runs enabled sources whose update class is due. **Scheduled cron** (`RAILWAY_CRON=1` + `--due` in `railway.ingestor.toml`) uses due-only. **Manual Railway “Run now”** uses the same argv but **does not** apply due-only (all enabled sources run) unless you set `RAILWAY_CRON=1` on the one-off.
+- Manual runs run **post-deploy after ingest** by default. Set `POST_DEPLOY_BEFORE_INGEST=true` to run cleanup first, or `false` to skip pre-ingest cleanup entirely.
 - `--source <id>` runs that source even if paused/blocked.
 - `--limit <n>` stops after *n* items.
 - `--full` uses `backfill_checkpoints` and may deactivate missing catalogue URLs (full-catalogue adapters only).

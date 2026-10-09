@@ -382,6 +382,7 @@ export default async function AdminPage() {
                 <th className="pb-2 pr-4">Status</th>
                 <th className="pb-2 pr-4">New</th>
                 <th className="pb-2 pr-4">Updated</th>
+                <th className="pb-2 pr-4">Outcome</th>
                 <th className="pb-2">Started</th>
               </tr>
             </thead>
@@ -398,6 +399,9 @@ export default async function AdminPage() {
                   <td className="py-2 pr-4">{String(run.status)}</td>
                   <td className="py-2 pr-4">{String(run.items_new)}</td>
                   <td className="py-2 pr-4">{String(run.items_updated)}</td>
+                  <td className="py-2 pr-4 text-xs text-muted max-w-[14rem] truncate" title={String(run.error_summary ?? "")}>
+                    {run.error_summary ? String(run.error_summary) : run.status === "SKIPPED" ? "skipped" : "—"}
+                  </td>
                   <td className="py-2">{formatDate(run.started_at as string)}</td>
                 </tr>
               ))}

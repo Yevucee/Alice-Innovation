@@ -150,7 +150,10 @@ export async function runIngestion(
           continue;
         }
         if (options.dueOnly && !due(source, meta.rows[0].last_successful_run)) {
-          log("info", "source_not_due", { source_id: source.id });
+          await recordSkippedSourceRun(pool, meta.rows[0].id, source.id, "not_due", {
+            update_class: source.update_class,
+            last_successful_run: meta.rows[0].last_successful_run?.toISOString() ?? null,
+          });
           continue;
         }
         await pool.query("UPDATE sources SET last_attempted_run = now(), updated_at = now() WHERE slug = $1", [source.id]);
@@ -389,8 +392,15 @@ export async function runIngestion(
             await confirmDisappearances(pool, source.id, catalogue);
           }
           let runErrorSummary: string | null = null;
+          const runOutcome = formatRunOutcome({
+            kind: "ran",
+            counts,
+            toProcess: refs.length,
+          });
           if (sourceTimeBudgetExhausted) {
-            runErrorSummary = `source_loop_time_budget_minutes=${sourceLoopBudget.maxMinutes()}; items_processed=${itemsProcessed}; to_process=${refs.length}`;
+            runErrorSummary = `source_loop_time_budget_minutes=${sourceLoopBudget.maxMinutes()}; items_processed=${itemsProcessed}; to_process=${refs.length}; ${runOutcome}`;
+          } else {
+            runErrorSummary = runOutcome;
           }
           let status = counts.failed > 0 ? "PARTIAL_SUCCESS" : "SUCCESS";
           if (sourceTimeBudgetExhausted && itemsProcessed < refs.length) {
@@ -469,6 +479,47 @@ type IngestRunCounts = {
   skipped_duplicate_of?: boolean;
 };
 
+function formatRunOutcome(input: {
+  kind: "skipped" | "ran";
+  reason?: string;
+  counts?: IngestRunCounts;
+  toProcess?: number;
+}): string {
+  if (input.kind === "skipped") {
+    return `skipped:${input.reason ?? "unknown"}`;
+  }
+  const c = input.counts!;
+  const parts = [
+    `ran:discovered=${c.discovered}`,
+    `pending=${input.toProcess ?? 0}`,
+    `new=${c.created}`,
+    `updated=${c.updated}`,
+    `unchanged=${c.unchanged}`,
+    `failed=${c.failed}`,
+    `dropped_existing=${c.dropped_existing ?? 0}`,
+    `dropped_limit=${c.dropped_limit ?? 0}`,
+  ];
+  return parts.join(";");
+}
+
+async function recordSkippedSourceRun(
+  pool: ReturnType<typeof getPool>,
+  sourceDbId: string,
+  sourceSlug: string,
+  reason: string,
+  detail?: Record<string, unknown>,
+): Promise<void> {
+  const summary = formatRunOutcome({ kind: "skipped", reason });
+  const stats = { outcome: "skipped", reason, ...detail };
+  const run = await pool.query<{ id: string }>(
+    `INSERT INTO ingestion_runs (source_id, status, completed_at, error_summary, duration_ms, pipeline_stats)
+     VALUES ($1, 'SKIPPED', now(), $2, 0, $3::jsonb)
+     RETURNING id::text`,
+    [sourceDbId, summary, JSON.stringify(stats)],
+  );
+  log("info", "source_skipped", { source_id: sourceSlug, run_id: run.rows[0]?.id, reason, ...detail });
+}
+
 async function finishRun(
   runId: string,
   status: string,
@@ -486,6 +537,7 @@ async function finishRun(
     skipped_duplicate_of: counts.skipped_duplicate_of ?? false,
     enrich_attempted: counts.enrich_attempted ?? 0,
     enrich_applied: counts.enrich_applied ?? 0,
+    outcome: errorSummary?.startsWith("skipped:") ? "skipped" : "ran",
   };
   await getPool().query(
     `UPDATE ingestion_runs SET
