@@ -19,9 +19,11 @@
 
 ## 2) Hub71 — Invalid URL
 
-**Root cause:** Discover used `row.website` as `ref.url`. Several JSON rows have `website: null` or malformed values (e.g. `": https://…"`). `canonicaliseUrl(ref.url)` in the pipeline threw **Invalid URL** and failed the whole source.
+**Root cause (#86):** Discover used `row.website` as `ref.url` (malformed `": https://…"` etc.).
 
-**Fix:** Discover always uses stable `https://www.hub71.com/startups/{slug}`; websites normalized via `resolveHub71PublicUrl`. Dry-run: **316** discovered; **27/50** pass quality gate on listing JSON (detail fetch not required for those).
+**Still failing after #86 deploy:** Legacy **`source_items.canonical_url`** rows from the old adapter are canonicalised in `loadSourceItemListingStateMap` → throw **Invalid URL** and fail the whole source after discover (316).
+
+**Fix (follow-up PR):** `tryCanonicaliseUrl` + skip bad stored URLs; drop bad `imageUrl` in `buildDraft` only. Dry-run: **316** discovered; **211** pass quality gate on listing JSON.
 
 ## 3) Disabled sources (persistent failures)
 

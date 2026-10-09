@@ -18,8 +18,8 @@ async function main(): Promise<void> {
   });
   console.log("discovered", refs.length);
   let pass = 0;
-  const sample = refs.slice(0, 50);
-  for (const ref of sample) {
+  let fail = 0;
+  for (const ref of refs) {
     const page = await adapter.fetch(ref, {
       source,
       userAgent: "AliceInnovationLibrary/0.1",
@@ -29,8 +29,11 @@ async function main(): Promise<void> {
     });
     const draft = adapter.parse(page);
     if (auditDraftShape(draft).length === 0) pass += 1;
+    else fail += 1;
   }
-  console.log("quality_pass_sample_50", pass, "/", sample.length);
+  console.log("quality_gate_pass", pass);
+  console.log("quality_gate_fail", fail);
+  console.log("would_insert_estimate", pass);
 }
 
 main().catch((e) => {

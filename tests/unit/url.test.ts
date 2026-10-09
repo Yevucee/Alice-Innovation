@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { canonicaliseUrl } from "../../packages/shared/src/url.ts";
+import { canonicaliseUrl, tryCanonicaliseUrl } from "../../packages/shared/src/url.ts";
 
 test("canonicaliseUrl drops tracking, fragments, and trailing slashes", () => {
   const url = canonicaliseUrl("HTTPS://Example.com:443/Solutions/?utm_source=news&b=2&a=1#section");
@@ -13,4 +13,14 @@ test("canonicaliseUrl keeps the root slash and default-less http port", () => {
 
 test("canonicaliseUrl sorts repeated query keys", () => {
   assert.equal(canonicaliseUrl("https://example.com/a?z=2&z=1"), "https://example.com/a?z=1&z=2");
+});
+
+test("tryCanonicaliseUrl returns null for malformed website-style values", () => {
+  assert.equal(tryCanonicaliseUrl(": https://example.com/"), null);
+  assert.equal(tryCanonicaliseUrl(""), null);
+  assert.equal(tryCanonicaliseUrl("not a url"), null);
+});
+
+test("tryCanonicaliseUrl canonicalises valid URLs", () => {
+  assert.equal(tryCanonicaliseUrl("https://Example.com/path/"), "https://example.com/path");
 });

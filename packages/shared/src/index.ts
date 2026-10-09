@@ -1,4 +1,4 @@
-export { canonicaliseUrl } from "./url.js";
+export { canonicaliseUrl, tryCanonicaliseUrl } from "./url.js";
 export { sha256, contentHash } from "./hash.js";
 export { htmlToText, truncate, truncateAtWordBoundary, normaliseName } from "./text.js";
 export { convertAllCapsTitleToTitleCase, looksLikeAllCapsTitle } from "./title-case.js";
