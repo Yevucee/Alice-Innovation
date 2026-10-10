@@ -63,9 +63,7 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
             slug,
             title: pickEn(row.title),
             description: pickEn(row.description),
-            website: publicUrl,
             sector: row.sector,
-            detailUrl,
           }),
         });
       }

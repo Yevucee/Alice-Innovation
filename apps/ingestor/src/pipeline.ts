@@ -8,9 +8,11 @@ import {
   loadSourceItemListingStateMap,
   lookupListingState,
   readCheckpoint,
+  repairMalformedSourceItemCanonicalUrls,
   shouldSkipDetailFetch,
   touchSourceItemWithoutDetailFetch,
   writeCheckpoint,
+  completeIngestRequest,
 } from "@alice/database";
 import { canonicaliseUrl, log, tryCanonicaliseUrl } from "@alice/shared";
 import type { NormalisedDraft } from "@alice/shared";
@@ -20,7 +22,15 @@ import { robotsAllows } from "./robots.js";
 import { getAdapter, ensurePromotedCatalogueAdapters } from "./adapters/registry.js";
 import { AccessBlockedError, type AdapterContext, type DiscoveredRef } from "./adapters/types.js";
 import { createHostPacedFetch, ingestDetailConcurrency, mapWithConcurrency } from "./detail-fetch.js";
-import { createIngestSourceLoopBudget } from "./ingest-loop-budget.js";
+import { createIngestSourceLoopBudget, ingestSourceLoopMaxMinutes } from "./ingest-loop-budget.js";
+import {
+  filterSourcesByScope,
+  ingestScopeMaxMinutes,
+  loadFailedOnlySourceSlugs,
+  prefixRunOutcome,
+  type IngestScope,
+  type IngestTrigger,
+} from "./ingest-scope.js";
 import { processIngestItem } from "./item-pipeline.js";
 import { prepareIngestDraft } from "./prepare-draft.js";
 import { buildSourcePreviewReport, type SourcePreviewReport } from "./source-preview.js";
@@ -94,6 +104,9 @@ export interface IngestOptions {
   full: boolean;
   dryRun: boolean;
   collectSourcePreview?: boolean;
+  ingestScope?: IngestScope;
+  ingestTrigger?: IngestTrigger;
+  ingestRequestId?: string | null;
 }
 
 export async function runIngestion(
@@ -105,12 +118,22 @@ export async function runIngestion(
   sourcePreviewReport?: import("./source-preview.js").SourcePreviewReport;
 }> {
   const pool = getPool();
+  const ingestScope = options.ingestScope ?? "all";
+  const ingestTrigger = options.ingestTrigger ?? "manual";
+  const ingestRequestId = options.ingestRequestId ?? null;
   const userAgent = process.env.INGESTION_USER_AGENT || "AliceInnovationLibrary/0.1 (+https://github.com/Yevucee/Alice-Innovation)";
   const timeoutMs = Number(process.env.INGESTION_REQUEST_TIMEOUT_MS || 20000);
   const client = await pool.connect();
   const locked = await client.query<{ locked: boolean }>("SELECT pg_try_advisory_lock($1) AS locked", [LOCK_KEY]);
   if (!locked.rows[0]?.locked) {
-    log("info", "ingest_skipped", { reason: "lock_held" });
+    log("info", "ingest_skipped", { reason: "lock_held", scope: ingestScope, trigger: ingestTrigger });
+    if (ingestRequestId) {
+      await completeIngestRequest(pool, ingestRequestId, {
+        status: "failed",
+        errorMessage: "already_running",
+        durationMs: 0,
+      });
+    }
     client.release();
     return { failedSources: [], touchedResourceIds: [], ingestSkippedDueToLock: true };
   }
@@ -121,8 +144,12 @@ export async function runIngestion(
   let previewSource: SourceRecord | null = null;
   let previewLimit = options.limit ?? 20;
   const ingestLoopStartedAt = Date.now();
-  const globalLoopBudget = createIngestSourceLoopBudget(ingestLoopStartedAt);
+  const scopeLoopMinutes = ingestScope === "all"
+    ? ingestSourceLoopMaxMinutes()
+    : ingestScopeMaxMinutes();
+  const globalLoopBudget = createIngestSourceLoopBudget(ingestLoopStartedAt, scopeLoopMinutes);
   let dedicatedSourceWallMs = 0;
+  let totalItemsNew = 0;
 
   function hasDedicatedSourceLoopCap(source: SourceRecord): boolean {
     const minutes = source.limits.source_loop_max_minutes;
@@ -136,9 +163,21 @@ export async function runIngestion(
 
   try {
     await ensurePromotedCatalogueAdapters(pool);
-    const selected = options.sources.filter((source) => {
+    const failedOnlySlugs = ingestScope === "failed-only"
+      ? await loadFailedOnlySourceSlugs(pool)
+      : new Set<string>();
+    let selected = options.sources.filter((source) => {
       if (options.only && options.only.length > 0) return options.only.includes(source.id);
       return source.enabled;
+    });
+    if (!options.only?.length) {
+      selected = filterSourcesByScope(selected, ingestScope, failedOnlySlugs);
+    }
+    log("info", "ingest_scope_selected", {
+      scope: ingestScope,
+      trigger: ingestTrigger,
+      sources: selected.length,
+      scope_budget_minutes: scopeLoopMinutes,
     });
     let sourcesStarted = 0;
     for (const source of selected) {
@@ -179,10 +218,17 @@ export async function runIngestion(
           continue;
         }
         if (options.dueOnly && !due(source, meta.rows[0].last_successful_run)) {
-          await recordSkippedSourceRun(pool, meta.rows[0].id, source.id, "not_due", {
-            update_class: source.update_class,
-            last_successful_run: meta.rows[0].last_successful_run?.toISOString() ?? null,
-          });
+          await recordSkippedSourceRun(
+            pool,
+            meta.rows[0].id,
+            source.id,
+            "not_due",
+            {
+              update_class: source.update_class,
+              last_successful_run: meta.rows[0].last_successful_run?.toISOString() ?? null,
+            },
+            { scope: ingestScope, trigger: ingestTrigger },
+          );
           continue;
         }
         await pool.query("UPDATE sources SET last_attempted_run = now(), updated_at = now() WHERE slug = $1", [source.id]);
@@ -306,6 +352,9 @@ export async function runIngestion(
           });
           let itemsProcessed = 0;
           setIngestPipelineStage("load_listing_state_map");
+          if (!options.dryRun) {
+            await repairMalformedSourceItemCanonicalUrls(pool, source.id);
+          }
           const listingStateMap = options.dryRun
             ? new Map()
             : await loadSourceItemListingStateMap(pool, source.id);
@@ -452,11 +501,16 @@ export async function runIngestion(
             await confirmDisappearances(pool, source.id, catalogue);
           }
           let runErrorSummary: string | null = null;
-          const runOutcome = formatRunOutcome({
-            kind: "ran",
-            counts,
-            toProcess: refs.length,
-          });
+          const runOutcome = prefixRunOutcome(
+            ingestScope,
+            ingestTrigger,
+            formatRunOutcome({
+              kind: "ran",
+              counts,
+              toProcess: refs.length,
+            }),
+          );
+          totalItemsNew += counts.created;
           if (sourceTimeBudgetExhausted) {
             runErrorSummary = `source_loop_time_budget_minutes=${activeLoopBudget.maxMinutes()}; dedicated=${dedicatedCap}; items_processed=${itemsProcessed}; to_process=${refs.length}; ${runOutcome}`;
           } else {
@@ -504,7 +558,13 @@ export async function runIngestion(
         } catch (error) {
           failedSources.push(source.id);
           const message = error instanceof Error ? error.message : String(error);
-          await finishRun(runId, "FAILED", counts, Date.now() - started, message);
+          await finishRun(
+            runId,
+            "FAILED",
+            counts,
+            Date.now() - started,
+            prefixRunOutcome(ingestScope, ingestTrigger, message),
+          );
           await recordError(source.id, runId, null, error);
           log("error", "source_failed", {
             source_id: source.id,
@@ -527,6 +587,15 @@ export async function runIngestion(
       }
     }
   } finally {
+    if (ingestRequestId) {
+      const durationMs = Date.now() - ingestLoopStartedAt;
+      await completeIngestRequest(pool, ingestRequestId, {
+        status: failedSources.length > 0 ? "failed" : "completed",
+        errorMessage: failedSources.length > 0 ? `failed_sources=${failedSources.join(",")}` : null,
+        itemsNew: totalItemsNew,
+        durationMs,
+      });
+    }
     await client.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]);
     client.release();
   }
@@ -590,9 +659,13 @@ async function recordSkippedSourceRun(
   sourceSlug: string,
   reason: string,
   detail?: Record<string, unknown>,
+  scopeMeta?: { scope: IngestScope; trigger: IngestTrigger },
 ): Promise<void> {
-  const summary = formatRunOutcome({ kind: "skipped", reason });
-  const stats = { outcome: "skipped", reason, ...detail };
+  const base = formatRunOutcome({ kind: "skipped", reason });
+  const summary = scopeMeta
+    ? prefixRunOutcome(scopeMeta.scope, scopeMeta.trigger, base)
+    : base;
+  const stats = { outcome: "skipped", reason, scope: scopeMeta?.scope, trigger: scopeMeta?.trigger, ...detail };
   const run = await pool.query<{ id: string }>(
     `INSERT INTO ingestion_runs (source_id, status, completed_at, error_summary, duration_ms, pipeline_stats)
      VALUES ($1, 'SKIPPED', now(), $2, 0, $3::jsonb)
@@ -609,6 +682,7 @@ async function finishRun(
   durationMs: number,
   errorSummary: string | null,
 ): Promise<void> {
+  const scopeMatch = errorSummary?.match(/^scope=([^;]+);trigger=([^;]+);/);
   const pipelineStats = {
     detail_skipped: counts.detail_skipped ?? 0,
     detail_skipped_bootstrap: counts.detail_skipped_bootstrap ?? 0,
@@ -619,7 +693,9 @@ async function finishRun(
     skipped_duplicate_of: counts.skipped_duplicate_of ?? false,
     enrich_attempted: counts.enrich_attempted ?? 0,
     enrich_applied: counts.enrich_applied ?? 0,
-    outcome: errorSummary?.startsWith("skipped:") ? "skipped" : "ran",
+    outcome: errorSummary?.includes("skipped:") ? "skipped" : "ran",
+    ingest_scope: scopeMatch?.[1] ?? null,
+    ingest_trigger: scopeMatch?.[2] ?? null,
   };
   await getPool().query(
     `UPDATE ingestion_runs SET

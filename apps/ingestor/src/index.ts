@@ -19,6 +19,13 @@ import { runPostDeployJobsStep, shouldRunPostDeployBeforeIngest } from "./post-d
 import { resetSupplementalFetchHostPolicy } from "./enrichment-context-fetch.js";
 import { resetRunFailureTracker } from "./run-failure-tracker.js";
 import { runIngestion } from "./pipeline.js";
+import { claimPendingIngestRequest } from "@alice/database";
+import {
+  parseIngestScope,
+  resolveIngestTrigger,
+  type IngestScope,
+  type IngestTrigger,
+} from "./ingest-scope.js";
 
 loadDotEnv();
 process.env.SERVICE_NAME = "alice-ingestor";
@@ -191,6 +198,33 @@ async function main(): Promise<void> {
     return;
   }
 
+  let ingestScope: IngestScope = parseIngestScope(process.env.INGEST_SCOPE);
+  let ingestTrigger: IngestTrigger = resolveIngestTrigger();
+  let ingestRequestId: string | null = process.env.INGEST_REQUEST_ID?.trim() || null;
+
+  const scopeArg = argValues("--scope")[0];
+  if (scopeArg) {
+    ingestScope = parseIngestScope(scopeArg);
+  }
+
+  if (!scopeArg && !process.env.INGEST_SCOPE?.trim() && !dryRun) {
+    const claimed = await claimPendingIngestRequest(pool);
+    if (claimed) {
+      ingestScope = parseIngestScope(claimed.scope);
+      ingestTrigger = (claimed.trigger === "admin-button" || claimed.trigger === "cron" || claimed.trigger === "manual")
+        ? claimed.trigger
+        : "admin-button";
+      ingestRequestId = claimed.id;
+      log("info", "ingest_request_claimed", {
+        request_id: claimed.id,
+        scope: ingestScope,
+        trigger: ingestTrigger,
+      });
+    }
+  }
+
+  log("info", "ingest_scope", { scope: ingestScope, trigger: ingestTrigger, request_id: ingestRequestId });
+
   const result = await runIngestion({
     sources,
     only,
@@ -199,6 +233,9 @@ async function main(): Promise<void> {
     full,
     dryRun,
     collectSourcePreview: dryRun && only.length === 1,
+    ingestScope,
+    ingestTrigger,
+    ingestRequestId,
   });
   if (result.sourcePreviewReport) {
     const { persistSourcePreviewReport } = await import("./source-preview.js");
