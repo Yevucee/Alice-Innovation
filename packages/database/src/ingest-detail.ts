@@ -1,4 +1,5 @@
-import { canonicaliseUrl, contentHash, tryCanonicaliseUrl } from "@alice/shared";
+import { contentHash, tryCanonicaliseUrl } from "@alice/shared";
+import { log } from "@alice/shared";
 import type { Queryable } from "./pool.js";
 
 export interface ListingRef {
@@ -83,6 +84,7 @@ export async function loadSourceItemListingStateMap(
     [sourceSlug],
   );
   const map = new Map<string, SourceItemListingState>();
+  let malformedCanonicalUrls = 0;
   for (const row of rows.rows) {
     const state: SourceItemListingState = {
       id: row.id,
@@ -92,7 +94,14 @@ export async function loadSourceItemListingStateMap(
     };
     const canonicalKey = tryCanonicaliseUrl(row.canonical_url);
     if (canonicalKey) map.set(canonicalKey, state);
+    else malformedCanonicalUrls += 1;
     if (row.external_id) map.set(row.external_id, state);
+  }
+  if (malformedCanonicalUrls > 0) {
+    log("warn", "ingest_listing_state_malformed_canonical_url", {
+      source_slug: sourceSlug,
+      count: malformedCanonicalUrls,
+    });
   }
   return map;
 }
@@ -119,6 +128,7 @@ export async function touchSourceItemWithoutDetailFetch(
          active = true,
          ingestion_run_id = $3::uuid,
          listing_content_hash = $4,
+         canonical_url = $2,
          updated_at = now()
      FROM sources s
      WHERE si.source_id = s.id

@@ -26,6 +26,18 @@ import { prepareIngestDraft } from "./prepare-draft.js";
 import { buildSourcePreviewReport, type SourcePreviewReport } from "./source-preview.js";
 import { resolveIngestItemLimit } from "./ingest-limits.js";
 import { IngestQualityDropError } from "./ingest-quality-drop.js";
+import {
+  appendStoppedReason,
+  createSourceFailureCircuit,
+  recordSourceItemFailure,
+  recordSourceItemSuccess,
+} from "./source-failure-circuit.js";
+
+let ingestPipelineStage = "init";
+
+function setIngestPipelineStage(stage: string): void {
+  ingestPipelineStage = stage;
+}
 
 const LOCK_KEY = 84261001;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -293,13 +305,18 @@ export async function runIngestion(
             source_loop_dedicated_cap: dedicatedCap,
           });
           let itemsProcessed = 0;
+          setIngestPipelineStage("load_listing_state_map");
           const listingStateMap = options.dryRun
             ? new Map()
             : await loadSourceItemListingStateMap(pool, source.id);
           const failureSummaries: Array<{ url: string; reason: string }> = [];
           let sourceTimeBudgetExhausted = false;
+          const failureCircuit = createSourceFailureCircuit();
 
-          const processRef = async (ref: DiscoveredRef): Promise<{ ref: DiscoveredRef; cursor: string }> => {
+          const processRef = async (
+            ref: DiscoveredRef,
+          ): Promise<{ ref: DiscoveredRef; cursor: string; ok: boolean }> => {
+            setIngestPipelineStage("item");
             const listingHash = listingContentHash(ref);
             if (!options.dryRun) {
               const skip = shouldSkipDetailFetch(
@@ -314,7 +331,7 @@ export async function runIngestion(
                   counts.unchanged += 1;
                   counts.detail_skipped += 1;
                   if (skip.reason === "bootstrap") counts.detail_skipped_bootstrap += 1;
-                  return { ref, cursor: ref.url };
+                  return { ref, cursor: ref.url, ok: true };
                 }
               }
             }
@@ -328,7 +345,7 @@ export async function runIngestion(
                 previewSource = source;
               }
               log("info", "dry_run_item", { source_id: source.id, title: draft.title, url: draft.canonicalUrl });
-              return { ref, cursor: ref.url };
+              return { ref, cursor: ref.url, ok: true };
             }
             const processed = await processIngestItem(pool, source, parsed, runId, { listingContentHash: listingHash });
             const saved = processed.saved;
@@ -345,10 +362,11 @@ export async function runIngestion(
             if (saved.outcome !== "unchanged") {
               touchedResourceIds.add(saved.resourceId);
             }
-            return { ref, cursor: ref.url };
+            return { ref, cursor: ref.url, ok: true };
           };
 
           for (let offset = 0; offset < refs.length; offset += detailConcurrency) {
+            if (failureCircuit.stoppedReason) break;
             const hitGlobalCap = !dedicatedCap && globalIngestLoopExhausted();
             const hitSourceCap = dedicatedCap && activeLoopBudget.exhausted();
             if (hitGlobalCap || hitSourceCap) {
@@ -373,18 +391,22 @@ export async function runIngestion(
                 if (error instanceof IngestQualityDropError) {
                   counts.failed += 1;
                   failureSummaries.push({ url: ref.url, reason: error.message });
-                  return { ref, cursor: ref.url };
+                  return { ref, cursor: ref.url, ok: false };
                 }
                 counts.failed += 1;
                 const reason = failureReason(error);
                 failureSummaries.push({ url: ref.url, reason });
                 await recordError(source.id, runId, ref, error);
-                return { ref, cursor: ref.url };
+                return { ref, cursor: ref.url, ok: false };
               }
             });
             for (const result of chunkResults) {
               cursor = result.cursor;
               itemsProcessed += 1;
+              if (result.ok) recordSourceItemSuccess(failureCircuit);
+              else {
+                recordSourceItemFailure(failureCircuit, { itemsProcessed, failed: counts.failed });
+              }
               if (itemsProcessed % progressEvery === 0) {
                 log("info", "ingest_source_progress", {
                   source_id: source.id,
@@ -405,6 +427,17 @@ export async function runIngestion(
             }
             if (options.full && !options.dryRun && chunk.length > 0) {
               await writeCheckpoint(pool, source.id, chunk[chunk.length - 1].url);
+            }
+            if (failureCircuit.stoppedReason) {
+              log("info", "ingest_source_failure_circuit", {
+                source_id: source.id,
+                run_id: runId,
+                stopped_reason: failureCircuit.stoppedReason,
+                items_processed: itemsProcessed,
+                failed: counts.failed,
+                to_process: refs.length,
+              });
+              break;
             }
           }
           if (failureSummaries.length > 0) {
@@ -429,6 +462,7 @@ export async function runIngestion(
           } else {
             runErrorSummary = runOutcome;
           }
+          runErrorSummary = appendStoppedReason(runErrorSummary, failureCircuit.stoppedReason);
           let status = counts.failed > 0 ? "PARTIAL_SUCCESS" : "SUCCESS";
           if (sourceTimeBudgetExhausted && itemsProcessed < refs.length) {
             status = "PARTIAL_SUCCESS";
@@ -472,7 +506,13 @@ export async function runIngestion(
           const message = error instanceof Error ? error.message : String(error);
           await finishRun(runId, "FAILED", counts, Date.now() - started, message);
           await recordError(source.id, runId, null, error);
-          log("error", "source_failed", { source_id: source.id, run_id: runId, message });
+          log("error", "source_failed", {
+            source_id: source.id,
+            run_id: runId,
+            message,
+            ingest_stage: ingestPipelineStage,
+            stack: error instanceof Error ? error.stack?.split("\n").slice(0, 8).join("\n") : undefined,
+          });
         }
       } catch (error) {
         failedSources.push(source.id);

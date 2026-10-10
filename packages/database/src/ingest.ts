@@ -1,4 +1,4 @@
-import { contentHash, truncate } from "@alice/shared";
+import { contentHash, truncate, tryCanonicaliseUrl } from "@alice/shared";
 import type { NormalisedDraft } from "@alice/shared";
 import type pg from "pg";
 import { organisationSlug } from "./seed.js";
@@ -465,5 +465,11 @@ export async function loadActiveCanonicalUrlsForSource(
      WHERE s.slug = $1 AND si.active`,
     [sourceSlug],
   );
-  return new Set(rows.rows.map((row) => row.canonical_url));
+  const keys = new Set<string>();
+  for (const row of rows.rows) {
+    const canonical = tryCanonicaliseUrl(row.canonical_url);
+    if (canonical) keys.add(canonical);
+    keys.add(row.canonical_url);
+  }
+  return keys;
 }

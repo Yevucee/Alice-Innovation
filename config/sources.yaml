@@ -1985,7 +1985,8 @@ sources:
     description: PAUSED pending enablement. Listing-only portfolio cards on a single public page.
     homepage: https://thebaobabnetwork.com/
     collection_url: https://thebaobabnetwork.com/portfolio/
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs (JS portfolio; see PR #85 Vite bundle discover).
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2879,7 +2880,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 2 (india). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.startupindia.gov.in/
     collection_url: https://web.archive.org/web/20231201000000/https://www.startupindia.gov.in/content/sih/en/startup-schemes/startup-india-showcase.html
-    enabled: true
+    # DISABLED: Oct 2026 probe: Wayback 404.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -2911,7 +2913,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 3 (india). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.startupindia.gov.in/
     collection_url: https://web.archive.org/web/20231201000000/https://www.startupindia.gov.in/content/sih/en/awards/national-startup-awards.html
-    enabled: true
+    # DISABLED: Oct 2026 probe: Wayback 404; no live catalogue.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3007,7 +3010,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 6 (india). Same programme family as AIM; separate listing surface. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://aim.gov.in/
     collection_url: https://aim.gov.in/atal-incubation-centres.php
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs (static PHP listing).
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3039,7 +3043,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 7 (india). BioNEST incubator network under BIRAC. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.birac.nic.in/
     collection_url: https://www.birac.nic.in/bionest.php
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3199,7 +3204,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 12 (singapore). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.ipi-singapore.org/
     collection_url: https://www.ipi-singapore.org/
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3295,7 +3301,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 15 (singapore). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.ntuitive.sg/
     collection_url: https://www.ntuitive.sg/portfolio
-    enabled: true
+    # DISABLED: Oct 2026 probe: HTTP 404 portfolio URL.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3490,7 +3497,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 21 (south-korea). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.seoulstartuphub.com/
     collection_url: https://www.seoulstartuphub.com/
-    enabled: true
+    # DISABLED: Oct 2026 probe: fetch failed from ingest egress.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3554,7 +3562,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 23 (south-korea). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.seoulbiohub.or.kr/
     collection_url: https://www.seoulbiohub.or.kr/
-    enabled: true
+    # DISABLED: Oct 2026 probe: fetch failed from ingest egress.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3906,7 +3915,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 34 (malaysia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://mystartup.my/
     collection_url: https://mystartup.my/directory
-    enabled: true
+    # DISABLED: Oct 2026 probe: fetch failed from ingest egress.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3938,7 +3948,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 35 (malaysia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://mystartup.my/
     collection_url: https://mystartup.my/directory
-    enabled: true
+    # DISABLED: Oct 2026 probe: fetch failed from ingest egress.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3970,7 +3981,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 36 (malaysia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.cradle.com.my/
     collection_url: https://www.cradle.com.my/portfolio
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4003,7 +4015,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 37 (malaysia). Verify current portfolio route from Cradle site during audit. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.cradle.com.my/
     collection_url: https://www.cradle.com.my/
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4131,7 +4144,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 41 (indonesia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://indigo.id/
     collection_url: https://indigo.id/
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4323,7 +4337,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 47 (bangladesh). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://startupbangladesh.gov.bd/
     collection_url: https://startupbangladesh.gov.bd/en
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs; robots disallow on portfolio.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4515,7 +4530,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 53 (central-asia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://astanahub.com/
     collection_url: https://astanahub.com/en/startup
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs; duplicate adapter path.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4547,7 +4563,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 54 (central-asia). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://astanahub.com/
     collection_url: https://astanahub.com/en/startup
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs at /en/startup (needs API/SPA fix).
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4739,7 +4756,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 60 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://innovation.kaust.edu.sa/
     collection_url: https://innovation.kaust.edu.sa/ventures
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4771,7 +4789,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 61 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://entrepreneurship.kaust.edu.sa/
     collection_url: https://entrepreneurship.kaust.edu.sa/
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4803,7 +4822,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 62 (saudi-arabia). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://entrepreneurship.kaust.edu.sa/
     collection_url: https://entrepreneurship.kaust.edu.sa/portfolio/scalex
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4835,7 +4855,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 63 (saudi-arabia). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://innovation.kaust.edu.sa/
     collection_url: https://innovation.kaust.edu.sa/entrepreneurship/spinouts
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4963,7 +4984,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 67 (china). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.hicool.com/
     collection_url: https://www.hicool.com/
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5059,7 +5081,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 70 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.acceleratingasia.com/
     collection_url: https://www.acceleratingasia.com/portfolio
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs (SPA/empty portfolio HTML).
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5123,7 +5146,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 72 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.iterative.vc/
     collection_url: https://www.iterative.vc/companies
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5284,7 +5308,8 @@ sources:
     description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 77 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.insignia.vc/
     collection_url: https://www.insignia.vc/companies
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs (VC page / JS).
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5316,7 +5341,8 @@ sources:
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 78 (university). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.iitb.ac.in/
     collection_url: https://www.sineiitb.org/portfolio
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5380,7 +5406,8 @@ sources:
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 80 (university). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.iitm.ac.in/
     collection_url: https://www.iitmic.org/
-    enabled: true
+    # DISABLED: Oct 2026 probe: fetch failed from ingest egress.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5412,7 +5439,8 @@ sources:
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 81 (university). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.iitk.ac.in/
     collection_url: https://www.iitk.ac.in/siic
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5510,7 +5538,8 @@ sources:
     description: "PAUSED: Asia source (university). Asia acquisition queue seq 84 (university). duplicate_of=ntuitive-portfolio. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.ntu.edu.sg/
     collection_url: https://www.ntuitive.sg/portfolio
-    enabled: true
+    # DISABLED: Oct 2026 probe: HTTP 404 portfolio URL.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5543,7 +5572,8 @@ sources:
     description: "PARTIAL: duplicate_of=hkust-entrepreneurship-center. Shares startup-alumni catalogue."
     homepage: https://www.hkust.edu.hk/
     collection_url: https://ec.hkust.edu.hk/startup-alumni
-    enabled: true
+    # DISABLED: Oct 2026 probe: 0 refs.
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
