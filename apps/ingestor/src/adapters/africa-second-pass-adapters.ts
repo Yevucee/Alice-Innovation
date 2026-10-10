@@ -167,9 +167,10 @@ export const africaSecondPassAdapters: SourceAdapter[] = [
   launchLabAdapter,
   createHtmlCatalogueAdapter({
     id: "kenya-climate-innovation-centre",
-    siteOrigin: "https://kenyacic.org",
-    pathPattern: /^\/(venture|ventures|portfolio|our-ventures)\/[^/]+\/?$/i,
-    sitemap: { url: "https://kenyacic.org/sitemap.xml", followSitemapIndex: true },
+    siteOrigin: "https://www.kenyacic.org",
+    pathPattern: /^\/news\/[^/]+\/?$/i,
+    sitemapOnly: true,
+    sitemap: { url: "https://www.kenyacic.org/sitemap.xml", followSitemapIndex: true },
     resourceType: "SOLUTION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),

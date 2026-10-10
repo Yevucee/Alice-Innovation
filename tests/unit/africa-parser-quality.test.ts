@@ -9,6 +9,8 @@ import {
   resolveCatalogueTitle,
 } from "../../apps/ingestor/src/adapters/catalogue-parse-helpers.ts";
 import {
+  parseBaobabCard,
+  parseBaobabPortfolioFromScript,
   parseNorrsken100Item,
   parseNorrskenAccordionItem,
   africaAdapters,
@@ -121,6 +123,24 @@ test("africa tech festival exhibitor uses h1 not og site title", () => {
     "https://africatechfestival.com/home/sponsors/nairobi-fintech-exhibitor-2026",
   ));
   assert.equal(draft.title, "Nairobi Fintech Collective");
+});
+
+test("baobab portfolio parser reads companies from Vite bundle snippet", () => {
+  const js = `{name:"Adafri",description:"Payments",country:"Kenya",sector:"Fintech",url:"https://adafri.co"},{name:"Buyam",description:"Commerce",country:"Cameroon",sector:"Retail",url:"https://buyam.co/"}`;
+  const rows = parseBaobabPortfolioFromScript(js);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].name, "Adafri");
+  const draft = parseBaobabCard({
+    url: "https://thebaobabnetwork.com/portfolio/?item=adafri",
+    finalUrl: "https://thebaobabnetwork.com/portfolio/?item=adafri",
+    status: 200,
+    html: `<div class="portfolio-card__company-name">Adafri</div><div class="portfolio-card__company-text">Payments</div><a data-baobab-website href="https://adafri.co">site</a>`,
+    etag: null,
+    lastModified: null,
+    listingOnly: true,
+  });
+  assert.equal(draft.title, "Adafri");
+  assert.match(draft.canonicalUrl, /^https:\/\/adafri\.co\/?$/);
 });
 
 test("norrsken accordion still parses structured fields", () => {
