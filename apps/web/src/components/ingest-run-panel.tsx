@@ -60,9 +60,18 @@ export function IngestRunPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scope }),
       });
-      const body = (await res.json()) as { error?: string; message?: string };
+      const body = (await res.json()) as {
+        error?: string;
+        message?: string;
+        railway_message?: string;
+      };
       if (!res.ok) {
-        setError(body.message ?? body.error ?? `HTTP ${res.status}`);
+        setError(
+          body.railway_message
+          ?? body.message
+          ?? body.error
+          ?? `HTTP ${res.status}`,
+        );
       }
       await refresh();
     } finally {

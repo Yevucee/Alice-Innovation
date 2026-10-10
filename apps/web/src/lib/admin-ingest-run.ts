@@ -77,7 +77,16 @@ export async function handleAdminIngestRunPost(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await deps.markRequestFailed(db, created.id, message.slice(0, 500));
-    return { status: 502, body: { error: "deploy_failed", message } };
+    const safeMessage = message.replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
+      .replace(/Project-Access-Token:\s*[A-Za-z0-9._-]+/gi, "Project-Access-Token: [redacted]");
+    await deps.markRequestFailed(db, created.id, safeMessage.slice(0, 500));
+    return {
+      status: 502,
+      body: {
+        error: "deploy_failed",
+        message: safeMessage,
+        railway_message: safeMessage,
+      },
+    };
   }
 }
