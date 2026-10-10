@@ -77,17 +77,15 @@ Config file: `railway.web.toml`.
 
 - Build: `npm ci && npm run web:build`
 - Start: `npm run start:web`
-- Health check: `/login` (200 without auth)
+- Health check: `/` (200)
 - Suggested size: 0.5 vCPU, 512 MB RAM
 
 Environment (in addition to `DATABASE_URL`):
 
-- `WEB_SESSION_SECRET` (long random; not the MCP token in client code)
-- `WEB_AUTH_PASSWORD` (team sign-in password)
 - `WEB_PORT` (Railway sets `PORT`; Next reads `WEB_PORT` — set `WEB_PORT=$PORT` or rely on default 3000 if Railway maps correctly)
 - Same four `EMBEDDING_*` variables as MCP (required for hybrid search in the UI)
 
-Restrict the public URL (VPN, Railway private networking, or IP allowlist). Session cookies protect routes; this is not anonymous public data.
+Restrict the public URL (VPN, Railway private networking, or IP allowlist) if the catalogue should not be on the open internet.
 
 After deploy, run migrations and seed if the database is new (same as MCP). Ingest via the ingestor service or a one-off shell.
 

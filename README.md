@@ -59,11 +59,10 @@ npm run ingest -- --due
 ### Web UI
 
 ```bash
-# set WEB_SESSION_SECRET and WEB_AUTH_PASSWORD (or reuse MCP_AUTH_TOKEN for both in dev)
 npm run web
 ```
 
-Open `http://127.0.0.1:3000`, sign in, then search and browse. See `docs/frontend.md`. Production: `docs/railway-checklist.md`.
+Open `http://127.0.0.1:3000` and search or browse (no sign-in). See `docs/frontend.md`. Production: `docs/railway-checklist.md`.
 
 ### MCP server
 

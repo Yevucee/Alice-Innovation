@@ -28,9 +28,17 @@ async function main(): Promise<void> {
   if (health.status !== 200) failures.push(`mcp_health_${health.status}`);
   else log("info", "smoke_ok", { check: "mcp_health" });
 
-  const webLogin = await fetch(`${WEB_URL}/login`);
-  if (webLogin.status !== 200) failures.push(`web_login_${webLogin.status}`);
-  else log("info", "smoke_ok", { check: "web_login" });
+  const webHome = await fetch(`${WEB_URL}/`);
+  if (webHome.status !== 200) failures.push(`web_home_${webHome.status}`);
+  else log("info", "smoke_ok", { check: "web_home" });
+
+  const webSearch = await fetch(`${WEB_URL}/api/search`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ query: "water", limit: 1 }),
+  });
+  if (webSearch.status !== 200) failures.push(`web_search_api_${webSearch.status}`);
+  else log("info", "smoke_ok", { check: "web_search_api_public" });
 
   const denied = await fetch(`${MCP_URL}/mcp`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
   if (denied.status !== 401) failures.push(`mcp_auth_expected_401_got_${denied.status}`);

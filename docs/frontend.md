@@ -18,13 +18,13 @@ MCP tools and the web API both call the same `@alice/database` functions. No dup
 
 ## Authentication
 
-Browser sessions use an httpOnly signed cookie (`alice_session`). The MCP bearer token is never sent to client JavaScript. Set `WEB_SESSION_SECRET` and `WEB_AUTH_PASSWORD` (or use the same value as `MCP_AUTH_TOKEN` for a single shared secret in development).
+The web UI and `/api/*` routes are open (no sign-in). Restrict access at the network edge if needed (VPN, Railway allowlist). MCP tools still require `Authorization: Bearer $MCP_AUTH_TOKEN`; that token is never exposed to browser JavaScript.
 
 ## Running locally
 
 ```bash
 cp .env.example .env
-# DATABASE_URL, MCP_AUTH_TOKEN, WEB_SESSION_SECRET, WEB_AUTH_PASSWORD
+# DATABASE_URL, MCP_AUTH_TOKEN (MCP only)
 
 npm run migrate
 npm run seed
@@ -33,7 +33,7 @@ npm run ingest -- --source project-drawdown --limit 5
 npm run web
 ```
 
-Default web port: `3000` (`WEB_PORT`). Cloud Agent environments use `.cursor/environment.json` (ports 3000 and 8080); sign-in password is in `.env` as `WEB_AUTH_PASSWORD`.
+Default web port: `3000` (`WEB_PORT`). Cloud Agent environments use `.cursor/environment.json` (ports 3000 and 8080).
 
 Production: `railway.web.toml` and `docs/deployment.md`.
 

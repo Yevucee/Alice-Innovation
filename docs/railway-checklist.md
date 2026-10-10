@@ -134,15 +134,13 @@ npm run backfill:solar-images-all:remote
 - [ ] Third app service; config: **`railway.web.toml`**
 - [ ] Build: `npm ci && npm run web:build`
 - [ ] Start: `npm run start:web`
-- [ ] Health: `/login`
+- [ ] Health: `/`
 - [ ] Domain restricted (team VPN / allowlist recommended)
 
 Variables:
 
 ```env
 DATABASE_URL=<same>
-WEB_SESSION_SECRET=<openssl rand -hex 32>
-WEB_AUTH_PASSWORD=<team password — share with Alice users only>
 PORT=<Railway injects; Next uses PORT via start script>
 EMBEDDING_BASE_URL=...
 EMBEDDING_API_KEY=...
@@ -150,13 +148,12 @@ EMBEDDING_MODEL=text-embedding-3-small
 EMBEDDING_DIMENSIONS=1536
 ```
 
-- [ ] Open `https://<web-host>/login`, sign in, confirm Discover shows resources after ingest
+- [ ] Open `https://<web-host>/`, confirm Discover shows resources after ingest
 
 ## 5. Cursor Cloud Agent (optional)
 
 - [ ] Cursor Project linked to **Alice-Innovation** only
 - [ ] Environment uses `.cursor/environment.json` (ports 3000, 8080)
-- [ ] `WEB_AUTH_PASSWORD` in generated `.env` after first boot
 
 ## 6. Smoke tests
 
@@ -170,5 +167,5 @@ See `docs/access.md` for web access restrictions.
 ## 7. Secrets hygiene
 
 - [ ] No secrets in git
-- [ ] Rotate `MCP_AUTH_TOKEN` and `WEB_AUTH_PASSWORD` if ever leaked
+- [ ] Rotate `MCP_AUTH_TOKEN` if ever leaked
 - [ ] MCP token never stored in browser localStorage (web uses session cookie only)
