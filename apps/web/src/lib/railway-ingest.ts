@@ -1,11 +1,36 @@
 /**
  * Trigger alice-ingestor cron "run now" via Railway GraphQL.
- * `serviceInstanceDeploy` only builds for cron services; execution starts the start command.
- * @see https://docs.railway.com/cron-jobs
- * @see https://station.railway.com/questions/is-it-possible-to-use-the-railway-public-4587fc2b
+ * Project tokens: https://docs.railway.com/integrations/api (Project-Access-Token header).
+ * Cron run-now: deploymentInstanceExecutionCreate (see Railway Station / manage deployments).
  */
 
 const RAILWAY_API = "https://backboard.railway.com/graphql/v2";
+
+export type RailwayTokenType = "project" | "bearer";
+
+export function railwayTokenType(): RailwayTokenType {
+  const raw = (process.env.RAILWAY_TOKEN_TYPE ?? "project").trim().toLowerCase();
+  if (raw === "bearer") return "bearer";
+  return "project";
+}
+
+/** Build auth headers for Railway GraphQL (no token value in logs). */
+export function railwayAuthHeaders(token: string, tokenType: RailwayTokenType = railwayTokenType()): Record<string, string> {
+  if (tokenType === "bearer") {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return { "Project-Access-Token": token };
+}
+
+export class RailwayApiError extends Error {
+  constructor(
+    message: string,
+    readonly httpStatus: number | null = null,
+  ) {
+    super(message);
+    this.name = "RailwayApiError";
+  }
+}
 
 function requireRailwayConfig(): {
   token: string;
@@ -13,6 +38,7 @@ function requireRailwayConfig(): {
   environmentId: string;
   serviceId: string;
   serviceInstanceId: string | null;
+  tokenType: RailwayTokenType;
 } {
   const token = process.env.RAILWAY_API_TOKEN?.trim();
   const projectId = process.env.RAILWAY_PROJECT_ID?.trim();
@@ -22,11 +48,36 @@ function requireRailwayConfig(): {
   if (!token || !projectId || !environmentId || !serviceId) {
     throw new Error("railway_not_configured");
   }
-  return { token, projectId, environmentId, serviceId, serviceInstanceId };
+  return { token, projectId, environmentId, serviceId, serviceInstanceId, tokenType: railwayTokenType() };
+}
+
+async function parseRailwayResponse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  let body: { data?: T; errors?: Array<{ message: string }> } | null = null;
+  try {
+    body = text ? (JSON.parse(text) as { data?: T; errors?: Array<{ message: string }> }) : null;
+  } catch {
+    body = null;
+  }
+
+  if (!res.ok) {
+    const graphqlMsg = body?.errors?.map((e) => e.message).filter(Boolean).join("; ");
+    const message = graphqlMsg || text.trim() || `Railway HTTP ${res.status}`;
+    throw new RailwayApiError(message, res.status);
+  }
+
+  if (body?.errors?.length) {
+    throw new RailwayApiError(body.errors.map((e) => e.message).join("; "), res.status);
+  }
+  if (!body?.data) {
+    throw new RailwayApiError("railway_empty_response", res.status);
+  }
+  return body.data;
 }
 
 async function railwayGraphql<T>(
   token: string,
+  tokenType: RailwayTokenType,
   query: string,
   variables: Record<string, unknown>,
 ): Promise<T> {
@@ -34,25 +85,20 @@ async function railwayGraphql<T>(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      ...railwayAuthHeaders(token, tokenType),
     },
     body: JSON.stringify({ query, variables }),
   });
-  if (!res.ok) {
-    throw new Error(`railway_http_${res.status}`);
-  }
-  const body = (await res.json()) as { data?: T; errors?: Array<{ message: string }> };
-  if (body.errors?.length) {
-    throw new Error(body.errors.map((e) => e.message).join("; "));
-  }
-  if (!body.data) {
-    throw new Error("railway_empty_response");
-  }
-  return body.data;
+  return parseRailwayResponse<T>(res);
 }
 
+/**
+ * Resolve ingestor service instance id in the configured environment.
+ * Uses `environment.serviceInstances` (same GraphQL surface as deployment automation).
+ */
 async function resolveServiceInstanceId(
   token: string,
+  tokenType: RailwayTokenType,
   environmentId: string,
   serviceId: string,
 ): Promise<string> {
@@ -74,13 +120,13 @@ async function resolveServiceInstanceId(
     environment: {
       serviceInstances: { edges: Array<{ node: { id: string; serviceId: string } }> };
     } | null;
-  }>(token, query, { environmentId });
+  }>(token, tokenType, query, { environmentId });
 
   const match = data.environment?.serviceInstances.edges.find(
     (edge) => edge.node.serviceId === serviceId,
   );
   if (!match?.node.id) {
-    throw new Error("railway_service_instance_not_found");
+    throw new RailwayApiError("railway_service_instance_not_found", null);
   }
   return match.node.id;
 }
@@ -89,9 +135,15 @@ export async function triggerIngestorDeployment(): Promise<{
   executionId: string | null;
   serviceInstanceId: string;
 }> {
-  const { token, environmentId, serviceId, serviceInstanceId: configuredInstanceId } = requireRailwayConfig();
+  const {
+    token,
+    environmentId,
+    serviceId,
+    serviceInstanceId: configuredInstanceId,
+    tokenType,
+  } = requireRailwayConfig();
   const serviceInstanceId = configuredInstanceId
-    ?? await resolveServiceInstanceId(token, environmentId, serviceId);
+    ?? await resolveServiceInstanceId(token, tokenType, environmentId, serviceId);
 
   const mutation = `
     mutation deploymentInstanceExecutionCreate($input: DeploymentInstanceExecutionCreateInput!) {
@@ -103,7 +155,7 @@ export async function triggerIngestorDeployment(): Promise<{
   `;
   const data = await railwayGraphql<{
     deploymentInstanceExecutionCreate: { id: string; status: string } | null;
-  }>(token, mutation, {
+  }>(token, tokenType, mutation, {
     input: { serviceInstanceId },
   });
 

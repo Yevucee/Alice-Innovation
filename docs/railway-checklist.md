@@ -162,7 +162,9 @@ EMBEDDING_API_KEY=...
 EMBEDDING_MODEL=text-embedding-3-small
 EMBEDDING_DIMENSIONS=1536
 # Admin → Run ingest panel (Railway GraphQL run-now for cron ingestor; never expose to the browser)
-RAILWAY_API_TOKEN=<team token with deploy permission>
+RAILWAY_API_TOKEN=<project token from Project Settings → Tokens (production env)>
+# Default: project token header. Set bearer only for account/workspace tokens.
+RAILWAY_TOKEN_TYPE=project
 RAILWAY_PROJECT_ID=<project uuid>
 RAILWAY_ENVIRONMENT_ID=<production environment uuid>
 RAILWAY_INGESTOR_SERVICE_ID=<alice-ingestor service uuid>
