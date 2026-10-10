@@ -13,7 +13,7 @@ import {
 import { loadDotEnv, log } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
 import type { SourceRecord } from "@alice/source-registry";
-import { resolveIngestDueOnly } from "./ingest-due-mode.js";
+import { effectiveIngestDueOnly, isRailwayCronIngestRun, resolveIngestDueOnly } from "./ingest-due-mode.js";
 import { runPostIngestMaintenance } from "./post-ingest.js";
 import { runPostDeployJobsStep, shouldRunPostDeployBeforeIngest } from "./post-deploy-jobs.js";
 import { resetSupplementalFetchHostPolicy } from "./enrichment-context-fetch.js";
@@ -208,7 +208,13 @@ async function main(): Promise<void> {
   }
 
   if (!scopeArg && !process.env.INGEST_SCOPE?.trim() && !dryRun) {
-    const claimed = await claimPendingIngestRequest(pool);
+    const claimResult = await claimPendingIngestRequest(pool, {
+      cronRun: isRailwayCronIngestRun(),
+    });
+    for (const ignored of claimResult.ignored) {
+      log("info", "ingest_request_claim_ignored", ignored);
+    }
+    const claimed = claimResult.claimed;
     if (claimed) {
       ingestScope = parseIngestScope(claimed.scope);
       ingestTrigger = (claimed.trigger === "admin-button" || claimed.trigger === "cron" || claimed.trigger === "manual")
@@ -219,16 +225,29 @@ async function main(): Promise<void> {
         request_id: claimed.id,
         scope: ingestScope,
         trigger: ingestTrigger,
+        age_ms: Date.now() - claimed.requested_at.getTime(),
       });
     }
   }
 
-  log("info", "ingest_scope", { scope: ingestScope, trigger: ingestTrigger, request_id: ingestRequestId });
+  const ingestDueOnly = effectiveIngestDueOnly({
+    dueOnly,
+    ingestScope,
+    forcedOnly,
+  });
+
+  log("info", "ingest_scope", {
+    scope: ingestScope,
+    trigger: ingestTrigger,
+    request_id: ingestRequestId,
+    due_only: ingestDueOnly,
+    railway_cron: isRailwayCronIngestRun(),
+  });
 
   const result = await runIngestion({
     sources,
     only,
-    dueOnly: only.length === 0 ? dueOnly : false,
+    dueOnly: ingestDueOnly,
     limit,
     full,
     dryRun,

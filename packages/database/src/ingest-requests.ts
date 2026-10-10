@@ -2,6 +2,10 @@ import type { Queryable } from "./pool.js";
 
 export const INGEST_LOCK_KEY = 84261001;
 
+export const INGEST_REQUEST_PENDING_EXPIRY_MS = 20 * 60 * 1000;
+export const INGEST_REQUEST_RUNNING_EXPIRY_MS = 3 * 60 * 60 * 1000;
+export const INGEST_REQUEST_CLAIM_MAX_AGE_MS = 15 * 60 * 1000;
+
 export type IngestRequestStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 
 export interface IngestRequestRow {
@@ -45,10 +49,50 @@ export async function isIngestLockHeld(db: Queryable): Promise<boolean> {
 
 const RATE_LIMIT_MS = 10 * 60 * 1000;
 
+export async function expireStuckIngestRequests(db: Queryable): Promise<{
+  expired_pending: number;
+  expired_running: number;
+}> {
+  const pending = await db.query<{ id: string }>(
+    `UPDATE ingest_requests
+     SET status = 'failed',
+         completed_at = now(),
+         error_message = 'expired_pending'
+     WHERE status = 'pending'
+       AND requested_at < now() - ($1::int * interval '1 millisecond')
+     RETURNING id::text`,
+    [INGEST_REQUEST_PENDING_EXPIRY_MS],
+  );
+
+  let expiredRunning = 0;
+  const lockHeld = await isIngestLockHeld(db);
+  if (!lockHeld) {
+    const running = await db.query<{ id: string }>(
+      `UPDATE ingest_requests
+       SET status = 'failed',
+           completed_at = now(),
+           error_message = 'expired_running'
+       WHERE status = 'running'
+         AND started_at IS NOT NULL
+         AND started_at < now() - ($1::int * interval '1 millisecond')
+       RETURNING id::text`,
+      [INGEST_REQUEST_RUNNING_EXPIRY_MS],
+    );
+    expiredRunning = running.rowCount ?? 0;
+  }
+
+  return {
+    expired_pending: pending.rowCount ?? 0,
+    expired_running: expiredRunning,
+  };
+}
+
 export async function createIngestRequest(
   db: Queryable,
   input: { scope: string; trigger: string },
 ): Promise<{ id: string } | { error: "rate_limited" | "already_running" }> {
+  await expireStuckIngestRequests(db);
+
   if (await isIngestLockHeld(db)) {
     return { error: "already_running" };
   }
@@ -79,21 +123,65 @@ export async function createIngestRequest(
   return { id: inserted.rows[0].id };
 }
 
-export async function claimPendingIngestRequest(db: Queryable): Promise<IngestRequestRow | null> {
+export interface ClaimPendingIngestRequestResult {
+  claimed: IngestRequestRow | null;
+  ignored: Array<{ id: string; scope: string; age_ms: number; reason: string }>;
+}
+
+export async function claimPendingIngestRequest(
+  db: Queryable,
+  input: { cronRun: boolean },
+): Promise<ClaimPendingIngestRequestResult> {
+  await expireStuckIngestRequests(db);
+  const ignored: ClaimPendingIngestRequestResult["ignored"] = [];
+
+  if (input.cronRun) {
+    const stale = await db.query<{ id: string; scope: string; requested_at: Date }>(
+      `SELECT id::text, scope, requested_at FROM ingest_requests WHERE status = 'pending'`,
+    );
+    for (const row of stale.rows) {
+      ignored.push({
+        id: row.id,
+        scope: row.scope,
+        age_ms: Date.now() - row.requested_at.getTime(),
+        reason: "railway_cron_never_claims",
+      });
+    }
+    return { claimed: null, ignored };
+  }
+
+  const tooOld = await db.query<{ id: string; scope: string; requested_at: Date }>(
+    `SELECT id::text, scope, requested_at
+     FROM ingest_requests
+     WHERE status = 'pending'
+       AND requested_at <= now() - ($1::int * interval '1 millisecond')`,
+    [INGEST_REQUEST_CLAIM_MAX_AGE_MS],
+  );
+  for (const row of tooOld.rows) {
+    ignored.push({
+      id: row.id,
+      scope: row.scope,
+      age_ms: Date.now() - row.requested_at.getTime(),
+      reason: "pending_too_old_to_claim",
+    });
+  }
+
   const row = await db.query<IngestRequestRow>(
     `UPDATE ingest_requests
      SET status = 'running', started_at = now()
      WHERE id = (
        SELECT id FROM ingest_requests
        WHERE status = 'pending'
+         AND requested_at > now() - ($1::int * interval '1 millisecond')
        ORDER BY requested_at ASC
        LIMIT 1
        FOR UPDATE SKIP LOCKED
      )
      RETURNING id::text AS id, scope, trigger, status, requested_at, started_at, completed_at,
                error_message, items_new, duration_ms`,
+    [INGEST_REQUEST_CLAIM_MAX_AGE_MS],
   );
-  return row.rows[0] ?? null;
+  return { claimed: row.rows[0] ?? null, ignored };
 }
 
 export async function completeIngestRequest(
@@ -128,10 +216,51 @@ export interface IngestScopeStatusRow {
   last_requested_at: Date | null;
 }
 
+function mapRequestRowToScopeStatus(
+  scope: string,
+  row: {
+    status: string;
+    started_at: Date | null;
+    error_message: string | null;
+    items_new: number | null;
+    duration_ms: number | null;
+    requested_at: Date;
+  } | undefined,
+  lockHeld: boolean,
+): IngestScopeStatusRow {
+  if (!row) {
+    return {
+      scope,
+      status: lockHeld ? "running" : "idle",
+      started_at: null,
+      last_result: null,
+      last_items_new: null,
+      last_duration_ms: null,
+      last_requested_at: null,
+    };
+  }
+  let status: IngestScopeStatusRow["status"] = "idle";
+  if (row.status === "pending") status = "pending";
+  else if (row.status === "running") status = "running";
+  else if (lockHeld && row.status !== "completed" && row.status !== "failed") {
+    status = "running";
+  }
+  return {
+    scope,
+    status,
+    started_at: row.started_at,
+    last_result: row.error_message ?? (row.status === "completed" ? "completed" : row.status),
+    last_items_new: row.items_new,
+    last_duration_ms: row.duration_ms,
+    last_requested_at: row.requested_at,
+  };
+}
+
 export async function ingestScopeAdminStatus(
   db: Queryable,
   scopes: readonly string[],
 ): Promise<{ lock_held: boolean; scopes: IngestScopeStatusRow[] }> {
+  await expireStuckIngestRequests(db);
   const lockHeld = await isIngestLockHeld(db);
   const rows = await db.query<{
     scope: string;
@@ -158,31 +287,6 @@ export async function ingestScopeAdminStatus(
     [scopes],
   );
   const byScope = new Map(rows.rows.map((row) => [row.scope, row]));
-  const scopesOut: IngestScopeStatusRow[] = scopes.map((scope) => {
-    const row = byScope.get(scope);
-    if (!row) {
-      return {
-        scope,
-        status: lockHeld ? "running" : "idle",
-        started_at: null,
-        last_result: null,
-        last_items_new: null,
-        last_duration_ms: null,
-        last_requested_at: null,
-      };
-    }
-    let status: IngestScopeStatusRow["status"] = "idle";
-    if (row.status === "pending") status = "pending";
-    else if (row.status === "running" || lockHeld) status = "running";
-    return {
-      scope,
-      status,
-      started_at: row.started_at,
-      last_result: row.error_message ?? (row.status === "completed" ? "completed" : row.status),
-      last_items_new: row.items_new,
-      last_duration_ms: row.duration_ms,
-      last_requested_at: row.requested_at,
-    };
-  });
+  const scopesOut = scopes.map((scope) => mapRequestRowToScopeStatus(scope, byScope.get(scope), lockHeld));
   return { lock_held: lockHeld, scopes: scopesOut };
 }

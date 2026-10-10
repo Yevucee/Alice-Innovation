@@ -161,15 +161,19 @@ EMBEDDING_BASE_URL=...
 EMBEDDING_API_KEY=...
 EMBEDDING_MODEL=text-embedding-3-small
 EMBEDDING_DIMENSIONS=1536
-# Admin → Run ingest panel (Railway GraphQL deploy of alice-ingestor; never expose to the browser)
+# Admin → Run ingest panel (Railway GraphQL run-now for cron ingestor; never expose to the browser)
 RAILWAY_API_TOKEN=<team token with deploy permission>
 RAILWAY_PROJECT_ID=<project uuid>
 RAILWAY_ENVIRONMENT_ID=<production environment uuid>
 RAILWAY_INGESTOR_SERVICE_ID=<alice-ingestor service uuid>
+# Optional: skip GraphQL lookup of service instance id
+RAILWAY_INGESTOR_SERVICE_INSTANCE_ID=<service instance uuid>
 ```
 
+`alice-web` runs **`npm run migrate`** before `start:web` (see `railway.web.toml`) so migration `024_ingest_requests` applies on deploy.
+
 - [ ] Open `https://<web-host>/login`, sign in, confirm Discover shows resources after ingest
-- [ ] **Admin → Run ingest:** confirm dialog, scope status updates (~15s poll). Buttons disabled while a run is active. See `docs/ingest-scopes.md`.
+- [ ] **Admin → Run ingest:** confirm dialog, scope status updates (~15s poll). Buttons disabled while a run is active. Uses `deploymentInstanceExecutionCreate` (cron “run now”), not `serviceInstanceDeploy` alone — see `docs/ingest-scopes.md`.
 
 ## 5. Cursor Cloud Agent (optional)
 

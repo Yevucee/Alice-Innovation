@@ -15,7 +15,11 @@ export interface SourceItemListingState {
   last_fetched_at: Date | null;
 }
 
-export function listingContentHash(ref: ListingRef): string {
+export interface ListingRefInput extends ListingRef {
+  listingExtras?: Record<string, unknown>;
+}
+
+export function listingContentHash(ref: ListingRefInput): string {
   const urlKey = tryCanonicaliseUrl(ref.url) ?? ref.url.trim();
   return contentHash([
     urlKey,

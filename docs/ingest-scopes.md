@@ -13,7 +13,16 @@ Scoped runs isolate regional catalogues from grant/research sources so a manual 
 
 CLI: `npm run ingest -- --scope asia`
 
-Admin buttons enqueue `ingest_requests` and trigger a one-shot Railway deploy of **alice-ingestor** (see `docs/railway-checklist.md`). The ingestor claims the pending row on startup; persistent Railway service variables are not changed.
+Admin buttons enqueue `ingest_requests` and call Railway GraphQL **`deploymentInstanceExecutionCreate`** on the ingestor **service instance** (cron “run now”). A plain `serviceInstanceDeploy` on a cron service builds an image but does **not** run the start command until the schedule fires ([Railway cron docs](https://docs.railway.com/cron-jobs), [community confirmation](https://station.railway.com/questions/how-to-initialize-a-railway-cron-service-3e24592b)).
+
+The ingestor claims pending rows only when:
+
+- `RAILWAY_CRON` is **not** set (nightly cron never claims admin requests), and
+- the request is **newer than 15 minutes**.
+
+Stale `pending` / `running` rows auto-fail (`expired_pending` / `expired_running`) so Admin buttons cannot stay blocked forever.
+
+Persistent Railway service variables are not changed.
 
 ## Run order for `all`
 
