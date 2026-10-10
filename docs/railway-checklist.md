@@ -69,6 +69,18 @@ npm run backfill:africa-countries:remote          # geo tags from adapter metada
 - [ ] **No** public domain
 - [ ] Same `DATABASE_URL` and `EMBEDDING_*` as MCP
 
+Scoped runs (optional; nightly cron unchanged):
+
+```env
+# Default when unset: all sources, grants last (see docs/ingest-scopes.md)
+INGEST_SCOPE=all
+INGEST_SOURCE_LOOP_MAX_MINUTES=60
+# Per-button / manual scoped runs (asia, africa, …) use INGEST_SCOPE_MAX_MINUTES (default 90)
+INGEST_SCOPE_MAX_MINUTES=90
+```
+
+Admin **Run ingest** buttons do **not** set these on the ingestor service. They insert into `ingest_requests` and redeploy the ingestor; the worker claims the row on boot. See **§4 Web — admin ingest triggers**.
+
 Optional first run (shell):
 
 ```bash
@@ -143,14 +155,25 @@ Variables:
 DATABASE_URL=<same>
 WEB_SESSION_SECRET=<openssl rand -hex 32>
 WEB_AUTH_PASSWORD=<team password — share with Alice users only>
+ADMIN_ENABLED=true
 PORT=<Railway injects; Next uses PORT via start script>
 EMBEDDING_BASE_URL=...
 EMBEDDING_API_KEY=...
 EMBEDDING_MODEL=text-embedding-3-small
 EMBEDDING_DIMENSIONS=1536
+# Admin → Run ingest panel (Railway GraphQL run-now for cron ingestor; never expose to the browser)
+RAILWAY_API_TOKEN=<team token with deploy permission>
+RAILWAY_PROJECT_ID=<project uuid>
+RAILWAY_ENVIRONMENT_ID=<production environment uuid>
+RAILWAY_INGESTOR_SERVICE_ID=<alice-ingestor service uuid>
+# Optional: skip GraphQL lookup of service instance id
+RAILWAY_INGESTOR_SERVICE_INSTANCE_ID=<service instance uuid>
 ```
 
+`alice-web` runs **`npm run migrate`** before `start:web` (see `railway.web.toml`) so migration `024_ingest_requests` applies on deploy.
+
 - [ ] Open `https://<web-host>/login`, sign in, confirm Discover shows resources after ingest
+- [ ] **Admin → Run ingest:** confirm dialog, scope status updates (~15s poll). Buttons disabled while a run is active. Uses `deploymentInstanceExecutionCreate` (cron “run now”), not `serviceInstanceDeploy` alone — see `docs/ingest-scopes.md`.
 
 ## 5. Cursor Cloud Agent (optional)
 

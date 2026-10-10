@@ -5,6 +5,8 @@ export interface DiscoveredRef {
   url: string;
   externalId?: string;
   listingHtml?: string;
+  /** Adapter-only fields excluded from listingContentHash (see ingest-detail). */
+  listingExtras?: Record<string, unknown>;
 }
 
 export interface FetchedPage {

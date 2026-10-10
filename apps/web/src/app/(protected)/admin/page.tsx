@@ -17,6 +17,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { pool } from "@/lib/db";
 import { SourceCandidateForm } from "@/components/source-candidate-form";
 import { SourceCandidateList } from "@/components/source-candidate-list";
+import { IngestRunPanel } from "@/components/ingest-run-panel";
 
 export default async function AdminPage() {
   const [stats, sources, runs, embeddings, quality, enrichment, previews, postDeploy, sourceIdeas, asiaIngest, mitSolveBackfill, catalogueSources] = await Promise.all([
@@ -44,6 +45,8 @@ export default async function AdminPage() {
       <p className="mt-2 text-xs text-muted">
         Deploy checklist: <code className="text-ink">docs/railway-checklist.md</code>
       </p>
+
+      <IngestRunPanel />
 
       <section className="mt-8 rounded border border-line bg-white p-4 text-sm">
         <h2 className="text-sm font-medium">Suggest a new source</h2>

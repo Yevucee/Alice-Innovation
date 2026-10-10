@@ -7,7 +7,7 @@ builder = "NIXPACKS"
 buildCommand = "npm ci && npm run web:build"
 
 [deploy]
-startCommand = "npm run start:web"
+startCommand = "npm run migrate && npm run start:web"
 healthcheckPath = "/login"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"

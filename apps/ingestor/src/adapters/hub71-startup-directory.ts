@@ -63,10 +63,12 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
             slug,
             title: pickEn(row.title),
             description: pickEn(row.description),
-            website: publicUrl,
             sector: row.sector,
-            detailUrl,
           }),
+          listingExtras: {
+            website: publicUrl,
+            detailUrl,
+          },
         });
       }
       if (ctx.limit !== null && refs.length >= ctx.limit) break;
@@ -78,7 +80,13 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
   },
   async fetch(ref: DiscoveredRef, ctx: AdapterContext): Promise<FetchedPage> {
     if (ref.listingHtml) {
-      return listingPageFromJson(ref, JSON.parse(ref.listingHtml));
+      const listing = JSON.parse(ref.listingHtml) as Record<string, unknown>;
+      const extras = ref.listingExtras ?? {};
+      return listingPageFromJson(ref, {
+        ...listing,
+        website: extras.website ?? listing.website,
+        detailUrl: extras.detailUrl ?? ref.url,
+      });
     }
     const result = await ctx.fetchText(ref.url);
     return {
@@ -118,7 +126,12 @@ export const hub71StartupDirectoryAdapter: SourceAdapter = {
         organisationName: payload.title,
         evidenceBasis: "PROGRAMME_SELECTED",
         evidenceStage: "UNKNOWN",
-        rawMetadata: { hub71_startup_directory: true, sector: payload.sector, hub71_detail_url: payload.detailUrl },
+        rawMetadata: {
+          hub71_startup_directory: true,
+          sector: payload.sector,
+          hub71_detail_url: payload.detailUrl,
+          hub71_website: payload.website,
+        },
         etag: page.etag,
         lastModified: page.lastModified,
       });

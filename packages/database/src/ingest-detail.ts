@@ -15,7 +15,11 @@ export interface SourceItemListingState {
   last_fetched_at: Date | null;
 }
 
-export function listingContentHash(ref: ListingRef): string {
+export interface ListingRefInput extends ListingRef {
+  listingExtras?: Record<string, unknown>;
+}
+
+export function listingContentHash(ref: ListingRefInput): string {
   const urlKey = tryCanonicaliseUrl(ref.url) ?? ref.url.trim();
   return contentHash([
     urlKey,
@@ -58,6 +62,54 @@ export function shouldSkipDetailFetch(
   }
 
   return { skip: false };
+}
+
+function defaultCanonicalRepair(
+  sourceSlug: string,
+  row: { external_id: string; original_url: string; canonical_url: string },
+): string | null {
+  const fromOriginal = tryCanonicaliseUrl(row.original_url);
+  if (fromOriginal) return fromOriginal;
+  if (sourceSlug === "hub71-startup-directory" && row.external_id?.trim()) {
+    const slug = row.external_id.trim();
+    return tryCanonicaliseUrl(`https://www.hub71.com/startups/${slug}`);
+  }
+  const stripped = row.canonical_url.replace(/^:\s*/, "").trim();
+  return tryCanonicaliseUrl(stripped);
+}
+
+/** Repair legacy rows where canonical_url cannot be parsed (e.g. pre-#87 `": https://..."`). */
+export async function repairMalformedSourceItemCanonicalUrls(
+  db: Queryable,
+  sourceSlug: string,
+): Promise<number> {
+  const rows = await db.query<{
+    id: string;
+    external_id: string;
+    original_url: string;
+    canonical_url: string;
+  }>(
+    `SELECT si.id::text, si.external_id, si.original_url, si.canonical_url
+     FROM source_items si
+     JOIN sources s ON s.id = si.source_id
+     WHERE s.slug = $1 AND si.active`,
+    [sourceSlug],
+  );
+  let repaired = 0;
+  for (const row of rows.rows) {
+    if (tryCanonicaliseUrl(row.canonical_url)) continue;
+    const fixed = defaultCanonicalRepair(sourceSlug, row);
+    if (!fixed) continue;
+    await db.query(
+      `UPDATE source_items SET canonical_url = $2, updated_at = now() WHERE id = $1::uuid`,
+      [row.id, fixed],
+    );
+    repaired += 1;
+  }
+  if (repaired > 0) {
+    log("info", "ingest_repaired_malformed_canonical_urls", { source_slug: sourceSlug, count: repaired });
+  }
+  return repaired;
 }
 
 export async function loadSourceItemListingStateMap(
@@ -136,6 +188,7 @@ export async function touchSourceItemWithoutDetailFetch(
        AND si.resource_id IS NOT NULL
        AND (
          si.canonical_url = $2
+         OR btrim(regexp_replace(si.canonical_url, '^:\\s*', '')) = $2
          OR ($5 <> '' AND si.external_id = $5)
        )
      RETURNING si.id::text, si.resource_id::text`,

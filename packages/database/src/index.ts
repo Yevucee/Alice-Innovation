@@ -21,6 +21,7 @@ export {
   lookupListingState,
   touchSourceItemWithoutDetailFetch,
   markInterruptedIngestionRuns,
+  repairMalformedSourceItemCanonicalUrls,
 } from "./ingest-detail.js";
 export type { ListingRef, SourceItemListingState } from "./ingest-detail.js";
 export { linkResourceTaxonomy } from "./taxonomy-links.js";
@@ -113,6 +114,22 @@ export {
   type PostDeployLastRunBudget,
 } from "./post-deploy-admin.js";
 export { asiaIngestAdminSummary, type AsiaIngestAdminSummary, type AsiaSourceIngestRow } from "./asia-ingest-admin.js";
+export {
+  INGEST_LOCK_KEY,
+  createIngestRequest,
+  claimPendingIngestRequest,
+  completeIngestRequest,
+  expireStuckIngestRequests,
+  ingestScopeAdminStatus,
+  INGEST_REQUEST_PENDING_EXPIRY_MS,
+  INGEST_REQUEST_RUNNING_EXPIRY_MS,
+  INGEST_REQUEST_CLAIM_MAX_AGE_MS,
+  isIngestLockHeld,
+  tryIngestAdvisoryLock,
+  releaseIngestAdvisoryLock,
+  type IngestRequestRow,
+  type IngestScopeStatusRow,
+} from "./ingest-requests.js";
 export {
   mitSolveBackfillAdminSummary,
   type MitSolveBackfillAdminSummary,

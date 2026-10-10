@@ -22,6 +22,21 @@ export interface UpsertDraftOptions {
 
 const EXTRACT_LIMIT = 1500;
 
+/** Ignore cache-busting query params when deciding if card image changed. */
+function normalizeImageUrlForCompare(value: string | null | undefined): string | null {
+  if (!value?.trim()) return null;
+  const trimmed = value.trim();
+  if (trimmed.startsWith("data:")) return trimmed;
+  try {
+    const url = new URL(trimmed);
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return trimmed;
+  }
+}
+
 function indexText(draft: NormalisedDraft): string {
   return truncate(
     [draft.extractedText, draft.tags.join(" "), draft.organisationName ?? "", draft.countryName ?? ""].join(" "),
@@ -115,11 +130,6 @@ export async function upsertDraft(
       const row = existing.rows[0];
       const incomingImage = draft.imageUrl?.trim() || null;
       const priorImage = row.image_url?.trim() || null;
-      const incomingUsable = Boolean(incomingImage && !incomingImage.startsWith("data:"));
-      const priorUsable = Boolean(priorImage && !priorImage.startsWith("data:"));
-      const imageChanged = incomingUsable
-        ? incomingImage !== priorImage
-        : priorUsable && Boolean(incomingImage?.startsWith("data:"));
       await client.query(
         `UPDATE source_items
          SET last_seen_at = now(), last_fetched_at = now(), miss_count = 0, active = true,
@@ -139,7 +149,7 @@ export async function upsertDraft(
       await client.query("COMMIT");
       const resourceId = row.resource_id as string;
       return {
-        outcome: imageChanged ? "updated" : "unchanged",
+        outcome: "unchanged",
         resourceId,
         sourceItemId: row.id,
         contentHash: hash,
