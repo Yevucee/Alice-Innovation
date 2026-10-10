@@ -1,7 +1,7 @@
 /** Normalize Hub71 listing JSON website fields (null, relative, or malformed ": https://..."). */
 export function resolveHub71PublicUrl(website: string | null | undefined, detailUrl: string): string {
   const raw = (website ?? "").trim();
-  if (!raw || raw === "-" || raw === "N/A") return detailUrl;
+  if (!raw || raw === "-" || raw === "N/A" || raw === "#" || raw === "/") return detailUrl;
   let candidate = raw.replace(/^:\s*/, "");
   if (!/^https?:\/\//i.test(candidate)) {
     try {
