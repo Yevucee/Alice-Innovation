@@ -131,6 +131,13 @@ async function resolveServiceInstanceId(
   return match.node.id;
 }
 
+/** Railway returns Boolean! — no subfield selection allowed. */
+export const DEPLOYMENT_INSTANCE_EXECUTION_CREATE_MUTATION = `
+  mutation deploymentInstanceExecutionCreate($input: DeploymentInstanceExecutionCreateInput!) {
+    deploymentInstanceExecutionCreate(input: $input)
+  }
+`;
+
 export async function triggerIngestorDeployment(): Promise<{
   executionId: string | null;
   serviceInstanceId: string;
@@ -145,22 +152,21 @@ export async function triggerIngestorDeployment(): Promise<{
   const serviceInstanceId = configuredInstanceId
     ?? await resolveServiceInstanceId(token, tokenType, environmentId, serviceId);
 
-  const mutation = `
-    mutation deploymentInstanceExecutionCreate($input: DeploymentInstanceExecutionCreateInput!) {
-      deploymentInstanceExecutionCreate(input: $input) {
-        id
-        status
-      }
-    }
-  `;
   const data = await railwayGraphql<{
-    deploymentInstanceExecutionCreate: { id: string; status: string } | null;
-  }>(token, tokenType, mutation, {
+    deploymentInstanceExecutionCreate: boolean;
+  }>(token, tokenType, DEPLOYMENT_INSTANCE_EXECUTION_CREATE_MUTATION, {
     input: { serviceInstanceId },
   });
 
+  if (data.deploymentInstanceExecutionCreate !== true) {
+    throw new RailwayApiError(
+      "Railway declined deploymentInstanceExecutionCreate (returned false). Check ingestor cron service instance and token permissions.",
+      null,
+    );
+  }
+
   return {
-    executionId: data.deploymentInstanceExecutionCreate?.id ?? null,
+    executionId: null,
     serviceInstanceId,
   };
 }
