@@ -32,7 +32,7 @@ function createMockDb(initialIds: string[]): {
   const needsReview = new Set(initialIds);
   const processed: string[] = [];
 
-  const db: Queryable = {
+  const db = {
     query: async (sql: string, params?: unknown[]) => {
       const text = sql.replace(/\s+/g, " ");
       if (text.includes("FROM resources r") && text.includes("NEEDS_REVIEW")) {
@@ -67,7 +67,7 @@ function createMockDb(initialIds: string[]): {
       }
       return { rows: [], rowCount: 0 };
     },
-  };
+  } as Queryable;
 
   return { db, needsReview, processed };
 }

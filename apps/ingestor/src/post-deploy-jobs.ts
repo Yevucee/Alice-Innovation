@@ -28,6 +28,8 @@ import {
   currentNeedsReviewBulkFixMode,
   prepareNeedsReviewBulkFixProgress,
   requeueNeedsReviewBulkFixJobIfModeChanged,
+  type NeedsReviewBulkFixBatchResult,
+  type NeedsReviewBulkFixSample,
 } from "@alice/database";
 import { loadSources } from "@alice/source-registry";
 import { embedTextsDetailed, embeddingSettings, embeddingVersion, log } from "@alice/shared";
@@ -845,7 +847,7 @@ async function runNeedsReviewBulkFixStep(
     });
   }
   const lastId = typeof progress.last_id === "string" ? progress.last_id : null;
-  const totals = {
+  const totals: Record<string, number> = {
     cleared: 0,
     source_limited: 0,
     updated: 0,
@@ -854,12 +856,12 @@ async function runNeedsReviewBulkFixStep(
     unchanged: 0,
     ...((progress.totals as Record<string, number> | undefined) ?? {}),
   };
-  const by_source = {
-    ...((progress.by_source as Record<string, Record<string, number>>) ?? {}),
+  const by_source: NeedsReviewBulkFixBatchResult["by_source"] = {
+    ...((progress.by_source as NeedsReviewBulkFixBatchResult["by_source"] | undefined) ?? {}),
   };
-  const samples = [
-    ...((progress.title_samples as Array<Record<string, unknown>>) ?? []),
-  ] as import("@alice/database").NeedsReviewBulkFixSample[];
+  const samples: NeedsReviewBulkFixSample[] = [
+    ...((progress.title_samples as NeedsReviewBulkFixSample[] | undefined) ?? []),
+  ];
 
   const batch = await runNeedsReviewBulkFixBatch(db, lastId, {
     dryRun: !apply,
@@ -871,7 +873,8 @@ async function runNeedsReviewBulkFixStep(
       by_source[slug] = { cleared: 0, source_limited: 0, updated: 0, still_flagged: 0 };
     }
     for (const [key, value] of Object.entries(counts)) {
-      by_source[slug][key] = (by_source[slug][key] ?? 0) + value;
+      const field = key as keyof NeedsReviewBulkFixBatchResult["by_source"][string];
+      by_source[slug][field] = (by_source[slug][field] ?? 0) + value;
     }
   }
   totals.scanned = (totals.scanned ?? 0) + batch.scanned;

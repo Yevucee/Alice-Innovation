@@ -36,7 +36,7 @@ async function main(): Promise<void> {
     unchanged: 0,
     still_flagged: 0,
   };
-  const by_source: Record<string, Record<string, number>> = {};
+  const by_source: import("@alice/database").NeedsReviewBulkFixBatchResult["by_source"] = {};
   const samples: import("@alice/database").NeedsReviewBulkFixSample[] = [];
 
   for (;;) {
@@ -57,7 +57,8 @@ async function main(): Promise<void> {
     for (const [slug, counts] of Object.entries(batch.by_source)) {
       by_source[slug] = by_source[slug] ?? { cleared: 0, source_limited: 0, updated: 0, still_flagged: 0 };
       for (const [k, v] of Object.entries(counts)) {
-        by_source[slug][k] = (by_source[slug][k] ?? 0) + v;
+        const field = k as keyof (typeof by_source)[string];
+        by_source[slug][field] = (by_source[slug][field] ?? 0) + v;
       }
     }
     if (batch.complete) break;

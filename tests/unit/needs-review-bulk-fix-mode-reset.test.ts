@@ -22,7 +22,7 @@ test("prepareNeedsReviewBulkFixProgress resets cursor when mode changes", () => 
   assert.equal(previousMode, "dry_run");
   assert.equal(progress.mode, "apply");
   assert.equal(progress.last_id, null);
-  assert.equal(progress.totals.cleared, 0);
+  assert.equal((progress.totals as { cleared: number }).cleared, 0);
   assert.equal(progress.mode_reset_from, "dry_run");
 });
 
@@ -45,7 +45,7 @@ test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed job when APPLY
   let progress: Record<string, unknown> = { mode: "dry_run", last_id: "x", complete: true };
   let result: Record<string, unknown> | null = { mode: "dry_run" };
 
-  const db: Queryable = {
+  const db = {
     query: async (sql: string, params?: unknown[]) => {
       if (sql.includes("SELECT status, progress, result")) {
         return {
@@ -61,7 +61,7 @@ test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed job when APPLY
       }
       return { rows: [], rowCount: 0 };
     },
-  };
+  } as Queryable;
 
   const out = await requeueNeedsReviewBulkFixJobIfModeChanged(db);
   assert.equal(out.requeued, true);
