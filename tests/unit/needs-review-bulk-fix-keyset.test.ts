@@ -20,6 +20,7 @@ function makeRow(id: string): NeedsReviewBulkFixRow {
     raw_metadata: {},
     source_slug: "test-source",
     source_item_title: null,
+    source_external_id: null,
     canonical_url: null,
   };
 }

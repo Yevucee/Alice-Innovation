@@ -10,16 +10,21 @@ import { auditDraftShape } from "./quality-audit.js";
 import { shouldAcceptSourceLimited } from "./needs-review-reconcile.js";
 import {
   type BulkFixDuplicateTracker,
+  type BulkFixJunkHit,
   detectBulkFixJunk,
   JUNK_DUPLICATE_TITLE_CONTENT,
   JUNK_GENERIC_TITLE,
 } from "./needs-review-bulk-fix-junk.js";
 import { repairBulkFixTitle } from "./needs-review-bulk-fix-title-repair.js";
+import {
+  isSiteBrandPlaceholderTitle,
+  repairSiteBrandPlaceholderTitle,
+} from "./needs-review-bulk-fix-site-brand.js";
 
 export const NEEDS_REVIEW_BULK_FIX_BATCH_SIZE = 100;
 
 /** Bump when bulk-fix classification/repair logic changes; triggers job re-queue on deploy. */
-export const BULK_FIX_ALGORITHM_VERSION = 2;
+export const BULK_FIX_ALGORITHM_VERSION = 3;
 
 const BATCH = NEEDS_REVIEW_BULK_FIX_BATCH_SIZE;
 
@@ -66,6 +71,7 @@ export function initialNeedsReviewBulkFixProgress(
     by_source: {},
     title_samples: [],
     hide_samples: [],
+    atlas_title_repair_samples: [],
     duplicate_tracker: {},
     pending_reembed_ids: [],
     complete: false,
@@ -113,7 +119,8 @@ export function readBulkFixAlgorithmVersion(
 }
 
 export const NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT = 20;
-export const NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT = 100;
+export const NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT = 150;
+export const NEEDS_REVIEW_BULK_FIX_ATLAS_REPAIR_SAMPLE_LIMIT = 20;
 
 export interface NeedsReviewBulkFixSample {
   resource_id: string;
@@ -122,6 +129,7 @@ export interface NeedsReviewBulkFixSample {
   action: string;
   title_before: string;
   title_after: string;
+  hide_rule?: string | null;
 }
 
 export function formatNeedsReviewBulkFixSummary(input: {
@@ -130,6 +138,7 @@ export function formatNeedsReviewBulkFixSummary(input: {
   by_source: NeedsReviewBulkFixBatchResult["by_source"];
   samples: NeedsReviewBulkFixSample[];
   hide_samples?: NeedsReviewBulkFixSample[];
+  atlas_title_repair_samples?: NeedsReviewBulkFixSample[];
   mode_reset_from?: string | null;
   algorithm_version?: number;
   algorithm_version_reset_from?: number | null;
@@ -154,7 +163,16 @@ export function formatNeedsReviewBulkFixSummary(input: {
     lines.push("hide_samples:");
     for (const sample of hideSamples) {
       lines.push(
-        `  [hide] ${sample.source_slug ?? "?"} | ${sample.canonical_url ?? "—"} | "${sample.title_before}" → "${sample.title_after}"`,
+        `  [hide:${sample.hide_rule ?? sample.action}] ${sample.source_slug ?? "?"} | ${sample.canonical_url ?? "—"} | "${sample.title_before}" → "${sample.title_after}"`,
+      );
+    }
+  }
+  const atlasRepairs = input.atlas_title_repair_samples ?? [];
+  if (atlasRepairs.length > 0) {
+    lines.push("atlas_site_title_repairs:");
+    for (const sample of atlasRepairs) {
+      lines.push(
+        `  [atlas_repair] ${sample.canonical_url ?? "—"} | "${sample.title_before}" → "${sample.title_after}"`,
       );
     }
   }
@@ -171,6 +189,7 @@ export interface NeedsReviewBulkFixRow {
   raw_metadata: Record<string, unknown>;
   source_slug: string | null;
   source_item_title: string | null;
+  source_external_id: string | null;
   canonical_url: string | null;
 }
 
@@ -187,7 +206,8 @@ export function proposeNeedsReviewBulkFix(row: NeedsReviewBulkFixRow): {
   extracted_index_text: string;
   clear_organisation: boolean;
 } {
-  let title = repairBulkFixTitle(row, row.title);
+  let title = repairSiteBrandPlaceholderTitle(row, row.title);
+  title = repairBulkFixTitle(row, title);
   let summary = row.source_summary;
   let body = row.extracted_index_text;
   let clearOrg = false;
@@ -248,10 +268,10 @@ export function proposeNeedsReviewBulkFix(row: NeedsReviewBulkFixRow): {
 export function classifyBulkFixOutcome(
   row: NeedsReviewBulkFixRow,
   fixed: ReturnType<typeof proposeNeedsReviewBulkFix>,
-  junkCode?: string | null,
+  junkHit?: BulkFixJunkHit | null,
 ): BulkFixAction {
-  if (junkCode) {
-    const code = junkCode === JUNK_DUPLICATE_TITLE_CONTENT ? junkCode : JUNK_GENERIC_TITLE;
+  if (junkHit) {
+    const code = junkHit.code === JUNK_DUPLICATE_TITLE_CONTENT ? junkHit.code : JUNK_GENERIC_TITLE;
     return { action: "hide", reasons: [code] };
   }
 
@@ -337,6 +357,13 @@ export async function loadNeedsReviewBulkFixBatch(
               LIMIT 1
             ) AS source_item_title,
             (
+              SELECT si.external_id FROM resource_source_links l
+              JOIN source_items si ON si.id = l.source_item_id
+              WHERE l.resource_id = r.id
+              ORDER BY si.last_seen_at DESC NULLS LAST
+              LIMIT 1
+            ) AS source_external_id,
+            (
               SELECT si.canonical_url FROM resource_source_links l
               JOIN source_items si ON si.id = l.source_item_id
               WHERE l.resource_id = r.id
@@ -382,6 +409,7 @@ export interface NeedsReviewBulkFixBatchResult {
   by_source: Record<string, NeedsReviewBulkFixSourceCounts>;
   samples: NeedsReviewBulkFixSample[];
   hide_samples: NeedsReviewBulkFixSample[];
+  atlas_title_repair_samples: NeedsReviewBulkFixSample[];
   duplicate_tracker: BulkFixDuplicateTracker;
 }
 
@@ -416,6 +444,8 @@ export async function runNeedsReviewBulkFixBatch(
     existingSampleCount?: number;
     maxHideSamples?: number;
     existingHideSampleCount?: number;
+    maxAtlasRepairSamples?: number;
+    existingAtlasRepairSampleCount?: number;
     duplicateTracker?: BulkFixDuplicateTracker;
   },
 ): Promise<NeedsReviewBulkFixBatchResult> {
@@ -434,12 +464,18 @@ export async function runNeedsReviewBulkFixBatch(
   const by_source: NeedsReviewBulkFixBatchResult["by_source"] = {};
   const samples: NeedsReviewBulkFixSample[] = [];
   const hide_samples: NeedsReviewBulkFixSample[] = [];
+  const atlas_title_repair_samples: NeedsReviewBulkFixSample[] = [];
   const duplicate_tracker: BulkFixDuplicateTracker = { ...(input?.duplicateTracker ?? {}) };
   const sampleBudget = Math.max(0, (input?.maxSamples ?? 0) - (input?.existingSampleCount ?? 0));
   const hideSampleBudget = Math.max(
     0,
     (input?.maxHideSamples ?? NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT)
       - (input?.existingHideSampleCount ?? 0),
+  );
+  const atlasRepairBudget = Math.max(
+    0,
+    (input?.maxAtlasRepairSamples ?? NEEDS_REVIEW_BULK_FIX_ATLAS_REPAIR_SAMPLE_LIMIT)
+      - (input?.existingAtlasRepairSampleCount ?? 0),
   );
 
   const maybeSample = (row: NeedsReviewBulkFixRow, fixed: ReturnType<typeof proposeNeedsReviewBulkFix>, action: string) => {
@@ -455,13 +491,36 @@ export async function runNeedsReviewBulkFixBatch(
     });
   };
 
-  const maybeHideSample = (row: NeedsReviewBulkFixRow, fixed: ReturnType<typeof proposeNeedsReviewBulkFix>, reason: string) => {
+  const maybeHideSample = (
+    row: NeedsReviewBulkFixRow,
+    fixed: ReturnType<typeof proposeNeedsReviewBulkFix>,
+    junkHit: BulkFixJunkHit,
+  ) => {
     if (hide_samples.length >= hideSampleBudget) return;
     hide_samples.push({
       resource_id: row.id,
       source_slug: row.source_slug,
       canonical_url: row.canonical_url,
-      action: reason,
+      action: junkHit.code,
+      hide_rule: junkHit.rule,
+      title_before: row.title,
+      title_after: fixed.title,
+    });
+  };
+
+  const maybeAtlasRepairSample = (
+    row: NeedsReviewBulkFixRow,
+    fixed: ReturnType<typeof proposeNeedsReviewBulkFix>,
+  ) => {
+    if (atlas_title_repair_samples.length >= atlasRepairBudget) return;
+    if (row.source_slug !== "atlas-of-the-future") return;
+    if (!isSiteBrandPlaceholderTitle(row.source_slug, row.title)) return;
+    if (fixed.title === row.title) return;
+    atlas_title_repair_samples.push({
+      resource_id: row.id,
+      source_slug: row.source_slug,
+      canonical_url: row.canonical_url,
+      action: "atlas_site_title_repair",
       title_before: row.title,
       title_after: fixed.title,
     });
@@ -477,8 +536,9 @@ export async function runNeedsReviewBulkFixBatch(
 
   for (const row of rows) {
     const fixed = proposeNeedsReviewBulkFix(row);
-    const junkCode = detectBulkFixJunk(row, fixed.title, duplicate_tracker);
-    const outcome = classifyBulkFixOutcome(row, fixed, junkCode);
+    maybeAtlasRepairSample(row, fixed);
+    const junkHit = detectBulkFixJunk(row, fixed.title, duplicate_tracker);
+    const outcome = classifyBulkFixOutcome(row, fixed, junkHit);
     const slug = row.source_slug ?? "unknown";
 
     if (outcome.action === "unchanged") {
@@ -493,7 +553,7 @@ export async function runNeedsReviewBulkFixBatch(
     if (outcome.action === "hide") {
       hide += 1;
       bump(slug, "hide");
-      maybeHideSample(row, fixed, outcome.reasons[0] ?? JUNK_GENERIC_TITLE);
+      if (junkHit) maybeHideSample(row, fixed, junkHit);
       if (bulkFixModeWritesOutcome(mode, "hide")) {
         await hideNeedsReviewResource(db, row.id, outcome.reasons);
       }
@@ -619,6 +679,7 @@ export async function runNeedsReviewBulkFixBatch(
     by_source,
     samples,
     hide_samples,
+    atlas_title_repair_samples,
     duplicate_tracker,
   };
 }

@@ -26,6 +26,7 @@ import {
   formatNeedsReviewBulkFixSummary,
   NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
   NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT,
+  NEEDS_REVIEW_BULK_FIX_ATLAS_REPAIR_SAMPLE_LIMIT,
   currentNeedsReviewBulkFixMode,
   prepareNeedsReviewBulkFixProgress,
   requeueNeedsReviewBulkFixJobIfModeChanged,
@@ -867,6 +868,9 @@ async function runNeedsReviewBulkFixStep(
   const hide_samples: NeedsReviewBulkFixSample[] = [
     ...((progress.hide_samples as NeedsReviewBulkFixSample[] | undefined) ?? []),
   ];
+  const atlas_title_repair_samples: NeedsReviewBulkFixSample[] = [
+    ...((progress.atlas_title_repair_samples as NeedsReviewBulkFixSample[] | undefined) ?? []),
+  ];
   const duplicate_tracker =
     (progress.duplicate_tracker as import("@alice/database").NeedsReviewBulkFixBatchResult["duplicate_tracker"])
     ?? {};
@@ -877,6 +881,8 @@ async function runNeedsReviewBulkFixStep(
     existingSampleCount: samples.length,
     maxHideSamples: NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT,
     existingHideSampleCount: hide_samples.length,
+    maxAtlasRepairSamples: NEEDS_REVIEW_BULK_FIX_ATLAS_REPAIR_SAMPLE_LIMIT,
+    existingAtlasRepairSampleCount: atlas_title_repair_samples.length,
     duplicateTracker: duplicate_tracker,
   });
   for (const [slug, counts] of Object.entries(batch.by_source)) {
@@ -897,6 +903,7 @@ async function runNeedsReviewBulkFixStep(
   totals.unchanged = (totals.unchanged ?? 0) + batch.unchanged;
   samples.push(...batch.samples);
   hide_samples.push(...batch.hide_samples);
+  atlas_title_repair_samples.push(...batch.atlas_title_repair_samples);
   Object.assign(duplicate_tracker, batch.duplicate_tracker);
 
   const pending = [
@@ -918,6 +925,10 @@ async function runNeedsReviewBulkFixStep(
       by_source,
       samples: samples.slice(0, NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT),
       hide_samples: hide_samples.slice(0, NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT),
+      atlas_title_repair_samples: atlas_title_repair_samples.slice(
+        0,
+        NEEDS_REVIEW_BULK_FIX_ATLAS_REPAIR_SAMPLE_LIMIT,
+      ),
       mode_reset_from: typeof progress.mode_reset_from === "string" ? progress.mode_reset_from : null,
       algorithm_version: typeof progress.algorithm_version === "number" ? progress.algorithm_version : undefined,
       algorithm_version_reset_from:
@@ -945,6 +956,10 @@ async function runNeedsReviewBulkFixStep(
     by_source,
     title_samples: samples.slice(0, NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT),
     hide_samples: hide_samples.slice(0, NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT),
+    atlas_title_repair_samples: atlas_title_repair_samples.slice(
+      0,
+      NEEDS_REVIEW_BULK_FIX_ATLAS_REPAIR_SAMPLE_LIMIT,
+    ),
     duplicate_tracker,
     mode,
     algorithm_version: progress.algorithm_version ?? undefined,

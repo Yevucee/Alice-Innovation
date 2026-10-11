@@ -172,6 +172,7 @@ export {
   formatNeedsReviewBulkFixSummary,
   NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
   NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT,
+  NEEDS_REVIEW_BULK_FIX_ATLAS_REPAIR_SAMPLE_LIMIT,
   NEEDS_REVIEW_BULK_FIX_BATCH_SIZE,
   BULK_FIX_ALGORITHM_VERSION,
   BULK_FIX_ALGORITHM_VERSION_LEGACY,
@@ -189,6 +190,7 @@ export {
 export {
   detectBulkFixJunk,
   contentFingerprint,
+  type BulkFixJunkHit,
   looksLikeObviousProductOrOrgName,
   JUNK_GENERIC_TITLE,
   JUNK_DUPLICATE_TITLE_CONTENT,
@@ -196,6 +198,12 @@ export {
   type BulkFixDuplicateTracker,
 } from "./needs-review-bulk-fix-junk.js";
 export { repairBulkFixTitle, looksTruncatedTitle } from "./needs-review-bulk-fix-title-repair.js";
+export {
+  repairSiteBrandPlaceholderTitle,
+  isSiteBrandPlaceholderTitle,
+  titleFromProjectCanonicalUrl,
+  SITE_BRAND_PLACEHOLDER_BY_SLUG,
+} from "./needs-review-bulk-fix-site-brand.js";
 export {
   countBulkFixHiddenResources,
   restoreBulkFixHiddenResource,

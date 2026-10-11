@@ -1,9 +1,18 @@
 import type { NeedsReviewBulkFixRow } from "./needs-review-bulk-fix.js";
+import {
+  isSiteBrandPlaceholderTitle,
+  repairSiteBrandPlaceholderTitle,
+} from "./needs-review-bulk-fix-site-brand.js";
 
 export const JUNK_GENERIC_TITLE = "junk_generic_title";
 export const JUNK_DUPLICATE_TITLE_CONTENT = "junk_duplicate_title_content";
 
 export const BULK_FIX_JUNK_REASON_CODES = [JUNK_GENERIC_TITLE, JUNK_DUPLICATE_TITLE_CONTENT] as const;
+
+export interface BulkFixJunkHit {
+  code: string;
+  rule: string;
+}
 
 const NAVIGATION_TITLE_EXACT = new Set(
   [
@@ -26,9 +35,8 @@ const NAVIGATION_TITLE_EXACT = new Set(
   ].map((s) => s.toLowerCase()),
 );
 
-/** Source slug → titles that are the site/brand, not catalogue items. */
+/** Always hide (no project repair) — navigation / catalogue chrome. */
 const SOURCE_SITE_TITLE_KEYS: Record<string, string[]> = {
-  "atlas-of-the-future": ["atlas of the future"],
   "nia-innovation-catalogue": ["advance search", "advanced search", "nia innovation catalogue"],
   "china-college-students-innovation-competition": [
     "图解教育",
@@ -46,17 +54,25 @@ function normaliseTitleKey(title: string): string {
   return title.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function normaliseBodyKey(body: string): string {
-  return body.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 120);
+function normaliseBodySlice(body: string, maxLen: number): string {
+  return body.trim().toLowerCase().replace(/\s+/g, " ").slice(0, maxLen);
 }
 
-export function contentFingerprint(title: string, body: string): string {
-  return `${normaliseTitleKey(title)}|${normaliseBodyKey(body)}`;
+/** Duplicate detection: title + canonical URL + external id + long body slice (avoids same-title patents). */
+export function contentFingerprint(
+  title: string,
+  body: string,
+  canonicalUrl: string | null,
+  externalId?: string | null,
+): string {
+  const urlKey = canonicalUrl?.trim().toLowerCase() ?? "";
+  const extKey = externalId?.trim() ?? "";
+  const bodyKey = normaliseBodySlice(body, 400);
+  return `${normaliseTitleKey(title)}|${urlKey}|${extKey}|${bodyKey}`;
 }
 
 export type BulkFixDuplicateTracker = Record<string, Record<string, string>>;
 
-/** One-word mit-solve titles that look like product/org names — keep for source_limited, not hide. */
 export function looksLikeObviousProductOrOrgName(title: string): boolean {
   const t = title.trim();
   if (!t || t.includes(" ")) return false;
@@ -67,11 +83,6 @@ export function looksLikeObviousProductOrOrgName(title: string): boolean {
   return false;
 }
 
-/**
- * Narrow mit-solve stub rule: hide only when body is thin AND title matches linked person_name
- * (mis-parsed team leader as title). Ambiguous one-word names (e.g. "Helio") stay in the normal
- * reconcile path and may become source_limited instead of hidden.
- */
 function mitSolveMisParsedPersonTitle(row: NeedsReviewBulkFixRow, title: string, body: string): boolean {
   if (row.source_slug !== "mit-solve") return false;
   if (title.includes(" ") || title.length < 3) return false;
@@ -85,38 +96,55 @@ export function detectBulkFixJunk(
   row: NeedsReviewBulkFixRow,
   titleAfterPropose: string,
   tracker?: BulkFixDuplicateTracker,
-): string | null {
+): BulkFixJunkHit | null {
   const title = titleAfterPropose.trim() || row.title.trim();
   const key = normaliseTitleKey(title);
   const slug = row.source_slug ?? "unknown";
   const body = row.extracted_index_text || row.source_summary || "";
 
-  if (!title || title.length < 2) return JUNK_GENERIC_TITLE;
+  if (!title) return { code: JUNK_GENERIC_TITLE, rule: "empty_title" };
 
-  if (NAVIGATION_TITLE_EXACT.has(key)) return JUNK_GENERIC_TITLE;
+  if (title.length === 1) return { code: JUNK_GENERIC_TITLE, rule: "single_letter_title" };
 
-  // Exact normalised match for site/brand titles (avoids hiding "Atlas of the Future: <project>").
+  if (NAVIGATION_TITLE_EXACT.has(key)) return { code: JUNK_GENERIC_TITLE, rule: "navigation_title" };
+
   for (const siteKey of SOURCE_SITE_TITLE_KEYS[slug] ?? []) {
-    if (key === siteKey) return JUNK_GENERIC_TITLE;
+    if (key === siteKey) return { code: JUNK_GENERIC_TITLE, rule: "site_chrome_title" };
   }
 
-  // MOE portal: substring via regex on full title (many page title variants).
-  if (GOVERNMENT_PORTAL_TITLE.test(title)) return JUNK_GENERIC_TITLE;
+  if (GOVERNMENT_PORTAL_TITLE.test(title)) {
+    return { code: JUNK_GENERIC_TITLE, rule: "government_portal_title" };
+  }
 
-  // in5: Green Room appears as a substring in several media page titles.
-  if (/green room/i.test(title) && slug === "in5-dubai") return JUNK_GENERIC_TITLE;
+  if (/green room/i.test(title) && slug === "in5-dubai") {
+    return { code: JUNK_GENERIC_TITLE, rule: "in5_green_room_title" };
+  }
 
   const sourceName =
     typeof row.raw_metadata?.source_name === "string" ? row.raw_metadata.source_name.trim() : "";
-  if (sourceName && normaliseTitleKey(sourceName) === key) return JUNK_GENERIC_TITLE;
+  if (sourceName && normaliseTitleKey(sourceName) === key) {
+    return { code: JUNK_GENERIC_TITLE, rule: "source_name_equals_title" };
+  }
 
-  if (mitSolveMisParsedPersonTitle(row, title, body)) return JUNK_GENERIC_TITLE;
+  if (mitSolveMisParsedPersonTitle(row, title, body)) {
+    return { code: JUNK_GENERIC_TITLE, rule: "mit_solve_person_name_stub" };
+  }
+
+  if (isSiteBrandPlaceholderTitle(slug, title)) {
+    const repaired = repairSiteBrandPlaceholderTitle(row, title);
+    if (normaliseTitleKey(repaired) === key) {
+      return { code: JUNK_GENERIC_TITLE, rule: "site_brand_title_unrepaired" };
+    }
+    return null;
+  }
 
   if (tracker) {
-    const fp = contentFingerprint(title, body);
+    const fp = contentFingerprint(title, body, row.canonical_url, row.source_external_id);
     const bySource = tracker[slug] ?? {};
     const firstId = bySource[fp];
-    if (firstId && firstId !== row.id) return JUNK_DUPLICATE_TITLE_CONTENT;
+    if (firstId && firstId !== row.id) {
+      return { code: JUNK_DUPLICATE_TITLE_CONTENT, rule: "duplicate_title_url_body" };
+    }
     bySource[fp] = row.id;
     tracker[slug] = bySource;
   }

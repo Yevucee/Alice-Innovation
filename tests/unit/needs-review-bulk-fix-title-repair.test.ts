@@ -14,6 +14,7 @@ function baseRow(partial: Partial<NeedsReviewBulkFixRow>): NeedsReviewBulkFixRow
     raw_metadata: {},
     source_slug: "mit-solve",
     source_item_title: null,
+    source_external_id: null,
     canonical_url: null,
     ...partial,
   };
