@@ -21,6 +21,7 @@ import {
   type PostDeployJobStopReason,
   type PostDeployJobRow,
   type Queryable,
+  runNeedsReviewBulkFixBatch,
 } from "@alice/database";
 import { loadSources } from "@alice/source-registry";
 import { embedTextsDetailed, embeddingSettings, embeddingVersion, log } from "@alice/shared";
@@ -823,6 +824,54 @@ async function runQualityDetailBackfillStep(
   };
 }
 
+async function runNeedsReviewBulkFixStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const offset = Number(progress.offset ?? 0);
+  const totals = { ...(progress.totals as Record<string, number> | undefined) };
+  const by_source = {
+    ...((progress.by_source as Record<string, Record<string, number>>) ?? {}),
+  };
+  const batch = await runNeedsReviewBulkFixBatch(db, offset, { dryRun: false });
+  for (const [slug, counts] of Object.entries(batch.by_source)) {
+    if (!by_source[slug]) {
+      by_source[slug] = { cleared: 0, source_limited: 0, updated: 0, still_flagged: 0 };
+    }
+    for (const [key, value] of Object.entries(counts)) {
+      by_source[slug][key] = (by_source[slug][key] ?? 0) + value;
+    }
+  }
+  bumpTotal(totals, "bulk_scanned", batch.scanned);
+  bumpTotal(totals, "bulk_cleared", batch.cleared);
+  bumpTotal(totals, "bulk_source_limited", batch.source_limited);
+  bumpTotal(totals, "bulk_updated", batch.updated);
+  bumpTotal(totals, "bulk_still_flagged", batch.still_flagged);
+  const pending = [
+    ...new Set([
+      ...((progress.pending_reembed_ids as string[]) ?? []),
+      ...batch.reembed_resource_ids,
+    ]),
+  ];
+  if (batch.reembed_resource_ids.length > 0) {
+    const embedded = await reembedReconcileBatch(db, batch.reembed_resource_ids);
+    bumpTotal(totals, "reembedded", embedded);
+  }
+  const complete = batch.complete;
+  if (complete && pending.length > 0) {
+    const reembed = await reembedResourceIds(db, pending);
+    bumpTotal(totals, "reembedded", (totals.reembedded ?? 0) + reembed.embedded);
+    if (!reembed.skipped) pending.length = 0;
+  }
+  return {
+    offset: batch.next_offset,
+    totals,
+    by_source,
+    pending_reembed_ids: pending,
+    complete: complete && pending.length === 0,
+  };
+}
+
 async function runNeedsReviewReconcileStep(
   db: Queryable,
   progress: Record<string, unknown>,
@@ -983,6 +1032,15 @@ async function executePostDeployJobStep(
         nextProgress = await runNeedsReviewReconcileStep(db, progress);
         complete = Boolean(nextProgress.complete);
         result = { ...(nextProgress.totals as Record<string, unknown>) };
+        break;
+      }
+      case "needs_review_bulk_fix_202510": {
+        nextProgress = await runNeedsReviewBulkFixStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = {
+          ...(nextProgress.totals as Record<string, unknown>),
+          by_source: nextProgress.by_source,
+        };
         break;
       }
       case "asia_catalogue_quality_202510": {

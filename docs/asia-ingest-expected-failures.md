@@ -2,6 +2,19 @@
 
 Use this before a full Asia programme ingest. HTTP preflight lives in `docs/asia-source-acquisition.md`; adapter discover sweep in `docs/asia-adapter-ready-slugs.json`.
 
+## Disabled Oct 2026 (failing every run)
+
+These are **`enabled: false`** in `config/sources.yaml` with `# DISABLED: Oct 2026 failing`:
+
+| Slug | Why |
+|------|-----|
+| `startup-bangladesh-portfolio` | robots.txt disallows `/en/portfolio` |
+| `startup-sri-lanka` | HTTP 502 on robots.txt |
+| `startup-terrace-kaohsiung` | fetch error (site / egress) |
+| `startup-terrace-taiwan` | fetch error (site / egress) |
+| `switch-slingshot` | fetch error |
+| `thinkzone-ventures` | fetch error |
+
 ## Adapter discover = 0 (generic HTML catalogue not wired yet)
 
 As of the latest dry-run sweep, only these enabled slugs reported **`discovered > 0`** without extra adapter work:
@@ -11,6 +24,37 @@ As of the latest dry-run sweep, only these enabled slugs reported **`discovered 
 - `wavemaker-partners-portfolio`
 
 Expect **zero discover** on first ingest for most other enabled `asia-innovation` slugs until their listing HTML is verified and the shared catalogue adapter matches the page structure.
+
+### Sample of 24 zero-discover slugs (diagnosis)
+
+| Slug | Likely cause |
+|------|----------------|
+| `birac-technology-portal` | Stale selector / listing not matched by html-catalogue |
+| `startup-india-showcase` | HTTP 404 collection URL |
+| `national-startup-awards-india` | HTTP 404 collection URL |
+| `ccamp` | Stale selector or JS-rendered listing |
+| `atal-innovation-mission` | Stale selector / government portal layout |
+| `atal-incubation-centres` | Stale selector / multi-page listing |
+| `birac-bionest` | Stale selector |
+| `startup-sg` | Stale selector or SPA shell |
+| `sginnovate-portfolio` | Stale selector |
+| `open-innovation-network-singapore` | Stale selector |
+| `ipi-singapore-innovation-marketplace` | Stale selector |
+| `the-liveability-challenge` | Stale selector |
+| `nus-enterprise` | Stale selector |
+| `ntuitive` | fetch error / blocked |
+| `findit-taiwan` | fetch error |
+| `seoul-startup-plus` | fetch error |
+| `seoul-bio-hub` | fetch error |
+| `hkstp-elite-portfolio` | HTTP 404 |
+| `cyberport` | HTTP 403 |
+| `cyberport-incubation-programme` | HTTP 403 |
+| `mystartup-malaysia` | fetch error |
+| `mystartup-startup-directory` | fetch error |
+| `climate-impact-innovations-challenge` | fetch error |
+| `astana-hub-startup-programmes` | HTTP 404 |
+
+Full adapter sweep: `docs/asia-adapter-ready-slugs.json` (82 slugs with `discovered: 0` in that snapshot).
 
 ## HTTP preflight failures (403, 404, timeout)
 

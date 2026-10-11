@@ -15,6 +15,8 @@ CLI: `npm run ingest -- --scope asia`
 
 Admin buttons enqueue `ingest_requests` and call Railway GraphQL **`deploymentInstanceExecutionCreate`** on the ingestor **service instance** (cron “run now”). A plain `serviceInstanceDeploy` on a cron service builds an image but does **not** run the start command until the schedule fires ([Railway cron docs](https://docs.railway.com/cron-jobs), [community confirmation](https://station.railway.com/questions/how-to-initialize-a-railway-cron-service-3e24592b)).
 
+**One Admin click:** the worker claims the pending row on boot (even if `INGEST_SCOPE` is set on the service). A second manual start without a claim will **not** run `scope=all` within 20 minutes of an admin-button request — see `docs/ingest-admin-single-run.md`.
+
 The ingestor claims pending rows only when:
 
 - `RAILWAY_CRON` is **not** set (nightly cron never claims admin requests), and

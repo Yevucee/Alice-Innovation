@@ -49,6 +49,16 @@ export default async function AdminPage() {
       <IngestRunPanel />
 
       <section className="mt-8 rounded border border-line bg-white p-4 text-sm">
+        <h2 className="text-sm font-medium">Quality review queue</h2>
+        <p className="mt-1 text-xs text-muted">
+          Fast triage for remaining NEEDS_REVIEW rows after bulk post-deploy fixes.
+        </p>
+        <p className="mt-2">
+          <Link href="/admin/review" className="underline text-ink">Open review queue →</Link>
+        </p>
+      </section>
+
+      <section className="mt-8 rounded border border-line bg-white p-4 text-sm">
         <h2 className="text-sm font-medium">Suggest a new source</h2>
         <p className="mt-1 text-xs text-muted">
           Drop a link to a tech hub, award, directory, or programme page. It is stored in{" "}

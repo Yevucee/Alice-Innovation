@@ -129,6 +129,10 @@ export function parseHtmlCataloguePage(page: FetchedPage, config: HtmlCatalogueC
     throw new Error(`catalogue_junk:${junkReasons.join(",")}:${pageUrl}`);
   }
 
+  const metaDescription = $("meta[property='og:description']").attr("content")?.replace(/&#xA0;/g, " ").trim()
+    || $("meta[name='description']").attr("content")?.trim()
+    || null;
+
   return buildDraft({
     title,
     url: pageUrl,
@@ -139,7 +143,10 @@ export function parseHtmlCataloguePage(page: FetchedPage, config: HtmlCatalogueC
     evidenceBasis: config.evidenceBasis,
     evidenceStage: "UNKNOWN",
     imageUrl: ogImageFromPage(page.html, page.finalUrl || page.url),
-    rawMetadata: { listing_only: page.listingOnly },
+    rawMetadata: {
+      listing_only: page.listingOnly,
+      meta_description: metaDescription,
+    },
     etag: page.etag,
     lastModified: page.lastModified,
   });

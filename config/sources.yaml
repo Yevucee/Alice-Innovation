@@ -3169,10 +3169,10 @@ sources:
   - id: switch-slingshot
     name: SWITCH SLINGSHOT
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 11 (singapore). Verify collection_url via npm run asia:verify before enabling."
+    description: "# DISABLED: Oct 2026 failing (fetch error). PAUSED: Asia source (acquisition). Asia acquisition queue seq 11 (singapore). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.switchsg.com/
     collection_url: https://www.switchsg.com/slingshot
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3363,10 +3363,10 @@ sources:
   - id: startup-terrace-taiwan
     name: Startup Terrace Taiwan
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 17 (taiwan). Verify collection_url via npm run asia:verify before enabling."
+    description: "# DISABLED: Oct 2026 failing (fetch error). PAUSED: Asia source (acquisition). Asia acquisition queue seq 17 (taiwan). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://startupterrace.tw/
     collection_url: https://startupterrace.tw/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -3396,10 +3396,10 @@ sources:
     name: Startup Terrace Kaohsiung / Asia New Bay Area
     duplicate_of: startup-terrace-taiwan
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 18 (taiwan). duplicate_of=startup-terrace-taiwan. Kaohsiung / ANBA listing on Startup Terrace. Verify collection_url via npm run asia:verify before enabling."
+    description: "# DISABLED: Oct 2026 failing (fetch error). PAUSED: Asia source (acquisition). Asia acquisition queue seq 18 (taiwan). duplicate_of=startup-terrace-taiwan. Kaohsiung / ANBA listing on Startup Terrace. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://startupterrace.tw/
     collection_url: https://startupterrace.tw/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4367,10 +4367,10 @@ sources:
   - id: startup-bangladesh-portfolio
     name: Startup Bangladesh Portfolio
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 48 (bangladesh). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
+    description: "# DISABLED: Oct 2026 failing (robots.txt disallows /en/portfolio). PAUSED: Asia source (acquisition). Asia acquisition queue seq 48 (bangladesh). PRIORITY_FIRST_WAVE. Verify collection_url via npm run asia:verify before enabling."
     homepage: https://startupbangladesh.gov.bd/
     collection_url: https://startupbangladesh.gov.bd/en/portfolio
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -4463,10 +4463,10 @@ sources:
   - id: startup-sri-lanka
     name: Startup Sri Lanka
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 51 (sri-lanka). Verify collection_url via npm run asia:verify before enabling."
+    description: "# DISABLED: Oct 2026 failing (HTTP 502 on robots.txt). PAUSED: Asia source (acquisition). Asia acquisition queue seq 51 (sri-lanka). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://www.startupsl.lk/
     collection_url: https://www.startupsl.lk/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION
@@ -5273,10 +5273,10 @@ sources:
   - id: thinkzone-ventures
     name: ThinkZone Ventures
     category: asia-innovation
-    description: "PAUSED: Asia source (acquisition). Asia acquisition queue seq 76 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
+    description: "# DISABLED: Oct 2026 failing (fetch error). PAUSED: Asia source (acquisition). Asia acquisition queue seq 76 (pan-asian). Verify collection_url via npm run asia:verify before enabling."
     homepage: https://thinkzone.vc/
     collection_url: https://thinkzone.vc/portfolio
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - ORGANISATION

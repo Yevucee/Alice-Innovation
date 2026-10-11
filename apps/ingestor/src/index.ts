@@ -19,7 +19,7 @@ import { runPostDeployJobsStep, shouldRunPostDeployBeforeIngest } from "./post-d
 import { resetSupplementalFetchHostPolicy } from "./enrichment-context-fetch.js";
 import { resetRunFailureTracker } from "./run-failure-tracker.js";
 import { runIngestion } from "./pipeline.js";
-import { claimPendingIngestRequest } from "@alice/database";
+import { bootstrapIngestScopeFromRequest } from "@alice/database";
 import {
   parseIngestScope,
   resolveIngestTrigger,
@@ -207,27 +207,46 @@ async function main(): Promise<void> {
     ingestScope = parseIngestScope(scopeArg);
   }
 
-  if (!scopeArg && !process.env.INGEST_SCOPE?.trim() && !dryRun) {
-    const claimResult = await claimPendingIngestRequest(pool, {
-      cronRun: isRailwayCronIngestRun(),
+  const scopeBootstrap = await bootstrapIngestScopeFromRequest(pool, {
+    scopeArg,
+    envIngestScope: process.env.INGEST_SCOPE,
+    dryRun,
+    cronRun: isRailwayCronIngestRun(),
+  });
+  for (const ignored of scopeBootstrap.claimIgnored) {
+    log("info", "ingest_request_claim_ignored", ignored);
+  }
+  const claimed = scopeBootstrap.claimed;
+  if (claimed) {
+    ingestScope = parseIngestScope(claimed.scope);
+    ingestTrigger = (claimed.trigger === "admin-button" || claimed.trigger === "cron" || claimed.trigger === "manual")
+      ? claimed.trigger
+      : "admin-button";
+    ingestRequestId = claimed.id;
+    log("info", "ingest_request_claimed", {
+      request_id: claimed.id,
+      scope: ingestScope,
+      trigger: ingestTrigger,
+      age_ms: Date.now() - claimed.requested_at.getTime(),
     });
-    for (const ignored of claimResult.ignored) {
-      log("info", "ingest_request_claim_ignored", ignored);
+  } else if (scopeBootstrap.skipReason) {
+    log("info", "ingest_skipped", {
+      reason: scopeBootstrap.skipReason,
+      ...scopeBootstrap.skipDetail,
+    });
+    if (!dryRun && backlogRunId) {
+      await finishBacklogRun(pool, { backlogRunId, postDeploySummary });
     }
-    const claimed = claimResult.claimed;
-    if (claimed) {
-      ingestScope = parseIngestScope(claimed.scope);
-      ingestTrigger = (claimed.trigger === "admin-button" || claimed.trigger === "cron" || claimed.trigger === "manual")
-        ? claimed.trigger
-        : "admin-button";
-      ingestRequestId = claimed.id;
-      log("info", "ingest_request_claimed", {
-        request_id: claimed.id,
-        scope: ingestScope,
-        trigger: ingestTrigger,
-        age_ms: Date.now() - claimed.requested_at.getTime(),
-      });
-    }
+    await closePool();
+    return;
+  } else if (!scopeArg && process.env.INGEST_SCOPE?.trim()) {
+    log("info", "ingest_scope_from_env", { scope: ingestScope, env: "INGEST_SCOPE" });
+  } else if (!scopeArg && !claimed && !isRailwayCronIngestRun()) {
+    log("info", "ingest_scope_defaulted", {
+      scope: ingestScope,
+      trigger: ingestTrigger,
+      reason: "no_claim_no_ingest_scope_env",
+    });
   }
 
   const ingestDueOnly = effectiveIngestDueOnly({
