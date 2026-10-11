@@ -919,6 +919,11 @@ async function runNeedsReviewBulkFixStep(
       samples: samples.slice(0, NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT),
       hide_samples: hide_samples.slice(0, NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT),
       mode_reset_from: typeof progress.mode_reset_from === "string" ? progress.mode_reset_from : null,
+      algorithm_version: typeof progress.algorithm_version === "number" ? progress.algorithm_version : undefined,
+      algorithm_version_reset_from:
+        typeof progress.algorithm_version_reset_from === "number"
+          ? progress.algorithm_version_reset_from
+          : null,
     });
     log("info", "needs_review_bulk_fix_summary", {
       mode,
@@ -942,6 +947,8 @@ async function runNeedsReviewBulkFixStep(
     hide_samples: hide_samples.slice(0, NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT),
     duplicate_tracker,
     mode,
+    algorithm_version: progress.algorithm_version ?? undefined,
+    algorithm_version_reset_from: progress.algorithm_version_reset_from ?? null,
     mode_reset_from: progress.mode_reset_from ?? null,
     dry_run_summary,
     pending_reembed_ids: pending,
@@ -1118,8 +1125,11 @@ async function executePostDeployJobStep(
           totals: nextProgress.totals,
           by_source: nextProgress.by_source,
           title_samples: nextProgress.title_samples,
+          hide_samples: nextProgress.hide_samples,
           mode: nextProgress.mode,
           mode_reset_from: nextProgress.mode_reset_from,
+          algorithm_version: nextProgress.algorithm_version,
+          algorithm_version_reset_from: nextProgress.algorithm_version_reset_from,
           dry_run_summary: nextProgress.dry_run_summary,
         };
         break;

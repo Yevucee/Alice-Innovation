@@ -42,7 +42,7 @@ AfriLabs-only repair: `scripts/afrilabs-needs-review-repair.ts` (same dry-run / 
 2. Run one ingest or wait for post-deploy; read **Admin** summary or Railway logs for `needs_review_bulk_fix_summary`.
 3. If counts look right, set `NEEDS_REVIEW_BULK_FIX_APPLY=true`, re-run the job (or script with `--apply`), then unset the var.
 
-When `NEEDS_REVIEW_BULK_FIX_APPLY` changes (e.g. dry-run → `cleared-only` → `all`) after a completed run, the post-deploy runner **re-queues** `needs_review_bulk_fix_202510` (`status=pending`, progress reset). The Admin summary shows `run_mode=…` and `restarted_from=…` when that happens.
+When `NEEDS_REVIEW_BULK_FIX_APPLY` changes (e.g. dry-run → `cleared-only` → `all`) **or** the bulk-fix **algorithm version** bumps (see `BULK_FIX_ALGORITHM_VERSION` in code) after a completed run, the post-deploy runner **re-queues** `needs_review_bulk_fix_202510` (`status=pending`, progress reset). The Admin summary shows `algorithm_version=…`, `run_mode=…`, and `restarted_from=…` / `algo_restarted_from=…` when that happens.
 
 See `docs/needs-review-bulk-fix-source-analysis.md` for mit-solve / afrilabs / hundred / j-startup follow-up notes.
 

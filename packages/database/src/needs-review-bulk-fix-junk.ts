@@ -95,12 +95,15 @@ export function detectBulkFixJunk(
 
   if (NAVIGATION_TITLE_EXACT.has(key)) return JUNK_GENERIC_TITLE;
 
+  // Exact normalised match for site/brand titles (avoids hiding "Atlas of the Future: <project>").
   for (const siteKey of SOURCE_SITE_TITLE_KEYS[slug] ?? []) {
-    if (key === siteKey || key.includes(siteKey)) return JUNK_GENERIC_TITLE;
+    if (key === siteKey) return JUNK_GENERIC_TITLE;
   }
 
+  // MOE portal: substring via regex on full title (many page title variants).
   if (GOVERNMENT_PORTAL_TITLE.test(title)) return JUNK_GENERIC_TITLE;
 
+  // in5: Green Room appears as a substring in several media page titles.
   if (/green room/i.test(title) && slug === "in5-dubai") return JUNK_GENERIC_TITLE;
 
   const sourceName =

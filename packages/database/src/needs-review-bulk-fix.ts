@@ -18,6 +18,9 @@ import { repairBulkFixTitle } from "./needs-review-bulk-fix-title-repair.js";
 
 export const NEEDS_REVIEW_BULK_FIX_BATCH_SIZE = 100;
 
+/** Bump when bulk-fix classification/repair logic changes; triggers job re-queue on deploy. */
+export const BULK_FIX_ALGORITHM_VERSION = 2;
+
 const BATCH = NEEDS_REVIEW_BULK_FIX_BATCH_SIZE;
 
 export type NeedsReviewBulkFixMode = "dry_run" | "apply_cleared_only" | "apply_all";
@@ -49,6 +52,7 @@ export function initialNeedsReviewBulkFixProgress(
 ): Record<string, unknown> {
   return {
     mode,
+    algorithm_version: BULK_FIX_ALGORITHM_VERSION,
     last_id: null,
     totals: {
       cleared: 0,
@@ -75,18 +79,37 @@ export function prepareNeedsReviewBulkFixProgress(
   mode: NeedsReviewBulkFixMode,
 ): { progress: Record<string, unknown>; modeReset: boolean; previousMode: string | null } {
   const stored = typeof progress.mode === "string" ? progress.mode : null;
-  if (stored === mode) {
+  const storedVersion = readBulkFixAlgorithmVersion(progress);
+  const versionMismatch = storedVersion !== BULK_FIX_ALGORITHM_VERSION;
+  if (stored === mode && !versionMismatch) {
     return { progress, modeReset: false, previousMode: null };
   }
   const previousMode = stored;
   return {
     progress: initialNeedsReviewBulkFixProgress(mode, {
-      mode_reset_from: previousMode,
-      mode_reset_at: new Date().toISOString(),
+      ...(stored !== mode && previousMode
+        ? { mode_reset_from: previousMode, mode_reset_at: new Date().toISOString() }
+        : {}),
+      ...(versionMismatch
+        ? {
+            algorithm_version_reset_from: storedVersion,
+            algorithm_version_reset_at: new Date().toISOString(),
+          }
+        : {}),
     }),
-    modeReset: Boolean(previousMode),
-    previousMode,
+    modeReset: Boolean(previousMode && stored !== mode) || versionMismatch,
+    previousMode: stored !== mode ? previousMode : null,
   };
+}
+
+/** Version stored on jobs completed before `algorithm_version` existed. */
+export const BULK_FIX_ALGORITHM_VERSION_LEGACY = 1;
+
+export function readBulkFixAlgorithmVersion(
+  source: Record<string, unknown> | null | undefined,
+): number {
+  if (typeof source?.algorithm_version === "number") return source.algorithm_version;
+  return BULK_FIX_ALGORITHM_VERSION_LEGACY;
 }
 
 export const NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT = 20;
@@ -108,10 +131,13 @@ export function formatNeedsReviewBulkFixSummary(input: {
   samples: NeedsReviewBulkFixSample[];
   hide_samples?: NeedsReviewBulkFixSample[];
   mode_reset_from?: string | null;
+  algorithm_version?: number;
+  algorithm_version_reset_from?: number | null;
 }): string {
   const t = input.totals;
+  const algoVersion = input.algorithm_version ?? BULK_FIX_ALGORITHM_VERSION;
   const lines = [
-    `NEEDS_REVIEW bulk fix | run_mode=${input.mode}${input.mode_reset_from ? ` | restarted_from=${input.mode_reset_from}` : ""}`,
+    `NEEDS_REVIEW bulk fix | algorithm_version=${algoVersion} | run_mode=${input.mode}${input.mode_reset_from ? ` | restarted_from=${input.mode_reset_from}` : ""}${input.algorithm_version_reset_from != null ? ` | algo_restarted_from=${input.algorithm_version_reset_from}` : ""}`,
     `totals: cleared=${t.cleared ?? 0} source_limited=${t.source_limited ?? 0} hide=${t.hide ?? 0} updated=${t.updated ?? 0} still_flagged=${t.still_flagged ?? 0} scanned=${t.scanned ?? 0}`,
     `by_source: ${JSON.stringify(input.by_source)}`,
   ];
@@ -599,11 +625,18 @@ export async function runNeedsReviewBulkFixBatch(
 
 export const NEEDS_REVIEW_BULK_FIX_JOB_KEY = "needs_review_bulk_fix_202510";
 
-/** Re-open completed job when APPLY env toggles so apply pass runs from the start. */
+/** Re-open job when APPLY env or bulk-fix algorithm version changes. */
 export async function requeueNeedsReviewBulkFixJobIfModeChanged(
   db: Queryable,
-): Promise<{ requeued: boolean; previous_mode: string | null; current_mode: NeedsReviewBulkFixMode }> {
+): Promise<{
+  requeued: boolean;
+  previous_mode: string | null;
+  current_mode: NeedsReviewBulkFixMode;
+  previous_algorithm_version: number;
+  current_algorithm_version: number;
+}> {
   const current_mode = currentNeedsReviewBulkFixMode();
+  const current_algorithm_version = BULK_FIX_ALGORITHM_VERSION;
   const row = await db.query<{
     status: string;
     progress: Record<string, unknown>;
@@ -614,17 +647,42 @@ export async function requeueNeedsReviewBulkFixJobIfModeChanged(
   );
   const job = row.rows[0];
   if (!job) {
-    return { requeued: false, previous_mode: null, current_mode };
+    return {
+      requeued: false,
+      previous_mode: null,
+      current_mode,
+      previous_algorithm_version: BULK_FIX_ALGORITHM_VERSION_LEGACY,
+      current_algorithm_version,
+    };
   }
   const stored =
     (typeof job.result?.mode === "string" ? job.result.mode : null)
     ?? (typeof job.progress?.mode === "string" ? job.progress.mode : null);
-  if (!stored || stored === current_mode) {
-    return { requeued: false, previous_mode: stored, current_mode };
+  const previous_algorithm_version = Math.max(
+    readBulkFixAlgorithmVersion(job.progress),
+    readBulkFixAlgorithmVersion(job.result ?? undefined),
+  );
+  const modeMismatch = Boolean(stored && stored !== current_mode);
+  const versionMismatch = previous_algorithm_version !== current_algorithm_version;
+  if (!modeMismatch && !versionMismatch) {
+    return {
+      requeued: false,
+      previous_mode: stored,
+      current_mode,
+      previous_algorithm_version,
+      current_algorithm_version,
+    };
   }
   const fresh = initialNeedsReviewBulkFixProgress(current_mode, {
-    mode_reset_from: stored,
-    mode_reset_at: new Date().toISOString(),
+    ...(modeMismatch && stored
+      ? { mode_reset_from: stored, mode_reset_at: new Date().toISOString() }
+      : {}),
+    ...(versionMismatch
+      ? {
+          algorithm_version_reset_from: previous_algorithm_version,
+          algorithm_version_reset_at: new Date().toISOString(),
+        }
+      : {}),
   });
   await db.query(
     `UPDATE post_deploy_jobs
@@ -638,5 +696,11 @@ export async function requeueNeedsReviewBulkFixJobIfModeChanged(
      WHERE job_key = $1`,
     [NEEDS_REVIEW_BULK_FIX_JOB_KEY, JSON.stringify(fresh)],
   );
-  return { requeued: true, previous_mode: stored, current_mode };
+  return {
+    requeued: true,
+    previous_mode: stored,
+    current_mode,
+    previous_algorithm_version,
+    current_algorithm_version,
+  };
 }

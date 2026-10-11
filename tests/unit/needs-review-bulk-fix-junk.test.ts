@@ -31,6 +31,13 @@ test("detectBulkFixJunk flags navigation and site-name titles from prod samples"
   );
   assert.equal(
     detectBulkFixJunk(
+      row({ id: "2b", title: "Atlas of the Future: Community Cooling", source_slug: "atlas-of-the-future" }),
+      "Atlas of the Future: Community Cooling",
+    ),
+    null,
+  );
+  assert.equal(
+    detectBulkFixJunk(
       row({
         id: "3",
         title: "图解教育 - 中华人民共和国教育部政府门户网站",

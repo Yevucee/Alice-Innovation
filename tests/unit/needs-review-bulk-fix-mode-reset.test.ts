@@ -83,3 +83,52 @@ test("initialNeedsReviewBulkFixProgress uses keyset cursor not offset", () => {
   assert.equal(p.mode, "dry_run");
   assert.ok(!("offset" in p));
 });
+
+test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed dry_run when algorithm version is stale", async () => {
+  const prev = process.env.NEEDS_REVIEW_BULK_FIX_APPLY;
+  delete process.env.NEEDS_REVIEW_BULK_FIX_APPLY;
+  let status = "completed";
+  let progress: Record<string, unknown> = { mode: "dry_run", last_id: "x", complete: true, algorithm_version: 1 };
+  let result: Record<string, unknown> | null = { mode: "dry_run", algorithm_version: 1 };
+
+  const db = {
+    query: async (sql: string, params?: unknown[]) => {
+      if (sql.includes("SELECT status, progress, result")) {
+        return { rows: [{ status, progress, result }], rowCount: 1 };
+      }
+      if (sql.includes("UPDATE post_deploy_jobs") && sql.includes("status = 'pending'")) {
+        status = "pending";
+        progress = JSON.parse(params?.[1] as string) as Record<string, unknown>;
+        result = null;
+        return { rows: [], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  } as Queryable;
+
+  const out = await requeueNeedsReviewBulkFixJobIfModeChanged(db);
+  assert.equal(out.requeued, true);
+  assert.equal(out.previous_mode, "dry_run");
+  assert.equal(out.current_mode, "dry_run");
+  assert.equal(out.previous_algorithm_version, 1);
+  assert.equal(out.current_algorithm_version, 2);
+  assert.equal(status, "pending");
+  assert.equal(progress.mode, "dry_run");
+  assert.equal(progress.algorithm_version, 2);
+  assert.equal(progress.last_id, null);
+  assert.equal(progress.algorithm_version_reset_from, 1);
+
+  if (prev === undefined) delete process.env.NEEDS_REVIEW_BULK_FIX_APPLY;
+  else process.env.NEEDS_REVIEW_BULK_FIX_APPLY = prev;
+});
+
+test("formatNeedsReviewBulkFixSummary includes algorithm_version", () => {
+  const text = formatNeedsReviewBulkFixSummary({
+    mode: "dry_run",
+    algorithm_version: 2,
+    totals: { scanned: 1 },
+    by_source: {},
+    samples: [],
+  });
+  assert.match(text, /algorithm_version=2/);
+});
