@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BulkFixHiddenRestore } from "@/components/bulk-fix-hidden-restore";
 import { ReviewQueuePanel } from "@/components/review-queue-panel";
 
 export default function AdminReviewQueuePage() {
@@ -14,6 +15,7 @@ export default function AdminReviewQueuePage() {
         <code className="text-ink">scripts/needs-review-bulk-fix.ts</code>.
       </p>
       <section className="mt-6 rounded border border-line bg-white p-4">
+        <BulkFixHiddenRestore />
         <ReviewQueuePanel />
       </section>
     </div>

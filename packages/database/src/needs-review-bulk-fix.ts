@@ -90,11 +90,12 @@ export function prepareNeedsReviewBulkFixProgress(
 }
 
 export const NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT = 20;
-export const NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT = 20;
+export const NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT = 100;
 
 export interface NeedsReviewBulkFixSample {
   resource_id: string;
   source_slug: string | null;
+  canonical_url: string | null;
   action: string;
   title_before: string;
   title_after: string;
@@ -118,7 +119,7 @@ export function formatNeedsReviewBulkFixSummary(input: {
     lines.push("title_samples:");
     for (const sample of input.samples) {
       lines.push(
-        `  [${sample.action}] ${sample.source_slug ?? "?"} | "${sample.title_before}" → "${sample.title_after}"`,
+        `  [${sample.action}] ${sample.source_slug ?? "?"} | ${sample.canonical_url ?? "—"} | "${sample.title_before}" → "${sample.title_after}"`,
       );
     }
   }
@@ -127,7 +128,7 @@ export function formatNeedsReviewBulkFixSummary(input: {
     lines.push("hide_samples:");
     for (const sample of hideSamples) {
       lines.push(
-        `  [hide] ${sample.source_slug ?? "?"} | "${sample.title_before}" → "${sample.title_after}"`,
+        `  [hide] ${sample.source_slug ?? "?"} | ${sample.canonical_url ?? "—"} | "${sample.title_before}" → "${sample.title_after}"`,
       );
     }
   }
@@ -367,7 +368,10 @@ export async function hideNeedsReviewResource(
     `UPDATE resources SET
        review_status = 'ARCHIVED',
        active = false,
-       review_reason_codes = $2::text[],
+       review_reason_codes = (
+         SELECT coalesce(array_agg(DISTINCT code), '{}'::text[])
+         FROM unnest(array_cat(COALESCE(review_reason_codes, '{}'::text[]), $2::text[])) AS code
+       ),
        embedding_content_hash = NULL,
        updated_at = now()
      WHERE id = $1::uuid`,
@@ -418,6 +422,7 @@ export async function runNeedsReviewBulkFixBatch(
     samples.push({
       resource_id: row.id,
       source_slug: row.source_slug,
+      canonical_url: row.canonical_url,
       action,
       title_before: row.title,
       title_after: fixed.title,
@@ -429,6 +434,7 @@ export async function runNeedsReviewBulkFixBatch(
     hide_samples.push({
       resource_id: row.id,
       source_slug: row.source_slug,
+      canonical_url: row.canonical_url,
       action: reason,
       title_before: row.title,
       title_after: fixed.title,

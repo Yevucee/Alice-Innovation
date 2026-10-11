@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { applyReviewQueueAction, listReviewQueue } from "@alice/database";
+import { applyReviewQueueAction, listReviewQueue, restoreBulkFixHiddenBatch, countBulkFixHiddenResources } from "@alice/database";
 import { pool } from "@/lib/db";
 import { requireSession } from "@/lib/api-auth";
 
@@ -35,10 +35,19 @@ export async function POST(request: NextRequest) {
   if (!requireSession(request)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await request.json() as { resource_id?: string; action?: string };
   const action = body.action;
-  if (!body.resource_id || !action || !["approve", "source_limited", "hide"].includes(action)) {
+  if (action === "restore_bulk_fix_hidden_all") {
+    const count = await countBulkFixHiddenResources(pool());
+    const batch = await restoreBulkFixHiddenBatch(pool(), { limit: 5000 });
+    return NextResponse.json({ ok: true, hidden_before: count, restored: batch.restored });
+  }
+  if (!body.resource_id || !action || !["approve", "source_limited", "hide", "restore_bulk_fix_hide"].includes(action)) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
-  const ok = await applyReviewQueueAction(pool(), body.resource_id, action as "approve" | "source_limited" | "hide");
+  const ok = await applyReviewQueueAction(
+    pool(),
+    body.resource_id,
+    action as "approve" | "source_limited" | "hide" | "restore_bulk_fix_hide",
+  );
   if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

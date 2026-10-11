@@ -186,11 +186,18 @@ export {
 export {
   detectBulkFixJunk,
   contentFingerprint,
+  looksLikeObviousProductOrOrgName,
   JUNK_GENERIC_TITLE,
   JUNK_DUPLICATE_TITLE_CONTENT,
+  BULK_FIX_JUNK_REASON_CODES,
   type BulkFixDuplicateTracker,
 } from "./needs-review-bulk-fix-junk.js";
-export { repairBulkFixTitle } from "./needs-review-bulk-fix-title-repair.js";
+export { repairBulkFixTitle, looksTruncatedTitle } from "./needs-review-bulk-fix-title-repair.js";
+export {
+  countBulkFixHiddenResources,
+  restoreBulkFixHiddenResource,
+  restoreBulkFixHiddenBatch,
+} from "./bulk-fix-hidden-restore.js";
 export {
   bootstrapIngestScopeFromRequest,
   recentAdminIngestRequest,

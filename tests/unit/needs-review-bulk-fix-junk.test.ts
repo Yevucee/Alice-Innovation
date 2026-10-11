@@ -49,18 +49,31 @@ test("detectBulkFixJunk flags navigation and site-name titles from prod samples"
   );
 });
 
-test("detectBulkFixJunk flags single-name mit-solve junk and duplicate title/content", () => {
+test("detectBulkFixJunk flags mit-solve person-name stub, not ambiguous one-word products", () => {
   assert.equal(
     detectBulkFixJunk(
       row({
         id: "5",
         title: "Sabrina",
         source_slug: "mit-solve",
+        person_name: "Sabrina",
         extracted_index_text: "Short.",
       }),
       "Sabrina",
     ),
     JUNK_GENERIC_TITLE,
+  );
+  assert.equal(
+    detectBulkFixJunk(
+      row({
+        id: "5b",
+        title: "Helio",
+        source_slug: "mit-solve",
+        extracted_index_text: "Short.",
+      }),
+      "Helio",
+    ),
+    null,
   );
 
   const tracker: Record<string, Record<string, string>> = {};

@@ -33,6 +33,8 @@ Based on prod dry-run `needs_review_bulk_fix_202510` (~3,400 scanned) and code r
 - Typically **cohort/boilerplate titles** or **short_description** on portfolio stubs.
 - Junk detector catches duplicate title+body within source; remainder need manual review or source-limited after junk pass.
 
+**mit-solve single-word hide rule (narrow):** bulk-fix hides only when `person_name` equals the title (mis-parsed team leader, e.g. “Sabrina”) with body &lt; 120 chars. Ambiguous one-word names (e.g. “Helio”) are **not** hidden — they stay on the normal path and may become `source_limited`.
+
 ## j-startup (~15 still flagged)
 
 - Similar to hundred: **thin Japanese/English listing pages** and occasional **truncated_title**.

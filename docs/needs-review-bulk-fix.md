@@ -20,7 +20,9 @@ NEEDS_REVIEW_BULK_FIX_APPLY=all
 
 Unset or `false` after a one-off apply if you do not want accidental writes on later ingests.
 
-**Hide** uses the same mechanism as Admin review queue **Hide** (`active=false`, `review_status=ARCHIVED`) with reason codes such as `junk_generic_title` or `junk_duplicate_title_content`. Up to **20 hide samples** appear in the job summary under `hide_samples`.
+**Hide** uses the same mechanism as Admin review queue **Hide** (`active=false`, `review_status=ARCHIVED`), **appending** junk reason codes to existing `review_reason_codes`. Up to **100 hide samples** (with source URL) appear in the job summary under `hide_samples` (Admin post-deploy note uses a scrollable pre).
+
+**Restore:** `scripts/restore-bulk-fix-hidden.ts` or Admin → Review → **Restore all bulk-fix hidden** (rows with `junk_*` codes).
 
 ## Manual script (same rules)
 

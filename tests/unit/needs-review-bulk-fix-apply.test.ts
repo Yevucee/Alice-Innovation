@@ -26,6 +26,7 @@ test("formatNeedsReviewBulkFixSummary includes totals and title samples", () => 
       {
         resource_id: "a",
         source_slug: "mit-solve",
+        canonical_url: "https://example.com/a",
         action: "cleared",
         title_before: "OLD TITLE",
         title_after: "Old Title",
