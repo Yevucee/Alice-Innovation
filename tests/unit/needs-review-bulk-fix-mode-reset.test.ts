@@ -17,10 +17,10 @@ test("prepareNeedsReviewBulkFixProgress resets cursor when mode changes", () => 
     totals: { cleared: 99, scanned: 100 },
     complete: true,
   };
-  const { progress, modeReset, previousMode } = prepareNeedsReviewBulkFixProgress(stale, "apply");
+  const { progress, modeReset, previousMode } = prepareNeedsReviewBulkFixProgress(stale, "apply_all");
   assert.equal(modeReset, true);
   assert.equal(previousMode, "dry_run");
-  assert.equal(progress.mode, "apply");
+  assert.equal(progress.mode, "apply_all");
   assert.equal(progress.last_id, null);
   assert.equal((progress.totals as { cleared: number }).cleared, 0);
   assert.equal(progress.mode_reset_from, "dry_run");
@@ -28,13 +28,13 @@ test("prepareNeedsReviewBulkFixProgress resets cursor when mode changes", () => 
 
 test("formatNeedsReviewBulkFixSummary shows run_mode and restarted_from", () => {
   const text = formatNeedsReviewBulkFixSummary({
-    mode: "apply",
+    mode: "apply_all",
     mode_reset_from: "dry_run",
     totals: { cleared: 1, scanned: 1 },
     by_source: {},
     samples: [],
   });
-  assert.match(text, /run_mode=apply/);
+  assert.match(text, /run_mode=apply_all/);
   assert.match(text, /restarted_from=dry_run/);
 });
 
@@ -66,9 +66,9 @@ test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed job when APPLY
   const out = await requeueNeedsReviewBulkFixJobIfModeChanged(db);
   assert.equal(out.requeued, true);
   assert.equal(out.previous_mode, "dry_run");
-  assert.equal(out.current_mode, "apply");
+  assert.equal(out.current_mode, "apply_all");
   assert.equal(status, "pending");
-  assert.equal(progress.mode, "apply");
+  assert.equal(progress.mode, "apply_all");
   assert.equal(progress.last_id, null);
   assert.equal(progress.mode_reset_from, "dry_run");
   assert.equal(result, null);
@@ -82,4 +82,53 @@ test("initialNeedsReviewBulkFixProgress uses keyset cursor not offset", () => {
   assert.equal(p.last_id, null);
   assert.equal(p.mode, "dry_run");
   assert.ok(!("offset" in p));
+});
+
+test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed dry_run when algorithm version is stale", async () => {
+  const prev = process.env.NEEDS_REVIEW_BULK_FIX_APPLY;
+  delete process.env.NEEDS_REVIEW_BULK_FIX_APPLY;
+  let status = "completed";
+  let progress: Record<string, unknown> = { mode: "dry_run", last_id: "x", complete: true, algorithm_version: 1 };
+  let result: Record<string, unknown> | null = { mode: "dry_run", algorithm_version: 1 };
+
+  const db = {
+    query: async (sql: string, params?: unknown[]) => {
+      if (sql.includes("SELECT status, progress, result")) {
+        return { rows: [{ status, progress, result }], rowCount: 1 };
+      }
+      if (sql.includes("UPDATE post_deploy_jobs") && sql.includes("status = 'pending'")) {
+        status = "pending";
+        progress = JSON.parse(params?.[1] as string) as Record<string, unknown>;
+        result = null;
+        return { rows: [], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  } as Queryable;
+
+  const out = await requeueNeedsReviewBulkFixJobIfModeChanged(db);
+  assert.equal(out.requeued, true);
+  assert.equal(out.previous_mode, "dry_run");
+  assert.equal(out.current_mode, "dry_run");
+  assert.equal(out.previous_algorithm_version, 1);
+  assert.equal(out.current_algorithm_version, 2);
+  assert.equal(status, "pending");
+  assert.equal(progress.mode, "dry_run");
+  assert.equal(progress.algorithm_version, 2);
+  assert.equal(progress.last_id, null);
+  assert.equal(progress.algorithm_version_reset_from, 1);
+
+  if (prev === undefined) delete process.env.NEEDS_REVIEW_BULK_FIX_APPLY;
+  else process.env.NEEDS_REVIEW_BULK_FIX_APPLY = prev;
+});
+
+test("formatNeedsReviewBulkFixSummary includes algorithm_version", () => {
+  const text = formatNeedsReviewBulkFixSummary({
+    mode: "dry_run",
+    algorithm_version: 2,
+    totals: { scanned: 1 },
+    by_source: {},
+    samples: [],
+  });
+  assert.match(text, /algorithm_version=2/);
 });

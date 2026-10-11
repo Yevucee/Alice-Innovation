@@ -1,3 +1,4 @@
+import { restoreBulkFixHiddenResource } from "./bulk-fix-hidden-restore.js";
 import type { Queryable } from "./pool.js";
 
 export interface ReviewQueueRow {
@@ -77,7 +78,7 @@ export async function listReviewQueue(
 export async function applyReviewQueueAction(
   db: Queryable,
   resourceId: string,
-  action: "approve" | "source_limited" | "hide",
+  action: "approve" | "source_limited" | "hide" | "restore_bulk_fix_hide",
 ): Promise<boolean> {
   if (action === "approve") {
     const result = await db.query(
@@ -103,6 +104,9 @@ export async function applyReviewQueueAction(
       [resourceId],
     );
     return (result.rowCount ?? 0) > 0;
+  }
+  if (action === "restore_bulk_fix_hide") {
+    return restoreBulkFixHiddenResource(db, resourceId);
   }
   const result = await db.query(
     `UPDATE resources SET review_status = 'ARCHIVED', active = false, updated_at = now()

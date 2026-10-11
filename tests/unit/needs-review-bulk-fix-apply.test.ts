@@ -21,11 +21,12 @@ test("formatNeedsReviewBulkFixSummary includes totals and title samples", () => 
   const text = formatNeedsReviewBulkFixSummary({
     mode: "dry_run",
     totals: { cleared: 10, source_limited: 2, updated: 3, still_flagged: 1, scanned: 100 },
-    by_source: { "mit-solve": { cleared: 10, source_limited: 0, updated: 0, still_flagged: 0 } },
+    by_source: { "mit-solve": { cleared: 10, source_limited: 0, hide: 0, updated: 0, still_flagged: 0 } },
     samples: [
       {
         resource_id: "a",
         source_slug: "mit-solve",
+        canonical_url: "https://example.com/a",
         action: "cleared",
         title_before: "OLD TITLE",
         title_after: "Old Title",

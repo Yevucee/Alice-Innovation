@@ -337,7 +337,7 @@ export default async function AdminPage() {
                   <p className="mt-2 text-xs text-muted">No runner session recorded yet (stored in progress.last_run).</p>
                 )}
                 {job.summary_note ? (
-                  <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded border border-line bg-slate-50 p-2 text-xs text-ink">
+                  <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap rounded border border-line bg-slate-50 p-2 text-xs text-ink">
                     {job.summary_note}
                   </pre>
                 ) : null}
