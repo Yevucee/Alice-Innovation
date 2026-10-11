@@ -11,6 +11,43 @@ import { shouldAcceptSourceLimited } from "./needs-review-reconcile.js";
 
 const BATCH = 100;
 
+export const NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT = 20;
+
+export function needsReviewBulkFixApplyEnabled(): boolean {
+  const raw = process.env.NEEDS_REVIEW_BULK_FIX_APPLY?.trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes";
+}
+
+export interface NeedsReviewBulkFixSample {
+  resource_id: string;
+  source_slug: string | null;
+  action: string;
+  title_before: string;
+  title_after: string;
+}
+
+export function formatNeedsReviewBulkFixSummary(input: {
+  mode: "dry_run" | "apply";
+  totals: Record<string, number>;
+  by_source: NeedsReviewBulkFixBatchResult["by_source"];
+  samples: NeedsReviewBulkFixSample[];
+}): string {
+  const t = input.totals;
+  const lines = [
+    `NEEDS_REVIEW bulk fix (${input.mode}): cleared=${t.cleared ?? 0} source_limited=${t.source_limited ?? 0} updated=${t.updated ?? 0} still_flagged=${t.still_flagged ?? 0} scanned=${t.scanned ?? 0}`,
+    `by_source: ${JSON.stringify(input.by_source)}`,
+  ];
+  if (input.samples.length > 0) {
+    lines.push("title_samples:");
+    for (const sample of input.samples) {
+      lines.push(
+        `  [${sample.action}] ${sample.source_slug ?? "?"} | "${sample.title_before}" → "${sample.title_after}"`,
+      );
+    }
+  }
+  return lines.join("\n");
+}
+
 export interface NeedsReviewBulkFixRow {
   id: string;
   title: string;
@@ -213,12 +250,18 @@ export interface NeedsReviewBulkFixBatchResult {
   complete: boolean;
   reembed_resource_ids: string[];
   by_source: Record<string, { cleared: number; source_limited: number; updated: number; still_flagged: number }>;
+  samples: NeedsReviewBulkFixSample[];
 }
 
 export async function runNeedsReviewBulkFixBatch(
   db: Queryable,
   offset: number,
-  input?: { dryRun?: boolean; sourceSlug?: string | null },
+  input?: {
+    dryRun?: boolean;
+    sourceSlug?: string | null;
+    maxSamples?: number;
+    existingSampleCount?: number;
+  },
 ): Promise<NeedsReviewBulkFixBatchResult> {
   const rows = await loadNeedsReviewBulkFixBatch(db, offset, input?.sourceSlug ?? null);
   let cleared = 0;
@@ -228,6 +271,20 @@ export async function runNeedsReviewBulkFixBatch(
   let still_flagged = 0;
   const reembed_resource_ids: string[] = [];
   const by_source: NeedsReviewBulkFixBatchResult["by_source"] = {};
+  const samples: NeedsReviewBulkFixSample[] = [];
+  const sampleBudget = Math.max(0, (input?.maxSamples ?? 0) - (input?.existingSampleCount ?? 0));
+
+  const maybeSample = (row: NeedsReviewBulkFixRow, fixed: ReturnType<typeof proposeNeedsReviewBulkFix>, action: string) => {
+    if (samples.length >= sampleBudget) return;
+    if (fixed.title === row.title && action === "unchanged") return;
+    samples.push({
+      resource_id: row.id,
+      source_slug: row.source_slug,
+      action,
+      title_before: row.title,
+      title_after: fixed.title,
+    });
+  };
 
   const bump = (slug: string, field: keyof NeedsReviewBulkFixBatchResult["by_source"][string]) => {
     const key = slug || "unknown";
@@ -255,11 +312,14 @@ export async function runNeedsReviewBulkFixBatch(
       if (outcome.action === "cleared") {
         cleared += 1;
         bump(slug, "cleared");
+        maybeSample(row, fixed, "cleared");
       } else if (outcome.action === "source_limited") {
         source_limited += 1;
         bump(slug, "source_limited");
+        maybeSample(row, fixed, "source_limited");
       } else if (outcome.action === "updated") {
         updated += 1;
+        maybeSample(row, fixed, "updated");
         if (outcome.reasons.length > 0) {
           still_flagged += 1;
           bump(slug, "still_flagged");
@@ -345,5 +405,6 @@ export async function runNeedsReviewBulkFixBatch(
     complete: rows.length < BATCH,
     reembed_resource_ids,
     by_source,
+    samples,
   };
 }

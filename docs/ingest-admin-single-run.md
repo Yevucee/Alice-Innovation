@@ -13,7 +13,23 @@ That matches Admin showing a long `scope=all;trigger=manual` run (AfriLabs, Afri
 ## Guard (from PR after Oct 2026)
 
 - **Always** attempt to claim `ingest_requests` first (even when `INGEST_SCOPE` is set); claimed scope wins over env.
-- If the process would run **`scope=all`** without a claim and **without** `RAILWAY_CRON`, and an **admin-button** request exists in the last **20 minutes**, the ingestor **exits** with log `ingest_skipped` / `unscoped_manual_blocked_recent_admin`.
+- If the process would run **`scope=all`** without a claim (including when **`INGEST_SCOPE=all`** is set on the service) and **without** `RAILWAY_CRON`, and an **admin-button** request is still inside the **90-minute** guard window, the ingestor **exits** with log `ingest_skipped` / `unscoped_manual_blocked_recent_admin`.
+- Guard window is measured from **`completed_at`**, else **`started_at`**, else **`requested_at`** on the most recent admin-button row.
+
+## Process diagnostics
+
+Every ingestor start logs **`ingest_process_start`** with:
+
+- `process_started_at`, `pid`, `hostname`
+- `railway_cron`, `railway_deployment_id`, `railway_replica_id`, `railway_service_id`, `railway_environment_id`
+- `ingest_request_claimed`, `ingest_request_id`, resolved `ingest_scope` / `ingest_trigger`
+- `skip_reason` when the duplicate guard fires
+
+Use this to see what launched a second process (deployment vs replica) even when the guard blocks it.
+
+## NEEDS_REVIEW bulk fix
+
+See `docs/needs-review-bulk-fix.md` — post-deploy job is **dry-run by default**; apply only with `NEEDS_REVIEW_BULK_FIX_APPLY=true` on **alice-ingestor**.
 
 ## Samuel — verify on next Admin → Run Asia
 

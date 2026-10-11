@@ -336,6 +336,11 @@ export default async function AdminPage() {
                 ) : (
                   <p className="mt-2 text-xs text-muted">No runner session recorded yet (stored in progress.last_run).</p>
                 )}
+                {job.summary_note ? (
+                  <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded border border-line bg-slate-50 p-2 text-xs text-ink">
+                    {job.summary_note}
+                  </pre>
+                ) : null}
                 {job.counters.length > 0 ? (
                   <dl className="mt-2 grid gap-1 sm:grid-cols-2 text-xs text-muted">
                     {job.counters.map((row) => (

@@ -4,7 +4,8 @@ import {
   type ClaimPendingIngestRequestResult,
   type IngestRequestRow,
 } from "./ingest-requests.js";
-export const ADMIN_INGEST_GUARD_MS = 20 * 60 * 1000;
+/** Block manual scope=all without a claim for this long after an admin-button anchor time. */
+export const ADMIN_INGEST_GUARD_MS = 90 * 60 * 1000;
 
 const INGEST_SCOPE_VALUES = [
   "asia",
@@ -65,28 +66,48 @@ export function shouldGuardManualScopeAll(input: {
   return resolveIngestScopeAfterClaim(input) === "all";
 }
 
-export async function recentAdminIngestRequest(
-  db: Queryable,
-  withinMs: number = ADMIN_INGEST_GUARD_MS,
-): Promise<{
+export type AdminIngestGuardRow = {
   id: string;
   scope: string;
   status: string;
   requested_at: Date;
+  started_at: Date | null;
   completed_at: Date | null;
-} | null> {
-  const row = await db.query<{
-    id: string;
-    scope: string;
-    status: string;
+};
+
+/** Anchor for guard window: completion time if set, else start, else request time. */
+export function adminIngestGuardAnchor(row: {
+  requested_at: Date;
+  started_at: Date | null;
+  completed_at: Date | null;
+}): Date {
+  return row.completed_at ?? row.started_at ?? row.requested_at;
+}
+
+export function isAdminRequestWithinGuardWindow(
+  row: {
     requested_at: Date;
+    started_at: Date | null;
     completed_at: Date | null;
-  }>(
-    `SELECT id::text, scope, status, requested_at, completed_at
+  },
+  nowMs: number,
+  guardMs: number = ADMIN_INGEST_GUARD_MS,
+): boolean {
+  const anchorMs = adminIngestGuardAnchor(row).getTime();
+  return nowMs - anchorMs < guardMs;
+}
+
+export async function recentAdminIngestRequest(
+  db: Queryable,
+  withinMs: number = ADMIN_INGEST_GUARD_MS,
+): Promise<AdminIngestGuardRow | null> {
+  const row = await db.query<AdminIngestGuardRow>(
+    `SELECT id::text, scope, status, requested_at, started_at, completed_at
      FROM ingest_requests
      WHERE trigger = 'admin-button'
-       AND requested_at > now() - ($1::int * interval '1 millisecond')
-     ORDER BY requested_at DESC
+       AND COALESCE(completed_at, started_at, requested_at)
+           > now() - ($1::int * interval '1 millisecond')
+     ORDER BY COALESCE(completed_at, started_at, requested_at) DESC
      LIMIT 1`,
     [withinMs],
   );
@@ -125,10 +146,14 @@ export async function bootstrapIngestScopeFromRequest(
           recent_scope: recent.scope,
           recent_status: recent.status,
           requested_at: recent.requested_at.toISOString(),
+          started_at: recent.started_at?.toISOString() ?? null,
+          completed_at: recent.completed_at?.toISOString() ?? null,
+          guard_anchor_at: adminIngestGuardAnchor(recent).toISOString(),
           guard_ms: ADMIN_INGEST_GUARD_MS,
+          env_ingest_scope: input.envIngestScope?.trim() || null,
           explanation:
-            "No pending ingest_requests row to claim and INGEST_SCOPE is unset, so this process would run scope=all. "
-            + "A recent Admin ingest request exists — likely a duplicate Railway start after the scoped run.",
+            "No ingest_requests row to claim and this process would run scope=all (default or INGEST_SCOPE=all). "
+            + "A recent Admin ingest request is still inside the post-admin guard window — likely a duplicate Railway start.",
         },
       };
     }

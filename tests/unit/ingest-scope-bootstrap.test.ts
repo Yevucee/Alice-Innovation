@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  ADMIN_INGEST_GUARD_MS,
   resolveIngestScopeAfterClaim,
   shouldGuardManualScopeAll,
 } from "../../packages/database/src/ingest-scope-bootstrap.ts";
+
+test("ADMIN_INGEST_GUARD_MS is 90 minutes", () => {
+  assert.equal(ADMIN_INGEST_GUARD_MS, 90 * 60 * 1000);
+});
 
 test("shouldGuardManualScopeAll when manual start would run scope=all without claim", () => {
   assert.equal(

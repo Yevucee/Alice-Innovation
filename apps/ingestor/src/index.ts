@@ -26,6 +26,7 @@ import {
   type IngestScope,
   type IngestTrigger,
 } from "./ingest-scope.js";
+import { ingestProcessStartContext } from "./ingest-process-context.js";
 
 loadDotEnv();
 process.env.SERVICE_NAME = "alice-ingestor";
@@ -229,16 +230,6 @@ async function main(): Promise<void> {
       trigger: ingestTrigger,
       age_ms: Date.now() - claimed.requested_at.getTime(),
     });
-  } else if (scopeBootstrap.skipReason) {
-    log("info", "ingest_skipped", {
-      reason: scopeBootstrap.skipReason,
-      ...scopeBootstrap.skipDetail,
-    });
-    if (!dryRun && backlogRunId) {
-      await finishBacklogRun(pool, { backlogRunId, postDeploySummary });
-    }
-    await closePool();
-    return;
   } else if (!scopeArg && process.env.INGEST_SCOPE?.trim()) {
     log("info", "ingest_scope_from_env", { scope: ingestScope, env: "INGEST_SCOPE" });
   } else if (!scopeArg && !claimed && !isRailwayCronIngestRun()) {
@@ -254,6 +245,29 @@ async function main(): Promise<void> {
     ingestScope,
     forcedOnly,
   });
+
+  log("info", "ingest_process_start", {
+    ...ingestProcessStartContext(ingestProcessStartedAt),
+    ingest_request_claimed: Boolean(claimed),
+    ingest_request_id: ingestRequestId,
+    ingest_scope: ingestScope,
+    ingest_trigger: ingestTrigger,
+    skipped: Boolean(scopeBootstrap.skipReason),
+    skip_reason: scopeBootstrap.skipReason,
+    skip_detail: scopeBootstrap.skipDetail,
+  });
+
+  if (scopeBootstrap.skipReason) {
+    log("info", "ingest_skipped", {
+      reason: scopeBootstrap.skipReason,
+      ...scopeBootstrap.skipDetail,
+    });
+    if (!dryRun && backlogRunId) {
+      await finishBacklogRun(pool, { backlogRunId, postDeploySummary });
+    }
+    await closePool();
+    return;
+  }
 
   log("info", "ingest_scope", {
     scope: ingestScope,
