@@ -50,8 +50,8 @@ async function main(): Promise<void> {
       console.log(`## ${printed + 1}`);
       console.log(`- **title:** ${draft.title}`);
       console.log(`- **org:** ${org}`);
-      console.log(`- **description:** ${(draft.summary || draft.text || "").slice(0, 280).replace(/\n/g, " ")}`);
-      console.log(`- **url:** ${draft.url}`);
+      console.log(`- **description:** ${(draft.sourceSummary || draft.extractedText || "").slice(0, 280).replace(/\n/g, " ")}`);
+      console.log(`- **url:** ${draft.canonicalUrl}`);
       console.log("");
       printed += 1;
     } catch (error) {

@@ -169,8 +169,15 @@ export {
   needsReviewBulkFixApplyEnabled,
   formatNeedsReviewBulkFixSummary,
   NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
+  NEEDS_REVIEW_BULK_FIX_BATCH_SIZE,
+  NEEDS_REVIEW_BULK_FIX_JOB_KEY,
+  currentNeedsReviewBulkFixMode,
+  initialNeedsReviewBulkFixProgress,
+  prepareNeedsReviewBulkFixProgress,
+  requeueNeedsReviewBulkFixJobIfModeChanged,
   type NeedsReviewBulkFixBatchResult,
   type NeedsReviewBulkFixSample,
+  type NeedsReviewBulkFixMode,
 } from "./needs-review-bulk-fix.js";
 export {
   bootstrapIngestScopeFromRequest,

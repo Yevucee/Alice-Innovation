@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   const sourceIdx = process.argv.indexOf("--source");
   const sourceSlug = sourceIdx >= 0 ? process.argv[sourceIdx + 1] : null;
   const pool = getPool();
-  let offset = 0;
+  let lastId: string | null = null;
   const totals = {
     scanned: 0,
     cleared: 0,
@@ -36,17 +36,18 @@ async function main(): Promise<void> {
     unchanged: 0,
     still_flagged: 0,
   };
-  const by_source: Record<string, Record<string, number>> = {};
+  const by_source: import("@alice/database").NeedsReviewBulkFixBatchResult["by_source"] = {};
   const samples: import("@alice/database").NeedsReviewBulkFixSample[] = [];
 
   for (;;) {
-    const batch = await runNeedsReviewBulkFixBatch(pool, offset, {
+    const batch = await runNeedsReviewBulkFixBatch(pool, lastId, {
       dryRun,
       sourceSlug,
       maxSamples: NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
       existingSampleCount: samples.length,
     });
     samples.push(...batch.samples);
+    lastId = batch.next_last_id;
     totals.scanned += batch.scanned;
     totals.cleared += batch.cleared;
     totals.source_limited += batch.source_limited;
@@ -56,11 +57,11 @@ async function main(): Promise<void> {
     for (const [slug, counts] of Object.entries(batch.by_source)) {
       by_source[slug] = by_source[slug] ?? { cleared: 0, source_limited: 0, updated: 0, still_flagged: 0 };
       for (const [k, v] of Object.entries(counts)) {
-        by_source[slug][k] = (by_source[slug][k] ?? 0) + v;
+        const field = k as keyof (typeof by_source)[string];
+        by_source[slug][field] = (by_source[slug][field] ?? 0) + v;
       }
     }
     if (batch.complete) break;
-    offset = batch.next_offset;
   }
 
   const dry_run_summary = formatNeedsReviewBulkFixSummary({
