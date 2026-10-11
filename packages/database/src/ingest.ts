@@ -1,6 +1,7 @@
 import { contentHash, truncate, tryCanonicaliseUrl } from "@alice/shared";
 import type { NormalisedDraft } from "@alice/shared";
 import type pg from "pg";
+import { mergeIngestDraftPreservingQuality } from "./ingest-preserve-quality.js";
 import { organisationSlug } from "./seed.js";
 import type { Queryable } from "./pool.js";
 
@@ -104,8 +105,7 @@ export async function upsertDraft(
     ...draft.rawMetadata,
     ...(options.qualityReasons?.length ? { quality_reasons: options.qualityReasons } : {}),
   };
-  const draftWithMeta = { ...draft, rawMetadata: metadata };
-  const hash = contentHash([draftWithMeta.title, draftWithMeta.sourceSummary, draftWithMeta.extractedText]);
+  let draftWithMeta = { ...draft, rawMetadata: metadata };
   const client = await db.connect();
   try {
     await client.query("BEGIN");
@@ -126,7 +126,34 @@ export async function upsertDraft(
       [sourceId, draftWithMeta.externalId, draftWithMeta.canonicalUrl],
     );
 
-    if (existing.rows[0] && existing.rows[0].content_hash === hash && existing.rows[0].resource_id) {
+    let preserveAsUnchanged = false;
+    if (existing.rows[0]?.resource_id) {
+      const resource = await client.query<{
+        canonical_title: string;
+        source_summary: string;
+        extracted_index_text: string;
+        review_status: string;
+        review_reason_codes: string[];
+      }>(
+        `SELECT canonical_title, source_summary, extracted_index_text, review_status, review_reason_codes
+         FROM resources WHERE id = $1::uuid`,
+        [existing.rows[0].resource_id],
+      );
+      const row = resource.rows[0];
+      if (row) {
+        const preserved = mergeIngestDraftPreservingQuality(row, draftWithMeta);
+        draftWithMeta = { ...preserved.draft, rawMetadata: draftWithMeta.rawMetadata };
+        preserveAsUnchanged = preserved.treatAsUnchanged;
+      }
+    }
+
+    const hash = contentHash([draftWithMeta.title, draftWithMeta.sourceSummary, draftWithMeta.extractedText]);
+
+    if (
+      existing.rows[0]
+      && existing.rows[0].resource_id
+      && (preserveAsUnchanged || existing.rows[0].content_hash === hash)
+    ) {
       const row = existing.rows[0];
       const incomingImage = draft.imageUrl?.trim() || null;
       const priorImage = row.image_url?.trim() || null;

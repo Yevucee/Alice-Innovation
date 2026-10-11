@@ -49,6 +49,16 @@ export default async function AdminPage() {
       <IngestRunPanel />
 
       <section className="mt-8 rounded border border-line bg-white p-4 text-sm">
+        <h2 className="text-sm font-medium">Quality review queue</h2>
+        <p className="mt-1 text-xs text-muted">
+          Fast triage for remaining NEEDS_REVIEW rows after bulk post-deploy fixes.
+        </p>
+        <p className="mt-2">
+          <Link href="/admin/review" className="underline text-ink">Open review queue →</Link>
+        </p>
+      </section>
+
+      <section className="mt-8 rounded border border-line bg-white p-4 text-sm">
         <h2 className="text-sm font-medium">Suggest a new source</h2>
         <p className="mt-1 text-xs text-muted">
           Drop a link to a tech hub, award, directory, or programme page. It is stored in{" "}
@@ -326,6 +336,11 @@ export default async function AdminPage() {
                 ) : (
                   <p className="mt-2 text-xs text-muted">No runner session recorded yet (stored in progress.last_run).</p>
                 )}
+                {job.summary_note ? (
+                  <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded border border-line bg-slate-50 p-2 text-xs text-ink">
+                    {job.summary_note}
+                  </pre>
+                ) : null}
                 {job.counters.length > 0 ? (
                   <dl className="mt-2 grid gap-1 sm:grid-cols-2 text-xs text-muted">
                     {job.counters.map((row) => (

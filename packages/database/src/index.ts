@@ -161,6 +161,35 @@ export {
   countNeedsReview,
   type NeedsReviewReconcileBatchResult,
 } from "./needs-review-reconcile.js";
+export {
+  runNeedsReviewBulkFixBatch,
+  loadNeedsReviewBulkFixBatch,
+  proposeNeedsReviewBulkFix,
+  classifyBulkFixOutcome,
+  needsReviewBulkFixApplyEnabled,
+  formatNeedsReviewBulkFixSummary,
+  NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
+  type NeedsReviewBulkFixBatchResult,
+  type NeedsReviewBulkFixSample,
+} from "./needs-review-bulk-fix.js";
+export {
+  bootstrapIngestScopeFromRequest,
+  recentAdminIngestRequest,
+  shouldGuardManualScopeAll,
+  resolveIngestScopeAfterClaim,
+  adminIngestGuardAnchor,
+  isAdminRequestWithinGuardWindow,
+  ADMIN_INGEST_GUARD_MS,
+} from "./ingest-scope-bootstrap.js";
+export {
+  mergeIngestDraftPreservingQuality,
+  type ExistingResourceSnapshot,
+} from "./ingest-preserve-quality.js";
+export {
+  listReviewQueue,
+  applyReviewQueueAction,
+  type ReviewQueueRow,
+} from "./review-queue-admin.js";
 export { runAllCapsTitleRepairBatch } from "./title-case-repair.js";
 export {
   startQualityReviewBacklogRun,

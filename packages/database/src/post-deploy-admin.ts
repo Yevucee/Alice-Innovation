@@ -12,6 +12,8 @@ export interface PostDeployJobAdminRow {
   last_run: PostDeployJobLastRun | null;
   counters: Array<{ key: string; label: string; value: number | string }>;
   skipped: Array<{ key: string; reason: string }>;
+  /** Human-readable dry-run / result summary (e.g. needs_review_bulk_fix). */
+  summary_note: string | null;
 }
 
 export interface PostDeployLastRunBudget {
@@ -155,17 +157,25 @@ export async function loadPostDeployJobsAdmin(db: Queryable): Promise<PostDeploy
      ORDER BY sort_order ASC`,
   );
 
-  return rows.rows.map((row) => ({
-    job_key: row.job_key,
-    description: row.description,
-    status: row.status,
-    display_status: adminStatusLabel(row.status),
-    updated_at: row.updated_at,
-    last_error: row.last_error,
-    last_run: readLastRunFromProgress(row.progress),
-    counters: summarisePostDeployJobCounters({ progress: row.progress ?? {}, result: row.result }),
-    skipped: summarisePostDeployJobSkipped(row.progress ?? {}),
-  }));
+  return rows.rows.map((row) => {
+    const progress = row.progress ?? {};
+    const result = row.result ?? {};
+    const summary_note =
+      (typeof result.dry_run_summary === "string" ? result.dry_run_summary : null)
+      ?? (typeof progress.dry_run_summary === "string" ? progress.dry_run_summary : null);
+    return {
+      job_key: row.job_key,
+      description: row.description,
+      status: row.status,
+      display_status: adminStatusLabel(row.status),
+      updated_at: row.updated_at,
+      last_error: row.last_error,
+      last_run: readLastRunFromProgress(progress),
+      counters: summarisePostDeployJobCounters({ progress, result }),
+      skipped: summarisePostDeployJobSkipped(progress),
+      summary_note,
+    };
+  });
 }
 
 /** Approximate post-deploy activity during the latest completed ingestion run (read-only). */
