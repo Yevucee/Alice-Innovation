@@ -4,6 +4,7 @@ import {
   classifyBulkFixOutcome,
   proposeNeedsReviewBulkFix,
 } from "../../packages/database/src/needs-review-bulk-fix.ts";
+import { JUNK_GENERIC_TITLE } from "../../packages/database/src/needs-review-bulk-fix-junk.ts";
 
 test("proposeNeedsReviewBulkFix repairs ALL CAPS title", () => {
   const fixed = proposeNeedsReviewBulkFix({
@@ -37,4 +38,22 @@ test("classifyBulkFixOutcome clears when fixes resolve reasons", () => {
   const fixed = proposeNeedsReviewBulkFix(row);
   const outcome = classifyBulkFixOutcome(row, fixed);
   assert.equal(outcome.action, "cleared");
+});
+
+test("classifyBulkFixOutcome hides junk before source_limited", () => {
+  const row = {
+    id: "1",
+    title: "Advance Search",
+    source_summary: "Thin",
+    extracted_index_text: "Thin",
+    organisation_name: null,
+    person_name: null,
+    raw_metadata: {},
+    source_slug: "nia-innovation-catalogue",
+    source_item_title: null,
+    canonical_url: null,
+  };
+  const fixed = proposeNeedsReviewBulkFix(row);
+  const outcome = classifyBulkFixOutcome(row, fixed, JUNK_GENERIC_TITLE);
+  assert.equal(outcome.action, "hide");
 });

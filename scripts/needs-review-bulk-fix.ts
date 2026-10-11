@@ -6,9 +6,11 @@
  */
 import {
   closePool,
+  currentNeedsReviewBulkFixMode,
   formatNeedsReviewBulkFixSummary,
   getPool,
   needsReviewBulkFixApplyEnabled,
+  NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT,
   NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
   runNeedsReviewBulkFixBatch,
 } from "@alice/database";
@@ -17,8 +19,9 @@ import { loadDotEnv, log } from "@alice/shared";
 loadDotEnv();
 
 async function main(): Promise<void> {
+  const mode = currentNeedsReviewBulkFixMode();
   const apply = process.argv.includes("--apply") && needsReviewBulkFixApplyEnabled();
-  const dryRun = !apply;
+  const dryRun = mode === "dry_run" || !apply;
   if (process.argv.includes("--apply") && !needsReviewBulkFixApplyEnabled()) {
     log("warn", "needs_review_bulk_fix_apply_blocked", {
       message: "Set NEEDS_REVIEW_BULK_FIX_APPLY=true on alice-ingestor before --apply",
@@ -32,21 +35,29 @@ async function main(): Promise<void> {
     scanned: 0,
     cleared: 0,
     source_limited: 0,
+    hide: 0,
     updated: 0,
     unchanged: 0,
     still_flagged: 0,
   };
   const by_source: import("@alice/database").NeedsReviewBulkFixBatchResult["by_source"] = {};
   const samples: import("@alice/database").NeedsReviewBulkFixSample[] = [];
+  const hide_samples: import("@alice/database").NeedsReviewBulkFixSample[] = [];
+  const duplicate_tracker: import("@alice/database").BulkFixDuplicateTracker = {};
 
   for (;;) {
     const batch = await runNeedsReviewBulkFixBatch(pool, lastId, {
-      dryRun,
+      mode: apply ? mode : "dry_run",
       sourceSlug,
       maxSamples: NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
       existingSampleCount: samples.length,
+      maxHideSamples: NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT,
+      existingHideSampleCount: hide_samples.length,
+      duplicateTracker: duplicate_tracker,
     });
     samples.push(...batch.samples);
+    hide_samples.push(...batch.hide_samples);
+    Object.assign(duplicate_tracker, batch.duplicate_tracker);
     lastId = batch.next_last_id;
     totals.scanned += batch.scanned;
     totals.cleared += batch.cleared;
@@ -54,8 +65,9 @@ async function main(): Promise<void> {
     totals.updated += batch.updated;
     totals.unchanged += batch.unchanged;
     totals.still_flagged += batch.still_flagged;
+    totals.hide += batch.hide;
     for (const [slug, counts] of Object.entries(batch.by_source)) {
-      by_source[slug] = by_source[slug] ?? { cleared: 0, source_limited: 0, updated: 0, still_flagged: 0 };
+      by_source[slug] = by_source[slug] ?? { cleared: 0, source_limited: 0, hide: 0, updated: 0, still_flagged: 0 };
       for (const [k, v] of Object.entries(counts)) {
         const field = k as keyof (typeof by_source)[string];
         by_source[slug][field] = (by_source[slug][field] ?? 0) + v;
@@ -64,18 +76,21 @@ async function main(): Promise<void> {
     if (batch.complete) break;
   }
 
+  const runMode = dryRun ? "dry_run" : mode;
   const dry_run_summary = formatNeedsReviewBulkFixSummary({
-    mode: dryRun ? "dry_run" : "apply",
+    mode: runMode,
     totals,
     by_source,
     samples: samples.slice(0, NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT),
+    hide_samples: hide_samples.slice(0, NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT),
   });
   log("info", dryRun ? "needs_review_bulk_fix_dry_run" : "needs_review_bulk_fix_applied", {
     totals,
     by_source,
     title_samples: samples.slice(0, NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT),
+    hide_samples: hide_samples.slice(0, NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT),
     dry_run_summary,
-    mode: dryRun ? "dry_run" : "apply",
+    mode: runMode,
     source_filter: sourceSlug,
   });
   console.log(dry_run_summary);

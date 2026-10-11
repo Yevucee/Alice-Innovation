@@ -8,15 +8,39 @@ import {
 import type { Queryable } from "./pool.js";
 import { auditDraftShape } from "./quality-audit.js";
 import { shouldAcceptSourceLimited } from "./needs-review-reconcile.js";
+import {
+  type BulkFixDuplicateTracker,
+  detectBulkFixJunk,
+  JUNK_DUPLICATE_TITLE_CONTENT,
+  JUNK_GENERIC_TITLE,
+} from "./needs-review-bulk-fix-junk.js";
+import { repairBulkFixTitle } from "./needs-review-bulk-fix-title-repair.js";
 
 export const NEEDS_REVIEW_BULK_FIX_BATCH_SIZE = 100;
 
 const BATCH = NEEDS_REVIEW_BULK_FIX_BATCH_SIZE;
 
-export type NeedsReviewBulkFixMode = "dry_run" | "apply";
+export type NeedsReviewBulkFixMode = "dry_run" | "apply_cleared_only" | "apply_all";
+
+/** @deprecated use currentNeedsReviewBulkFixMode() */
+export function needsReviewBulkFixApplyEnabled(): boolean {
+  return currentNeedsReviewBulkFixMode() !== "dry_run";
+}
 
 export function currentNeedsReviewBulkFixMode(): NeedsReviewBulkFixMode {
-  return needsReviewBulkFixApplyEnabled() ? "apply" : "dry_run";
+  const raw = process.env.NEEDS_REVIEW_BULK_FIX_APPLY?.trim().toLowerCase();
+  if (!raw || raw === "false" || raw === "0" || raw === "no") return "dry_run";
+  if (raw === "cleared-only" || raw === "cleared_only" || raw === "cleared") return "apply_cleared_only";
+  return "apply_all";
+}
+
+export function bulkFixModeWritesOutcome(
+  mode: NeedsReviewBulkFixMode,
+  action: "cleared" | "source_limited" | "hide" | "updated",
+): boolean {
+  if (mode === "dry_run") return false;
+  if (mode === "apply_cleared_only") return action === "cleared";
+  return true;
 }
 
 export function initialNeedsReviewBulkFixProgress(
@@ -29,6 +53,7 @@ export function initialNeedsReviewBulkFixProgress(
     totals: {
       cleared: 0,
       source_limited: 0,
+      hide: 0,
       updated: 0,
       still_flagged: 0,
       scanned: 0,
@@ -36,6 +61,8 @@ export function initialNeedsReviewBulkFixProgress(
     },
     by_source: {},
     title_samples: [],
+    hide_samples: [],
+    duplicate_tracker: {},
     pending_reembed_ids: [],
     complete: false,
     ...extra,
@@ -63,11 +90,7 @@ export function prepareNeedsReviewBulkFixProgress(
 }
 
 export const NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT = 20;
-
-export function needsReviewBulkFixApplyEnabled(): boolean {
-  const raw = process.env.NEEDS_REVIEW_BULK_FIX_APPLY?.trim().toLowerCase();
-  return raw === "1" || raw === "true" || raw === "yes";
-}
+export const NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT = 20;
 
 export interface NeedsReviewBulkFixSample {
   resource_id: string;
@@ -78,16 +101,17 @@ export interface NeedsReviewBulkFixSample {
 }
 
 export function formatNeedsReviewBulkFixSummary(input: {
-  mode: "dry_run" | "apply";
+  mode: NeedsReviewBulkFixMode;
   totals: Record<string, number>;
   by_source: NeedsReviewBulkFixBatchResult["by_source"];
   samples: NeedsReviewBulkFixSample[];
+  hide_samples?: NeedsReviewBulkFixSample[];
   mode_reset_from?: string | null;
 }): string {
   const t = input.totals;
   const lines = [
     `NEEDS_REVIEW bulk fix | run_mode=${input.mode}${input.mode_reset_from ? ` | restarted_from=${input.mode_reset_from}` : ""}`,
-    `totals: cleared=${t.cleared ?? 0} source_limited=${t.source_limited ?? 0} updated=${t.updated ?? 0} still_flagged=${t.still_flagged ?? 0} scanned=${t.scanned ?? 0}`,
+    `totals: cleared=${t.cleared ?? 0} source_limited=${t.source_limited ?? 0} hide=${t.hide ?? 0} updated=${t.updated ?? 0} still_flagged=${t.still_flagged ?? 0} scanned=${t.scanned ?? 0}`,
     `by_source: ${JSON.stringify(input.by_source)}`,
   ];
   if (input.samples.length > 0) {
@@ -95,6 +119,15 @@ export function formatNeedsReviewBulkFixSummary(input: {
     for (const sample of input.samples) {
       lines.push(
         `  [${sample.action}] ${sample.source_slug ?? "?"} | "${sample.title_before}" → "${sample.title_after}"`,
+      );
+    }
+  }
+  const hideSamples = input.hide_samples ?? [];
+  if (hideSamples.length > 0) {
+    lines.push("hide_samples:");
+    for (const sample of hideSamples) {
+      lines.push(
+        `  [hide] ${sample.source_slug ?? "?"} | "${sample.title_before}" → "${sample.title_after}"`,
       );
     }
   }
@@ -117,6 +150,7 @@ export interface NeedsReviewBulkFixRow {
 export type BulkFixAction =
   | { action: "cleared"; reasons: string[] }
   | { action: "source_limited"; reasons: string[] }
+  | { action: "hide"; reasons: string[] }
   | { action: "updated"; reasons: string[] }
   | { action: "unchanged"; reasons: string[] };
 
@@ -126,7 +160,7 @@ export function proposeNeedsReviewBulkFix(row: NeedsReviewBulkFixRow): {
   extracted_index_text: string;
   clear_organisation: boolean;
 } {
-  let title = row.title;
+  let title = repairBulkFixTitle(row, row.title);
   let summary = row.source_summary;
   let body = row.extracted_index_text;
   let clearOrg = false;
@@ -187,7 +221,13 @@ export function proposeNeedsReviewBulkFix(row: NeedsReviewBulkFixRow): {
 export function classifyBulkFixOutcome(
   row: NeedsReviewBulkFixRow,
   fixed: ReturnType<typeof proposeNeedsReviewBulkFix>,
+  junkCode?: string | null,
 ): BulkFixAction {
+  if (junkCode) {
+    const code = junkCode === JUNK_DUPLICATE_TITLE_CONTENT ? junkCode : JUNK_GENERIC_TITLE;
+    return { action: "hide", reasons: [code] };
+  }
+
   const reasons = auditDraftShape({
     title: fixed.title,
     sourceSummary: fixed.source_summary,
@@ -292,10 +332,19 @@ export async function loadNeedsReviewBulkFixBatch(
   return rows.rows;
 }
 
+export type NeedsReviewBulkFixSourceCounts = {
+  cleared: number;
+  source_limited: number;
+  hide: number;
+  updated: number;
+  still_flagged: number;
+};
+
 export interface NeedsReviewBulkFixBatchResult {
   scanned: number;
   cleared: number;
   source_limited: number;
+  hide: number;
   updated: number;
   unchanged: number;
   still_flagged: number;
@@ -303,30 +352,65 @@ export interface NeedsReviewBulkFixBatchResult {
   next_last_id: string | null;
   complete: boolean;
   reembed_resource_ids: string[];
-  by_source: Record<string, { cleared: number; source_limited: number; updated: number; still_flagged: number }>;
+  by_source: Record<string, NeedsReviewBulkFixSourceCounts>;
   samples: NeedsReviewBulkFixSample[];
+  hide_samples: NeedsReviewBulkFixSample[];
+  duplicate_tracker: BulkFixDuplicateTracker;
+}
+
+export async function hideNeedsReviewResource(
+  db: Queryable,
+  resourceId: string,
+  reasonCodes: string[],
+): Promise<void> {
+  await db.query(
+    `UPDATE resources SET
+       review_status = 'ARCHIVED',
+       active = false,
+       review_reason_codes = $2::text[],
+       embedding_content_hash = NULL,
+       updated_at = now()
+     WHERE id = $1::uuid`,
+    [resourceId, reasonCodes],
+  );
 }
 
 export async function runNeedsReviewBulkFixBatch(
   db: Queryable,
   afterId: string | null,
   input?: {
+    mode?: NeedsReviewBulkFixMode;
     dryRun?: boolean;
     sourceSlug?: string | null;
     maxSamples?: number;
     existingSampleCount?: number;
+    maxHideSamples?: number;
+    existingHideSampleCount?: number;
+    duplicateTracker?: BulkFixDuplicateTracker;
   },
 ): Promise<NeedsReviewBulkFixBatchResult> {
+  const mode =
+    input?.mode
+    ?? (input?.dryRun === false ? "apply_all" : "dry_run");
+  const dryRun = mode === "dry_run";
   const rows = await loadNeedsReviewBulkFixBatch(db, afterId, input?.sourceSlug ?? null);
   let cleared = 0;
   let source_limited = 0;
+  let hide = 0;
   let updated = 0;
   let unchanged = 0;
   let still_flagged = 0;
   const reembed_resource_ids: string[] = [];
   const by_source: NeedsReviewBulkFixBatchResult["by_source"] = {};
   const samples: NeedsReviewBulkFixSample[] = [];
+  const hide_samples: NeedsReviewBulkFixSample[] = [];
+  const duplicate_tracker: BulkFixDuplicateTracker = { ...(input?.duplicateTracker ?? {}) };
   const sampleBudget = Math.max(0, (input?.maxSamples ?? 0) - (input?.existingSampleCount ?? 0));
+  const hideSampleBudget = Math.max(
+    0,
+    (input?.maxHideSamples ?? NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT)
+      - (input?.existingHideSampleCount ?? 0),
+  );
 
   const maybeSample = (row: NeedsReviewBulkFixRow, fixed: ReturnType<typeof proposeNeedsReviewBulkFix>, action: string) => {
     if (samples.length >= sampleBudget) return;
@@ -340,17 +424,29 @@ export async function runNeedsReviewBulkFixBatch(
     });
   };
 
-  const bump = (slug: string, field: keyof NeedsReviewBulkFixBatchResult["by_source"][string]) => {
+  const maybeHideSample = (row: NeedsReviewBulkFixRow, fixed: ReturnType<typeof proposeNeedsReviewBulkFix>, reason: string) => {
+    if (hide_samples.length >= hideSampleBudget) return;
+    hide_samples.push({
+      resource_id: row.id,
+      source_slug: row.source_slug,
+      action: reason,
+      title_before: row.title,
+      title_after: fixed.title,
+    });
+  };
+
+  const bump = (slug: string, field: keyof NeedsReviewBulkFixSourceCounts) => {
     const key = slug || "unknown";
     if (!by_source[key]) {
-      by_source[key] = { cleared: 0, source_limited: 0, updated: 0, still_flagged: 0 };
+      by_source[key] = { cleared: 0, source_limited: 0, hide: 0, updated: 0, still_flagged: 0 };
     }
     by_source[key][field] += 1;
   };
 
   for (const row of rows) {
     const fixed = proposeNeedsReviewBulkFix(row);
-    const outcome = classifyBulkFixOutcome(row, fixed);
+    const junkCode = detectBulkFixJunk(row, fixed.title, duplicate_tracker);
+    const outcome = classifyBulkFixOutcome(row, fixed, junkCode);
     const slug = row.source_slug ?? "unknown";
 
     if (outcome.action === "unchanged") {
@@ -362,7 +458,17 @@ export async function runNeedsReviewBulkFixBatch(
       continue;
     }
 
-    if (input?.dryRun) {
+    if (outcome.action === "hide") {
+      hide += 1;
+      bump(slug, "hide");
+      maybeHideSample(row, fixed, outcome.reasons[0] ?? JUNK_GENERIC_TITLE);
+      if (bulkFixModeWritesOutcome(mode, "hide")) {
+        await hideNeedsReviewResource(db, row.id, outcome.reasons);
+      }
+      continue;
+    }
+
+    if (dryRun) {
       if (outcome.action === "cleared") {
         cleared += 1;
         bump(slug, "cleared");
@@ -405,7 +511,7 @@ export async function runNeedsReviewBulkFixBatch(
       continue;
     }
 
-    if (outcome.action === "source_limited") {
+    if (outcome.action === "source_limited" && bulkFixModeWritesOutcome(mode, "source_limited")) {
       await db.query(
         `UPDATE resources SET
            canonical_title = $2,
@@ -424,6 +530,23 @@ export async function runNeedsReviewBulkFixBatch(
       source_limited += 1;
       bump(slug, "source_limited");
       reembed_resource_ids.push(row.id);
+      continue;
+    }
+
+    if (outcome.action === "source_limited" && !bulkFixModeWritesOutcome(mode, "source_limited")) {
+      source_limited += 1;
+      bump(slug, "source_limited");
+      maybeSample(row, fixed, "source_limited");
+      continue;
+    }
+
+    if (!bulkFixModeWritesOutcome(mode, "updated")) {
+      updated += 1;
+      maybeSample(row, fixed, "updated");
+      if (outcome.reasons.length > 0) {
+        still_flagged += 1;
+        bump(slug, "still_flagged");
+      }
       continue;
     }
 
@@ -453,6 +576,7 @@ export async function runNeedsReviewBulkFixBatch(
     scanned: rows.length,
     cleared,
     source_limited,
+    hide,
     updated,
     unchanged,
     still_flagged,
@@ -462,6 +586,8 @@ export async function runNeedsReviewBulkFixBatch(
     reembed_resource_ids,
     by_source,
     samples,
+    hide_samples,
+    duplicate_tracker,
   };
 }
 

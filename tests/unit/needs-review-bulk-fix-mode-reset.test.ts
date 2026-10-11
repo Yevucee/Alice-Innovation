@@ -17,10 +17,10 @@ test("prepareNeedsReviewBulkFixProgress resets cursor when mode changes", () => 
     totals: { cleared: 99, scanned: 100 },
     complete: true,
   };
-  const { progress, modeReset, previousMode } = prepareNeedsReviewBulkFixProgress(stale, "apply");
+  const { progress, modeReset, previousMode } = prepareNeedsReviewBulkFixProgress(stale, "apply_all");
   assert.equal(modeReset, true);
   assert.equal(previousMode, "dry_run");
-  assert.equal(progress.mode, "apply");
+  assert.equal(progress.mode, "apply_all");
   assert.equal(progress.last_id, null);
   assert.equal((progress.totals as { cleared: number }).cleared, 0);
   assert.equal(progress.mode_reset_from, "dry_run");
@@ -28,13 +28,13 @@ test("prepareNeedsReviewBulkFixProgress resets cursor when mode changes", () => 
 
 test("formatNeedsReviewBulkFixSummary shows run_mode and restarted_from", () => {
   const text = formatNeedsReviewBulkFixSummary({
-    mode: "apply",
+    mode: "apply_all",
     mode_reset_from: "dry_run",
     totals: { cleared: 1, scanned: 1 },
     by_source: {},
     samples: [],
   });
-  assert.match(text, /run_mode=apply/);
+  assert.match(text, /run_mode=apply_all/);
   assert.match(text, /restarted_from=dry_run/);
 });
 
@@ -66,9 +66,9 @@ test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed job when APPLY
   const out = await requeueNeedsReviewBulkFixJobIfModeChanged(db);
   assert.equal(out.requeued, true);
   assert.equal(out.previous_mode, "dry_run");
-  assert.equal(out.current_mode, "apply");
+  assert.equal(out.current_mode, "apply_all");
   assert.equal(status, "pending");
-  assert.equal(progress.mode, "apply");
+  assert.equal(progress.mode, "apply_all");
   assert.equal(progress.last_id, null);
   assert.equal(progress.mode_reset_from, "dry_run");
   assert.equal(result, null);

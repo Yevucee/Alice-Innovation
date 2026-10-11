@@ -167,8 +167,11 @@ export {
   proposeNeedsReviewBulkFix,
   classifyBulkFixOutcome,
   needsReviewBulkFixApplyEnabled,
+  bulkFixModeWritesOutcome,
+  hideNeedsReviewResource,
   formatNeedsReviewBulkFixSummary,
   NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
+  NEEDS_REVIEW_BULK_FIX_HIDE_SAMPLE_LIMIT,
   NEEDS_REVIEW_BULK_FIX_BATCH_SIZE,
   NEEDS_REVIEW_BULK_FIX_JOB_KEY,
   currentNeedsReviewBulkFixMode,
@@ -178,7 +181,16 @@ export {
   type NeedsReviewBulkFixBatchResult,
   type NeedsReviewBulkFixSample,
   type NeedsReviewBulkFixMode,
+  type NeedsReviewBulkFixSourceCounts,
 } from "./needs-review-bulk-fix.js";
+export {
+  detectBulkFixJunk,
+  contentFingerprint,
+  JUNK_GENERIC_TITLE,
+  JUNK_DUPLICATE_TITLE_CONTENT,
+  type BulkFixDuplicateTracker,
+} from "./needs-review-bulk-fix-junk.js";
+export { repairBulkFixTitle } from "./needs-review-bulk-fix-title-repair.js";
 export {
   bootstrapIngestScopeFromRequest,
   recentAdminIngestRequest,
