@@ -17,6 +17,7 @@ test("proposeNeedsReviewBulkFix repairs ALL CAPS title", () => {
     raw_metadata: {},
     source_slug: "mit-solve",
     source_item_title: null,
+    source_external_id: null,
     canonical_url: null,
   });
   assert.match(fixed.title, /Acme/);
@@ -33,6 +34,7 @@ test("classifyBulkFixOutcome clears when fixes resolve reasons", () => {
     raw_metadata: {},
     source_slug: "mit-solve",
     source_item_title: null,
+    source_external_id: null,
     canonical_url: null,
   };
   const fixed = proposeNeedsReviewBulkFix(row);
@@ -51,9 +53,10 @@ test("classifyBulkFixOutcome hides junk before source_limited", () => {
     raw_metadata: {},
     source_slug: "nia-innovation-catalogue",
     source_item_title: null,
+    source_external_id: null,
     canonical_url: null,
   };
   const fixed = proposeNeedsReviewBulkFix(row);
-  const outcome = classifyBulkFixOutcome(row, fixed, JUNK_GENERIC_TITLE);
+  const outcome = classifyBulkFixOutcome(row, fixed, { code: JUNK_GENERIC_TITLE, rule: "navigation_title" });
   assert.equal(outcome.action, "hide");
 });

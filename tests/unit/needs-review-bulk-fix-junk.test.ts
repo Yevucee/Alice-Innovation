@@ -15,28 +15,18 @@ function row(partial: Partial<NeedsReviewBulkFixRow> & Pick<NeedsReviewBulkFixRo
     person_name: null,
     raw_metadata: {},
     source_item_title: null,
+    source_external_id: null,
     canonical_url: null,
     ...partial,
   };
 }
 
-test("detectBulkFixJunk flags navigation and site-name titles from prod samples", () => {
-  assert.equal(
+test("detectBulkFixJunk flags navigation and portal titles from prod samples", () => {
+  assert.deepEqual(
     detectBulkFixJunk(row({ id: "1", title: "Advance Search", source_slug: "nia-innovation-catalogue" }), "Advance Search"),
-    JUNK_GENERIC_TITLE,
+    { code: JUNK_GENERIC_TITLE, rule: "navigation_title" },
   );
-  assert.equal(
-    detectBulkFixJunk(row({ id: "2", title: "Atlas of the Future", source_slug: "atlas-of-the-future" }), "Atlas of the Future"),
-    JUNK_GENERIC_TITLE,
-  );
-  assert.equal(
-    detectBulkFixJunk(
-      row({ id: "2b", title: "Atlas of the Future: Community Cooling", source_slug: "atlas-of-the-future" }),
-      "Atlas of the Future: Community Cooling",
-    ),
-    null,
-  );
-  assert.equal(
+  assert.deepEqual(
     detectBulkFixJunk(
       row({
         id: "3",
@@ -45,19 +35,37 @@ test("detectBulkFixJunk flags navigation and site-name titles from prod samples"
       }),
       "图解教育 - 中华人民共和国教育部政府门户网站",
     ),
-    JUNK_GENERIC_TITLE,
+    { code: JUNK_GENERIC_TITLE, rule: "government_portal_title" },
   );
-  assert.equal(
+  assert.deepEqual(
     detectBulkFixJunk(
       row({ id: "4", title: "In5 Media – Green Room", source_slug: "in5-dubai" }),
       "In5 Media – Green Room",
     ),
-    JUNK_GENERIC_TITLE,
+    { code: JUNK_GENERIC_TITLE, rule: "site_chrome_title" },
   );
 });
 
-test("detectBulkFixJunk flags mit-solve person-name stub, not ambiguous one-word products", () => {
+test("atlas exact site title without repairable URL is site_brand unrepaired", () => {
+  const hit = detectBulkFixJunk(
+    row({ id: "2", title: "Atlas of the Future", source_slug: "atlas-of-the-future", canonical_url: "https://atlasofthefuture.org/" }),
+    "Atlas of the Future",
+  );
+  assert.equal(hit?.rule, "site_brand_title_unrepaired");
+});
+
+test("atlas project subtitle title is not hidden", () => {
   assert.equal(
+    detectBulkFixJunk(
+      row({ id: "2b", title: "Atlas of the Future: Community Cooling", source_slug: "atlas-of-the-future" }),
+      "Atlas of the Future: Community Cooling",
+    ),
+    null,
+  );
+});
+
+test("detectBulkFixJunk flags mit-solve person stub and single letter only", () => {
+  assert.deepEqual(
     detectBulkFixJunk(
       row({
         id: "5",
@@ -68,7 +76,11 @@ test("detectBulkFixJunk flags mit-solve person-name stub, not ambiguous one-word
       }),
       "Sabrina",
     ),
-    JUNK_GENERIC_TITLE,
+    { code: JUNK_GENERIC_TITLE, rule: "mit_solve_person_name_stub" },
+  );
+  assert.deepEqual(
+    detectBulkFixJunk(row({ id: "5a", title: "a", source_slug: "mit-solve" }), "a"),
+    { code: JUNK_GENERIC_TITLE, rule: "single_letter_title" },
   );
   assert.equal(
     detectBulkFixJunk(
@@ -82,7 +94,9 @@ test("detectBulkFixJunk flags mit-solve person-name stub, not ambiguous one-word
     ),
     null,
   );
+});
 
+test("duplicate requires identical fingerprint including URL", () => {
   const tracker: Record<string, Record<string, string>> = {};
   const shared = row({
     id: "6",
@@ -90,6 +104,8 @@ test("detectBulkFixJunk flags mit-solve person-name stub, not ambiguous one-word
     source_slug: "hundred",
     source_summary: "Same listing body for duplicate detection test case.",
     extracted_index_text: "Same listing body for duplicate detection test case.",
+    canonical_url: "https://example.com/a",
+    source_external_id: "a",
   });
   assert.equal(detectBulkFixJunk(shared, "Community Cooling Hub", tracker), null);
   const dup = row({
@@ -98,6 +114,11 @@ test("detectBulkFixJunk flags mit-solve person-name stub, not ambiguous one-word
     source_slug: "hundred",
     source_summary: "Same listing body for duplicate detection test case.",
     extracted_index_text: "Same listing body for duplicate detection test case.",
+    canonical_url: "https://example.com/a",
+    source_external_id: "a",
   });
-  assert.equal(detectBulkFixJunk(dup, "Community Cooling Hub", tracker), JUNK_DUPLICATE_TITLE_CONTENT);
+  assert.deepEqual(detectBulkFixJunk(dup, "Community Cooling Hub", tracker), {
+    code: JUNK_DUPLICATE_TITLE_CONTENT,
+    rule: "duplicate_title_url_body",
+  });
 });

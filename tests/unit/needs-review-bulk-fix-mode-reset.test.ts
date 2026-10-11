@@ -111,10 +111,10 @@ test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed dry_run when a
   assert.equal(out.previous_mode, "dry_run");
   assert.equal(out.current_mode, "dry_run");
   assert.equal(out.previous_algorithm_version, 1);
-  assert.equal(out.current_algorithm_version, 2);
+  assert.equal(out.current_algorithm_version, 3);
   assert.equal(status, "pending");
   assert.equal(progress.mode, "dry_run");
-  assert.equal(progress.algorithm_version, 2);
+  assert.equal(progress.algorithm_version, 3);
   assert.equal(progress.last_id, null);
   assert.equal(progress.algorithm_version_reset_from, 1);
 
@@ -125,10 +125,10 @@ test("requeueNeedsReviewBulkFixJobIfModeChanged reopens completed dry_run when a
 test("formatNeedsReviewBulkFixSummary includes algorithm_version", () => {
   const text = formatNeedsReviewBulkFixSummary({
     mode: "dry_run",
-    algorithm_version: 2,
+    algorithm_version: 3,
     totals: { scanned: 1 },
     by_source: {},
     samples: [],
   });
-  assert.match(text, /algorithm_version=2/);
+  assert.match(text, /algorithm_version=3/);
 });
