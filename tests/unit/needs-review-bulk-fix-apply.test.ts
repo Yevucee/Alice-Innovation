@@ -32,7 +32,7 @@ test("formatNeedsReviewBulkFixSummary includes totals and title samples", () => 
       },
     ],
   });
-  assert.match(text, /dry_run/);
+  assert.match(text, /run_mode=dry_run/);
   assert.match(text, /cleared=10/);
   assert.match(text, /OLD TITLE/);
 });

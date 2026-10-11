@@ -25,6 +25,9 @@ import {
   needsReviewBulkFixApplyEnabled,
   formatNeedsReviewBulkFixSummary,
   NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
+  currentNeedsReviewBulkFixMode,
+  prepareNeedsReviewBulkFixProgress,
+  requeueNeedsReviewBulkFixJobIfModeChanged,
 } from "@alice/database";
 import { loadSources } from "@alice/source-registry";
 import { embedTextsDetailed, embeddingSettings, embeddingVersion, log } from "@alice/shared";
@@ -831,9 +834,17 @@ async function runNeedsReviewBulkFixStep(
   db: Queryable,
   progress: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const apply = needsReviewBulkFixApplyEnabled();
-  const mode: "dry_run" | "apply" = apply ? "apply" : "dry_run";
-  const offset = Number(progress.offset ?? 0);
+  const mode = currentNeedsReviewBulkFixMode();
+  const apply = mode === "apply";
+  const prepared = prepareNeedsReviewBulkFixProgress(progress, mode);
+  progress = prepared.progress;
+  if (prepared.modeReset) {
+    log("info", "needs_review_bulk_fix_mode_reset", {
+      previous_mode: prepared.previousMode,
+      current_mode: mode,
+    });
+  }
+  const lastId = typeof progress.last_id === "string" ? progress.last_id : null;
   const totals = {
     cleared: 0,
     source_limited: 0,
@@ -850,7 +861,7 @@ async function runNeedsReviewBulkFixStep(
     ...((progress.title_samples as Array<Record<string, unknown>>) ?? []),
   ] as import("@alice/database").NeedsReviewBulkFixSample[];
 
-  const batch = await runNeedsReviewBulkFixBatch(db, offset, {
+  const batch = await runNeedsReviewBulkFixBatch(db, lastId, {
     dryRun: !apply,
     maxSamples: NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
     existingSampleCount: samples.length,
@@ -889,6 +900,7 @@ async function runNeedsReviewBulkFixStep(
       totals,
       by_source,
       samples: samples.slice(0, NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT),
+      mode_reset_from: typeof progress.mode_reset_from === "string" ? progress.mode_reset_from : null,
     });
     log("info", "needs_review_bulk_fix_summary", {
       mode,
@@ -905,11 +917,12 @@ async function runNeedsReviewBulkFixStep(
     if (!reembed.skipped) pending.length = 0;
   }
   return {
-    offset: batch.next_offset,
+    last_id: batch.next_last_id,
     totals,
     by_source,
     title_samples: samples.slice(0, NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT),
     mode,
+    mode_reset_from: progress.mode_reset_from ?? null,
     dry_run_summary,
     pending_reembed_ids: pending,
     complete: complete && pending.length === 0,
@@ -1086,6 +1099,7 @@ async function executePostDeployJobStep(
           by_source: nextProgress.by_source,
           title_samples: nextProgress.title_samples,
           mode: nextProgress.mode,
+          mode_reset_from: nextProgress.mode_reset_from,
           dry_run_summary: nextProgress.dry_run_summary,
         };
         break;
@@ -1155,6 +1169,11 @@ export async function runPostDeployJobsStep(
   if (!postDeployJobsEnabled()) {
     log("info", "post_deploy_jobs_skipped", { reason: "POST_DEPLOY_JOBS_ON_INGEST=false", trigger });
     return emptySummary("disabled", []);
+  }
+
+  const bulkFixRequeue = await requeueNeedsReviewBulkFixJobIfModeChanged(db);
+  if (bulkFixRequeue.requeued) {
+    log("info", "needs_review_bulk_fix_job_requeued", bulkFixRequeue);
   }
 
   const pendingSnapshot = await listPostDeployJobs(db);

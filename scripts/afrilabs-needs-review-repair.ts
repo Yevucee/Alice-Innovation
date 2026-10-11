@@ -19,20 +19,20 @@ async function main(): Promise<void> {
      JOIN sources s ON s.id = si.source_id
      WHERE r.active AND r.review_status = 'NEEDS_REVIEW' AND s.slug = 'afrilabs'`,
   );
-  let offset = 0;
+  let lastId: string | null = null;
   const totals = { cleared: 0, source_limited: 0, updated: 0, still_flagged: 0, scanned: 0 };
   for (;;) {
-    const batch = await runNeedsReviewBulkFixBatch(pool, offset, {
+    const batch = await runNeedsReviewBulkFixBatch(pool, lastId, {
       dryRun: !apply,
       sourceSlug: "afrilabs",
     });
+    lastId = batch.next_last_id;
     totals.scanned += batch.scanned;
     totals.cleared += batch.cleared;
     totals.source_limited += batch.source_limited;
     totals.updated += batch.updated;
     totals.still_flagged += batch.still_flagged;
     if (batch.complete) break;
-    offset = batch.next_offset;
   }
   const after = apply ? await countNeedsReview(pool) : null;
   log("info", apply ? "afrilabs_needs_review_repair_applied" : "afrilabs_needs_review_repair_dry_run", {

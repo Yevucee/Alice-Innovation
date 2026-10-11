@@ -32,3 +32,7 @@ AfriLabs-only repair: `scripts/afrilabs-needs-review-repair.ts` (same dry-run / 
 1. Deploy PR with migration `025` (job registered, still dry-run).
 2. Run one ingest or wait for post-deploy; read **Admin** summary or Railway logs for `needs_review_bulk_fix_summary`.
 3. If counts look right, set `NEEDS_REVIEW_BULK_FIX_APPLY=true`, re-run the job (or script with `--apply`), then unset the var.
+
+When `NEEDS_REVIEW_BULK_FIX_APPLY` is enabled after a completed dry-run, the post-deploy runner **re-queues** `needs_review_bulk_fix_202510` (`status=pending`, progress reset). The Admin summary shows `run_mode=apply` and `restarted_from=dry_run` when that happens.
+
+Paging uses **keyset** (`last_id`) not `OFFSET`, so rows that leave `NEEDS_REVIEW` during apply are not skipped.

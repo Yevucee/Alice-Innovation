@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   const sourceIdx = process.argv.indexOf("--source");
   const sourceSlug = sourceIdx >= 0 ? process.argv[sourceIdx + 1] : null;
   const pool = getPool();
-  let offset = 0;
+  let lastId: string | null = null;
   const totals = {
     scanned: 0,
     cleared: 0,
@@ -40,13 +40,14 @@ async function main(): Promise<void> {
   const samples: import("@alice/database").NeedsReviewBulkFixSample[] = [];
 
   for (;;) {
-    const batch = await runNeedsReviewBulkFixBatch(pool, offset, {
+    const batch = await runNeedsReviewBulkFixBatch(pool, lastId, {
       dryRun,
       sourceSlug,
       maxSamples: NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT,
       existingSampleCount: samples.length,
     });
     samples.push(...batch.samples);
+    lastId = batch.next_last_id;
     totals.scanned += batch.scanned;
     totals.cleared += batch.cleared;
     totals.source_limited += batch.source_limited;
@@ -60,7 +61,6 @@ async function main(): Promise<void> {
       }
     }
     if (batch.complete) break;
-    offset = batch.next_offset;
   }
 
   const dry_run_summary = formatNeedsReviewBulkFixSummary({

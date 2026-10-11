@@ -9,7 +9,58 @@ import type { Queryable } from "./pool.js";
 import { auditDraftShape } from "./quality-audit.js";
 import { shouldAcceptSourceLimited } from "./needs-review-reconcile.js";
 
-const BATCH = 100;
+export const NEEDS_REVIEW_BULK_FIX_BATCH_SIZE = 100;
+
+const BATCH = NEEDS_REVIEW_BULK_FIX_BATCH_SIZE;
+
+export type NeedsReviewBulkFixMode = "dry_run" | "apply";
+
+export function currentNeedsReviewBulkFixMode(): NeedsReviewBulkFixMode {
+  return needsReviewBulkFixApplyEnabled() ? "apply" : "dry_run";
+}
+
+export function initialNeedsReviewBulkFixProgress(
+  mode: NeedsReviewBulkFixMode,
+  extra?: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    mode,
+    last_id: null,
+    totals: {
+      cleared: 0,
+      source_limited: 0,
+      updated: 0,
+      still_flagged: 0,
+      scanned: 0,
+      unchanged: 0,
+    },
+    by_source: {},
+    title_samples: [],
+    pending_reembed_ids: [],
+    complete: false,
+    ...extra,
+  };
+}
+
+/** Reset paging when switching dry_run ↔ apply so apply revisits every row. */
+export function prepareNeedsReviewBulkFixProgress(
+  progress: Record<string, unknown>,
+  mode: NeedsReviewBulkFixMode,
+): { progress: Record<string, unknown>; modeReset: boolean; previousMode: string | null } {
+  const stored = typeof progress.mode === "string" ? progress.mode : null;
+  if (stored === mode) {
+    return { progress, modeReset: false, previousMode: null };
+  }
+  const previousMode = stored;
+  return {
+    progress: initialNeedsReviewBulkFixProgress(mode, {
+      mode_reset_from: previousMode,
+      mode_reset_at: new Date().toISOString(),
+    }),
+    modeReset: Boolean(previousMode),
+    previousMode,
+  };
+}
 
 export const NEEDS_REVIEW_BULK_FIX_SAMPLE_LIMIT = 20;
 
@@ -31,10 +82,12 @@ export function formatNeedsReviewBulkFixSummary(input: {
   totals: Record<string, number>;
   by_source: NeedsReviewBulkFixBatchResult["by_source"];
   samples: NeedsReviewBulkFixSample[];
+  mode_reset_from?: string | null;
 }): string {
   const t = input.totals;
   const lines = [
-    `NEEDS_REVIEW bulk fix (${input.mode}): cleared=${t.cleared ?? 0} source_limited=${t.source_limited ?? 0} updated=${t.updated ?? 0} still_flagged=${t.still_flagged ?? 0} scanned=${t.scanned ?? 0}`,
+    `NEEDS_REVIEW bulk fix | run_mode=${input.mode}${input.mode_reset_from ? ` | restarted_from=${input.mode_reset_from}` : ""}`,
+    `totals: cleared=${t.cleared ?? 0} source_limited=${t.source_limited ?? 0} updated=${t.updated ?? 0} still_flagged=${t.still_flagged ?? 0} scanned=${t.scanned ?? 0}`,
     `by_source: ${JSON.stringify(input.by_source)}`,
   ];
   if (input.samples.length > 0) {
@@ -173,7 +226,7 @@ export function classifyBulkFixOutcome(
 
 export async function loadNeedsReviewBulkFixBatch(
   db: Queryable,
-  offset: number,
+  afterId: string | null,
   sourceSlug?: string | null,
 ): Promise<NeedsReviewBulkFixRow[]> {
   const rows = await db.query<NeedsReviewBulkFixRow>(
@@ -225,6 +278,7 @@ export async function loadNeedsReviewBulkFixBatch(
             ) AS canonical_url
      FROM resources r
      WHERE r.active AND r.review_status = 'NEEDS_REVIEW'
+       AND ($1::uuid IS NULL OR r.id > $1::uuid)
        AND ($3::text IS NULL OR EXISTS (
          SELECT 1 FROM resource_source_links l
          JOIN source_items si ON si.id = l.source_item_id
@@ -232,8 +286,8 @@ export async function loadNeedsReviewBulkFixBatch(
          WHERE l.resource_id = r.id AND s.slug = $3
        ))
      ORDER BY r.id
-     OFFSET $1 LIMIT $2`,
-    [offset, BATCH, sourceSlug ?? null],
+     LIMIT $2`,
+    [afterId, BATCH, sourceSlug ?? null],
   );
   return rows.rows;
 }
@@ -245,8 +299,8 @@ export interface NeedsReviewBulkFixBatchResult {
   updated: number;
   unchanged: number;
   still_flagged: number;
-  offset: number;
-  next_offset: number;
+  last_id: string | null;
+  next_last_id: string | null;
   complete: boolean;
   reembed_resource_ids: string[];
   by_source: Record<string, { cleared: number; source_limited: number; updated: number; still_flagged: number }>;
@@ -255,7 +309,7 @@ export interface NeedsReviewBulkFixBatchResult {
 
 export async function runNeedsReviewBulkFixBatch(
   db: Queryable,
-  offset: number,
+  afterId: string | null,
   input?: {
     dryRun?: boolean;
     sourceSlug?: string | null;
@@ -263,7 +317,7 @@ export async function runNeedsReviewBulkFixBatch(
     existingSampleCount?: number;
   },
 ): Promise<NeedsReviewBulkFixBatchResult> {
-  const rows = await loadNeedsReviewBulkFixBatch(db, offset, input?.sourceSlug ?? null);
+  const rows = await loadNeedsReviewBulkFixBatch(db, afterId, input?.sourceSlug ?? null);
   let cleared = 0;
   let source_limited = 0;
   let updated = 0;
@@ -393,6 +447,8 @@ export async function runNeedsReviewBulkFixBatch(
     }
   }
 
+  const nextLastId = rows.length > 0 ? rows[rows.length - 1].id : afterId;
+
   return {
     scanned: rows.length,
     cleared,
@@ -400,11 +456,55 @@ export async function runNeedsReviewBulkFixBatch(
     updated,
     unchanged,
     still_flagged,
-    offset,
-    next_offset: offset + rows.length,
+    last_id: afterId,
+    next_last_id: nextLastId,
     complete: rows.length < BATCH,
     reembed_resource_ids,
     by_source,
     samples,
   };
+}
+
+export const NEEDS_REVIEW_BULK_FIX_JOB_KEY = "needs_review_bulk_fix_202510";
+
+/** Re-open completed job when APPLY env toggles so apply pass runs from the start. */
+export async function requeueNeedsReviewBulkFixJobIfModeChanged(
+  db: Queryable,
+): Promise<{ requeued: boolean; previous_mode: string | null; current_mode: NeedsReviewBulkFixMode }> {
+  const current_mode = currentNeedsReviewBulkFixMode();
+  const row = await db.query<{
+    status: string;
+    progress: Record<string, unknown>;
+    result: Record<string, unknown> | null;
+  }>(
+    `SELECT status, progress, result FROM post_deploy_jobs WHERE job_key = $1`,
+    [NEEDS_REVIEW_BULK_FIX_JOB_KEY],
+  );
+  const job = row.rows[0];
+  if (!job) {
+    return { requeued: false, previous_mode: null, current_mode };
+  }
+  const stored =
+    (typeof job.result?.mode === "string" ? job.result.mode : null)
+    ?? (typeof job.progress?.mode === "string" ? job.progress.mode : null);
+  if (!stored || stored === current_mode) {
+    return { requeued: false, previous_mode: stored, current_mode };
+  }
+  const fresh = initialNeedsReviewBulkFixProgress(current_mode, {
+    mode_reset_from: stored,
+    mode_reset_at: new Date().toISOString(),
+  });
+  await db.query(
+    `UPDATE post_deploy_jobs
+     SET status = 'pending',
+         progress = $2::jsonb,
+         result = NULL,
+         completed_at = NULL,
+         started_at = NULL,
+         last_error = NULL,
+         updated_at = now()
+     WHERE job_key = $1`,
+    [NEEDS_REVIEW_BULK_FIX_JOB_KEY, JSON.stringify(fresh)],
+  );
+  return { requeued: true, previous_mode: stored, current_mode };
 }
