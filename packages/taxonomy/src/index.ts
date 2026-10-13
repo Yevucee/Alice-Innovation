@@ -55,6 +55,7 @@ export {
   isAfricanCountryCode,
 } from "./africa.js";
 export { ASIA_SOURCE_GEO_DEFAULTS } from "./asia.js";
+export { SOUTH_AMERICA_SOURCE_GEO_DEFAULTS } from "./south-america.js";
 
 export {
   continentNameForSlug,

@@ -18,6 +18,7 @@ import { buildAsiaQueueCatalogueAdapters } from "./asia-queue-adapters.js";
 import { pausedCatalogueAdapters } from "./paused-catalogue-adapters.js";
 import { buildPlaceholderAdapters, remainingCatalogueAdapters } from "./placeholder-adapters.js";
 import { seedstarsAdapter } from "./seedstars.js";
+import { southAmericaAdapters } from "./south-america-adapters.js";
 import { openDataAdapters } from "./open-data/index.js";
 
 const CORE_ADAPTERS: SourceAdapter[] = [
@@ -35,6 +36,7 @@ const CORE_ADAPTERS: SourceAdapter[] = [
   ...africaAdapters,
   ...africaSecondPassAdapters,
   ...asiaAdapters,
+  ...southAmericaAdapters,
   ...pausedCatalogueAdapters,
   ...remainingCatalogueAdapters,
 ];

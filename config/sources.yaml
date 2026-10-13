@@ -6472,3 +6472,93 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+
+  - id: fapesp-pipe
+    name: FAPESP PIPE (Fase 1 projetos vigentes)
+    category: south-america-innovation
+    description: "DISABLED: BV FAPESP PIPE Fase 1 active projects. robots.txt disallows /pt/pesquisa/* and ?cstart pagination; collection hub exposes a small static sample until a robots-allowed full index exists."
+    homepage: https://bv.fapesp.br/
+    collection_url: https://bv.fapesp.br/pt/696/pesquisa-inovativa-em-pequenas-empresas-pipe-fase-1-projetos-vigentes/
+    enabled: false
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: fapesp-pipe
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: collection HTTP 200; robots.txt HTTP 200 (disallows /pt/pesquisa/* and /*?cstart*). Detail /pt/auxilios/<id>/ allowed. Terms/privacy https://www.fapesp.br/politicas/privacidadeatividadefim . Plain HTML on hub lists recent PIPE Fase 1 auxilios; full buscador behind captcha."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Enable only after sample review; expect partial discover until robots-allowed enumeration is confirmed.
+
+  - id: uc-chile-technologies
+    name: UC Chile Technology Portfolio
+    category: south-america-innovation
+    description: "DISABLED: UC Transferencia y Desarrollo technology cards (Spanish detail pages). Cloudflare bot wall from automated egress during preflight."
+    homepage: https://transferenciaydesarrollo.uc.cl/
+    collection_url: https://transferenciaydesarrollo.uc.cl/innovaciones-uc/tecnologias/
+    enabled: false
+    status: BLOCKED
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: uc-chile-technologies
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: listing HTTP 403 (Cloudflare managed challenge); robots.txt HTTP 200 (empty allow-all). Spanish listing + ~6 pages pagination; ignore English duplicates."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Enable after egress can fetch listing without JS challenge.
+
+  - id: premios-verdes-500
+    name: Premios Verdes 500 Mejores Proyectos
+    category: south-america-innovation
+    description: "DISABLED: 2026 edition ranking cards. Config option include_central_america in discovery notes (default false = South America only)."
+    homepage: https://500-mejores.premiosverdes.org/
+    collection_url: https://500-mejores.premiosverdes.org/
+    enabled: false
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - SOLUTION
+    update_class: MANUAL
+    adapter: premios-verdes-500
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: list HTTP 200; robots.txt HTTP 200 (empty). include_central_america:false filters to South America. Detail /es/proyecto/<slug> — verify description without login. Strip personal emails/phones on detail."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Edition year 2026; external_id premios-verdes-500:2026:<slug>.
