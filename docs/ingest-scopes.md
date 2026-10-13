@@ -43,7 +43,7 @@ Implemented in `apps/ingestor/src/ingest-scope.ts` (`primaryIngestScopeForSource
 | **asia** | `category: asia-innovation` |
 | **africa** | `category: africa-innovation` |
 | **europe** | Source id or adapter prefix: `cordis-*`, `eu-innovation-radar`, `ukri-gtr-*` |
-| **south-america** | Explicit slug set `SOUTH_AMERICA_SOURCE_IDS` (empty until SA catalogues are enabled) |
+| **south-america** | `category: south-america-innovation` and explicit slug set `SOUTH_AMERICA_SOURCE_IDS` (7 enabled Oct 2026) |
 | **grants** | Categories: `general-innovation`, `agriculture-water-development`, `climate-energy-nature`, `people-innovators`, `major-backed-ideas`, `education-government-design`, `solutions-journalism` |
 | **unmapped** | Any other category → treated as **grants** for filtering; listed by `listUnmappedSourceIds()` in tests |
 
@@ -64,7 +64,7 @@ Runs only sources whose **latest** `ingestion_runs` row is `FAILED`, or `PARTIAL
 | asia | ~40+ enabled in category | 60–90 min |
 | africa | ~20+ enabled | 60–90 min |
 | europe | Mostly disabled open-data; cordis when on | 30–90 min |
-| south-america | 5 enabled (`fapesp-pipe`, `gridx-portfolio`, `unc-oferta-tecnologica`, `uc-chile-technologies`, `premios-verdes-500`) | minutes |
+| south-america | 7 enabled (`fapesp-pipe`, `gridx-portfolio`, `unc-oferta-tecnologica`, `usp-vitrine-portfolio`, `cuech-red-proyectos`, `uc-chile-technologies`, `premios-verdes-500`) | ~15–45 min |
 | grants | ~35 non-regional | 60–90 min (often hits budget on one large catalogue) |
 | all (cron) | All enabled | 60 min global cap |
 | failed-only | Subset | 30–90 min |

@@ -11,6 +11,8 @@ SOUTH_AMERICA_SOURCES=(
   fapesp-pipe
   gridx-portfolio
   unc-oferta-tecnologica
+  usp-vitrine-portfolio
+  cuech-red-proyectos
   uc-chile-technologies
   premios-verdes-500
 )

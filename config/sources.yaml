@@ -6623,3 +6623,65 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: "~30 nodes across three listing pages when checked."
+
+  - id: cuech-red-proyectos
+    name: Red Innovación CUECH (proyectos)
+    category: south-america-innovation
+    description: "Chilean state universities technology sheet modals on /proyectos/ (HTML, listing-only)."
+    homepage: https://redinnovacion.uestatales.cl/
+    collection_url: https://redinnovacion.uestatales.cl/proyectos/
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cuech-red-proyectos
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: ~9 modal projects in server HTML; descriptions in .modal-descripcion."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+      complete_catalogue_per_run: true
+    coverage:
+      historical_backfill: not-started
+      notes: Under 20 items; legacy /proyectos/ page only.
+
+  - id: usp-vitrine-portfolio
+    name: USP Vitrine Tecnológica
+    category: south-america-innovation
+    description: "USP Ribeirão Preto technology portfolio; detail via public Nuxt _payload.json (plain HTTP)."
+    homepage: https://vitrine.rp.usp.br/
+    collection_url: https://vitrine.rp.usp.br/portfolio/
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: usp-vitrine-portfolio
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: ~32 slugs on /portfolio/ and area pages; /portfolio/{slug}/_payload.json returns titulo+conteudo."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+      complete_catalogue_per_run: true
+    coverage:
+      historical_backfill: not-started
+      notes: Nuxt shell on HTML pages; ingest uses _payload.json only.

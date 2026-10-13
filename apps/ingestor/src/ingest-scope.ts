@@ -35,6 +35,8 @@ export const SOUTH_AMERICA_SOURCE_IDS = new Set<string>([
   "premios-verdes-500",
   "gridx-portfolio",
   "unc-oferta-tecnologica",
+  "cuech-red-proyectos",
+  "usp-vitrine-portfolio",
 ]);
 
 const GRANT_CATEGORIES = new Set([

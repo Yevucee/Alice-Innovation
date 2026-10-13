@@ -4,12 +4,17 @@ import { test } from "node:test";
 import {
   extractFapespAuxilioRefs,
   extractUncNodeRefs,
+  extractUspPortfolioSlugs,
+  parseCuechProyectosModals,
+  parseCuechProyectosDetail,
   parseFapespPipeDetail,
   parseGridxPortfolioCards,
   parseGridxPortfolioDetail,
   parsePremiosVerdesDetail,
   parsePremiosVerdesListingCard,
   parseUncOfertaDetail,
+  parseUspNuxtPayload,
+  parseUspVitrineDetail,
   parseUcChileDetail,
   southAmericaAdapters,
 } from "../../apps/ingestor/src/adapters/south-america-adapters.ts";
@@ -154,13 +159,55 @@ test("UNC oferta list and detail parse", () => {
   assert.ok(meetsSouthAmericaDescriptionGate(draft.extractedText));
 });
 
+test("CUECH proyectos modals parse", () => {
+  const html = readFileSync(new URL("../fixtures/south-america/cuech-proyectos-list.html", import.meta.url), "utf8");
+  const items = parseCuechProyectosModals(html);
+  assert.equal(items.length, 9);
+  const draft = parseCuechProyectosDetail({
+    url: "https://redinnovacion.uestatales.cl/proyectos/#modal-proyecto-4138",
+    finalUrl: "https://redinnovacion.uestatales.cl/proyectos/#modal-proyecto-4138",
+    status: 200,
+    html: JSON.stringify(items[0]),
+    etag: null,
+    lastModified: null,
+    listingOnly: true,
+  });
+  assert.match(draft.title, /Mobiliario escolar/i);
+  assert.ok(meetsSouthAmericaDescriptionGate(draft.extractedText));
+});
+
+test("USP vitrine payload parse", () => {
+  const raw = readFileSync(new URL("../fixtures/south-america/usp-vitrine-payload.json", import.meta.url), "utf8");
+  const parsed = parseUspNuxtPayload(raw);
+  assert.ok(parsed);
+  assert.match(parsed!.title, /Luva Detectora/i);
+  const draft = parseUspVitrineDetail({
+    url: "https://vitrine.rp.usp.br/portfolio/luva_detectora_de_pesticidas",
+    finalUrl: "https://vitrine.rp.usp.br/portfolio/luva_detectora_de_pesticidas/_payload.json",
+    status: 200,
+    html: raw,
+    etag: null,
+    lastModified: null,
+    listingOnly: false,
+  });
+  assert.ok(meetsSouthAmericaDescriptionGate(draft.extractedText));
+});
+
+test("USP portfolio slug extract", () => {
+  const list = readFileSync(new URL("../fixtures/south-america/usp-vitrine-list-snippet.html", import.meta.url), "utf8");
+  const slugs = extractUspPortfolioSlugs(list);
+  assert.ok(slugs.length >= 5);
+});
+
 test("south america adapters registered", () => {
   const ids = southAmericaAdapters.map((adapter) => adapter.id);
   assert.deepEqual(ids.sort(), [
+    "cuech-red-proyectos",
     "fapesp-pipe",
     "gridx-portfolio",
     "premios-verdes-500",
     "uc-chile-technologies",
     "unc-oferta-tecnologica",
+    "usp-vitrine-portfolio",
   ].sort());
 });

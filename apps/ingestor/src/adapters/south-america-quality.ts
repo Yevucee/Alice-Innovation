@@ -9,6 +9,8 @@ export const SOUTH_AMERICA_ADAPTER_IDS = new Set([
   "premios-verdes-500",
   "gridx-portfolio",
   "unc-oferta-tecnologica",
+  "cuech-red-proyectos",
+  "usp-vitrine-portfolio",
 ]);
 
 export const FAPESP_TITLE_PREFIX_RE = /^Pesquisa e Inovação:\s*/i;

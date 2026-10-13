@@ -27,6 +27,10 @@ const GRIDX_ORIGIN = "https://www.gridexponential.com";
 const GRIDX_PORTFOLIO_URL = `${GRIDX_ORIGIN}/portfolio`;
 const UNC_ORIGIN = "https://ofertatecnologica.secyt.unc.edu.ar";
 const UNC_LIST_PATH = "/capacidades-tecnologicas";
+const CUECH_ORIGIN = "https://redinnovacion.uestatales.cl";
+const CUECH_PROYECTOS_URL = `${CUECH_ORIGIN}/proyectos/`;
+const USP_ORIGIN = "https://vitrine.rp.usp.br";
+const USP_PORTFOLIO_URL = `${USP_ORIGIN}/portfolio/`;
 
 const FAPESP_AUXILIO_PATH_RE = /\/pt\/auxilios\/(\d+)\/([^/?#]+)\/?/gi;
 const FAPESP_AUXILIO_URL_RE = /\/pt\/auxilios\/(\d+)\/([^/?#]+)\/?/i;
@@ -559,10 +563,265 @@ const uncOfertaTecnologicaAdapter: SourceAdapter = {
   parse: parseUncOfertaDetail,
 };
 
+export interface CuechProyectoModal {
+  title: string;
+  description: string;
+  modalId: string;
+  stableId: string;
+}
+
+export function parseCuechProyectosModals(html: string): CuechProyectoModal[] {
+  const $ = load(html);
+  const items: CuechProyectoModal[] = [];
+  $(".proyecto-modal, [id^='modal-proyecto-']").each((_, el) => {
+    const modal = $(el);
+    const modalId = modal.attr("id") ?? "";
+    const match = modalId.match(/modal-proyecto-(\d+)/);
+    if (!match) return;
+    const title = modal.find("h2").first().text().replace(/\s+/g, " ").trim();
+    const description = htmlToText(modal.find(".modal-descripcion").html() ?? "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!title || !description) return;
+    items.push({
+      title,
+      description,
+      modalId,
+      stableId: match[1],
+    });
+  });
+  return items;
+}
+
+async function discoverCuechProyectos(ctx: AdapterContext): Promise<DiscoveredRef[]> {
+  const page = await ctx.fetchText(CUECH_PROYECTOS_URL);
+  const refs: DiscoveredRef[] = [];
+  for (const item of parseCuechProyectosModals(page.body)) {
+    refs.push({
+      url: `${CUECH_PROYECTOS_URL}#${item.modalId}`,
+      externalId: item.stableId,
+      listingHtml: JSON.stringify(item),
+    });
+  }
+  let deduped = dedupeDiscoveredRefs(discoverFingerprintDedupe(refs));
+  if (ctx.limit !== null) deduped = deduped.slice(0, ctx.limit);
+  assertDiscoverNonEmpty(ctx.source.id, deduped);
+  return deduped;
+}
+
+export function parseCuechProyectosDetail(page: FetchedPage) {
+  let item: CuechProyectoModal;
+  try {
+    item = JSON.parse(page.html) as CuechProyectoModal;
+  } catch {
+    throw new Error("cuech-red-proyectos: expected listing JSON payload");
+  }
+  assertSouthAmericaTitle(item.title);
+  const description = enrichSouthAmericaPortfolioDescription(item.description, {
+    countryName: "Chile",
+    catalogueLabel: "Red de Innovación CUECH",
+  });
+  assertSouthAmericaDescription(description, "detail");
+
+  return buildDraft({
+    title: item.title,
+    url: page.url,
+    externalId: item.stableId,
+    summary: description,
+    text: description,
+    countryName: "Chile",
+    continentName: "South America",
+    resourceType: "TECHNOLOGY",
+    evidenceBasis: "PROGRAMME_SELECTED",
+    language: "es",
+    rawMetadata: {
+      cuech_modal_id: item.modalId,
+      content_fingerprint: contentFingerprint(item.title, description),
+      listing_only: true,
+    },
+    etag: page.etag,
+    lastModified: page.lastModified,
+  });
+}
+
+const cuechRedProyectosAdapter: SourceAdapter = {
+  id: "cuech-red-proyectos",
+  fullCatalogue: true,
+  async discover(ctx) {
+    return discoverCuechProyectos(ctx);
+  },
+  async fetch(ref, ctx) {
+    if (ref.listingHtml) {
+      return listingPageFromJson(ref, JSON.parse(ref.listingHtml));
+    }
+    return defaultFetch(ref, ctx);
+  },
+  parse: parseCuechProyectosDetail,
+};
+
+export function extractUspPortfolioSlugs(html: string): string[] {
+  const slugs = new Set<string>();
+  for (const match of html.matchAll(/\/portfolio\/([a-z0-9_]+)/gi)) {
+    const slug = match[1].toLowerCase();
+    if (slug === "_payload" || slug === "area") continue;
+    if (slug.startsWith("area")) continue;
+    slugs.add(slug);
+  }
+  return [...slugs];
+}
+
+function resolveNuxtPayloadRef(root: unknown[], ref: unknown): unknown {
+  if (typeof ref === "number" && Number.isInteger(ref) && ref >= 0 && ref < root.length) {
+    return root[ref];
+  }
+  return ref;
+}
+
+export function parseUspNuxtPayload(raw: string): { title: string; contentHtml: string } | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (Array.isArray(parsed)) {
+    for (const item of parsed) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+      const record = item as Record<string, unknown>;
+      if (!("titulo" in record) || !("conteudo" in record)) continue;
+      const title = resolveNuxtPayloadRef(parsed, record.titulo);
+      const contentHtml = resolveNuxtPayloadRef(parsed, record.conteudo);
+      if (typeof title === "string" && typeof contentHtml === "string" && contentHtml.includes("<")) {
+        return { title, contentHtml };
+      }
+    }
+  }
+
+  const strings: string[] = [];
+  const walk = (value: unknown): void => {
+    if (typeof value === "string") strings.push(value);
+    else if (Array.isArray(value)) value.forEach(walk);
+    else if (value && typeof value === "object") Object.values(value).forEach(walk);
+  };
+  walk(parsed);
+  const contentHtml = strings
+    .filter((s) => s.length > 200 && s.includes("<"))
+    .sort((a, b) => b.length - a.length)[0];
+  if (!contentHtml) return null;
+  const titleNoise = new Set([
+    "shallowreactive",
+    "reactive",
+    "set",
+    "light",
+    "pt",
+    "en",
+    "es",
+  ]);
+  const titleCandidates = strings.filter((s) => {
+    if (s.length < 8 || s.length > 160) return false;
+    if (s.includes("<") || s.includes("http") || /^[0-9a-f-]{36}$/i.test(s)) return false;
+    if (titleNoise.has(s.toLowerCase())) return false;
+    if (s.startsWith("/portfolio/")) return false;
+    if (!/[A-Za-zÀ-ÿ]/.test(s)) return false;
+    const words = s.split(/\s+/).filter(Boolean);
+    return words.length >= 2;
+  });
+  const title = titleCandidates.sort((a, b) => b.length - a.length)[0];
+  if (!title) return null;
+  return { title, contentHtml };
+}
+
+async function discoverUspVitrine(ctx: AdapterContext): Promise<DiscoveredRef[]> {
+  const slugs = new Set<string>();
+  const listPage = await ctx.fetchText(USP_PORTFOLIO_URL);
+  for (const slug of extractUspPortfolioSlugs(listPage.body)) slugs.add(slug);
+
+  const $ = load(listPage.body);
+  $("a[href*='/portfolio/area/']").each((_, el) => {
+    const href = $(el).attr("href") ?? "";
+    if (!href.includes("/portfolio/area/")) return;
+  });
+
+  for (const areaMatch of listPage.body.matchAll(/\/portfolio\/area\/[a-z0-9_]+/gi)) {
+    try {
+      const areaPage = await ctx.fetchText(absoluteUrl(USP_ORIGIN, areaMatch[0]));
+      for (const slug of extractUspPortfolioSlugs(areaPage.body)) slugs.add(slug);
+    } catch {
+      // ignore area page failures
+    }
+  }
+
+  const refs: DiscoveredRef[] = [...slugs].map((slug) => ({
+    url: absoluteUrl(USP_ORIGIN, `/portfolio/${slug}`),
+    externalId: slug,
+  }));
+  let deduped = dedupeDiscoveredRefs(discoverFingerprintDedupe(refs));
+  if (ctx.limit !== null) deduped = deduped.slice(0, ctx.limit);
+  assertDiscoverNonEmpty(ctx.source.id, deduped);
+  return deduped;
+}
+
+export function parseUspVitrineDetail(page: FetchedPage) {
+  const slug = page.url.match(/\/portfolio\/([^/?#]+)/)?.[1]?.replace(/_payload\.json$/, "") ?? "";
+  const payload = parseUspNuxtPayload(page.html);
+  if (!payload) throw new Error(`usp-vitrine-portfolio: could not parse Nuxt payload for ${slug}`);
+  assertSouthAmericaTitle(payload.title);
+  let description = htmlToText(payload.contentHtml).replace(/\s+/g, " ").trim();
+  description = enrichSouthAmericaPortfolioDescription(description, {
+    countryName: "Brazil",
+    catalogueLabel: "USP Vitrine Tecnológica",
+  });
+  assertSouthAmericaDescription(description, "detail");
+
+  return buildDraft({
+    title: payload.title,
+    url: page.url.replace(/\/_payload\.json.*$/, "").replace(/\/$/, "") || page.url,
+    externalId: slug,
+    summary: description,
+    text: description,
+    countryName: "Brazil",
+    continentName: "South America",
+    resourceType: "TECHNOLOGY",
+    evidenceBasis: "PROGRAMME_SELECTED",
+    language: "pt",
+    rawMetadata: {
+      usp_slug: slug,
+      content_fingerprint: contentFingerprint(payload.title, description),
+    },
+    etag: page.etag,
+    lastModified: page.lastModified,
+  });
+}
+
+const uspVitrinePortfolioAdapter: SourceAdapter = {
+  id: "usp-vitrine-portfolio",
+  fullCatalogue: true,
+  async discover(ctx) {
+    return discoverUspVitrine(ctx);
+  },
+  async fetch(ref, ctx) {
+    const slug = ref.externalId ?? ref.url.split("/").filter(Boolean).pop() ?? "";
+    const payloadUrl = absoluteUrl(USP_ORIGIN, `/portfolio/${slug}/_payload.json`);
+    const result = await ctx.fetchText(payloadUrl);
+    return {
+      url: ref.url,
+      finalUrl: result.finalUrl,
+      status: result.status,
+      html: result.body,
+      etag: result.etag,
+      lastModified: result.lastModified,
+      listingOnly: false,
+    };
+  },
+  parse: parseUspVitrineDetail,
+};
+
 export const southAmericaAdapters: SourceAdapter[] = [
   fapespPipeAdapter,
   ucChileTechnologiesAdapter,
   premiosVerdes500Adapter,
   gridxPortfolioAdapter,
   uncOfertaTecnologicaAdapter,
+  cuechRedProyectosAdapter,
+  uspVitrinePortfolioAdapter,
 ];
