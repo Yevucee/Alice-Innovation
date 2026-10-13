@@ -80,6 +80,13 @@ export function isSouthAmericaCountryLabel(countryLabel: string): boolean {
   return SOUTH_AMERICA_COUNTRY_NAMES.has(key) || key === "peru";
 }
 
+export function assertSouthAmericaOrganisationTitle(title: string): void {
+  const trimmed = title.replace(/\s+/g, " ").trim();
+  if (!trimmed) throw new IngestQualityDropError(["empty_title"]);
+  if (isBoilerplateCatalogueTitle(trimmed)) throw new IngestQualityDropError(["blocklist_title"]);
+  if (trimmed.length < 3) throw new IngestQualityDropError(["truncated_title"]);
+}
+
 export function assertSouthAmericaTitle(title: string): void {
   const trimmed = title.replace(/\s+/g, " ").trim();
   if (!trimmed) throw new IngestQualityDropError(["empty_title"]);

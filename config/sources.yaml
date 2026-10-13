@@ -6570,7 +6570,7 @@ sources:
     homepage: https://www.gridexponential.com/
     collection_url: https://www.gridexponential.com/portfolio
     enabled: true
-    status: OPEN
+    status: PARTIAL
     resource_types:
       - ORGANISATION
       - SOLUTION
@@ -6601,7 +6601,7 @@ sources:
     homepage: https://ofertatecnologica.secyt.unc.edu.ar/
     collection_url: https://ofertatecnologica.secyt.unc.edu.ar/capacidades-tecnologicas
     enabled: true
-    status: OPEN
+    status: PARTIAL
     resource_types:
       - TECHNOLOGY
       - SOLUTION

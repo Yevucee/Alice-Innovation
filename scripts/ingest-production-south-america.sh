@@ -4,6 +4,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 export INGEST_SCOPE=south-america
+export POST_DEPLOY_JOBS_ON_INGEST=false
+export POST_DEPLOY_BEFORE_INGEST=false
 
 SOUTH_AMERICA_SOURCES=(
   fapesp-pipe

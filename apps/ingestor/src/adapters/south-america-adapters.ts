@@ -4,6 +4,7 @@ import { buildDraft } from "./draft.js";
 import {
   assertDiscoverNonEmpty,
   assertSouthAmericaDescription,
+  assertSouthAmericaOrganisationTitle,
   assertSouthAmericaTitle,
   contentFingerprint,
   dedupeDiscoveredRefs,
@@ -417,7 +418,7 @@ export function parseGridxPortfolioDetail(page: FetchedPage) {
   } catch {
     throw new Error("gridx-portfolio: expected listing JSON payload");
   }
-  assertSouthAmericaTitle(card.title);
+  assertSouthAmericaOrganisationTitle(card.title);
   const description = enrichSouthAmericaPortfolioDescription(card.description, {
     countryName: card.countryName,
     catalogueLabel: "GRIDX venture portfolio",
