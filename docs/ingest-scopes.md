@@ -64,7 +64,7 @@ Runs only sources whose **latest** `ingestion_runs` row is `FAILED`, or `PARTIAL
 | asia | ~40+ enabled in category | 60–90 min |
 | africa | ~20+ enabled | 60–90 min |
 | europe | Mostly disabled open-data; cordis when on | 30–90 min |
-| south-america | 3 disabled (`fapesp-pipe`, `uc-chile-technologies`, `premios-verdes-500`) | minutes |
+| south-america | 5 enabled (`fapesp-pipe`, `gridx-portfolio`, `unc-oferta-tecnologica`, `uc-chile-technologies`, `premios-verdes-500`) | minutes |
 | grants | ~35 non-regional | 60–90 min (often hits budget on one large catalogue) |
 | all (cron) | All enabled | 60 min global cap |
 | failed-only | Subset | 30–90 min |

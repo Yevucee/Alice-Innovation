@@ -3,4 +3,6 @@ export const SOUTH_AMERICA_SOURCE_GEO_DEFAULTS: Record<string, { countryName?: s
   "fapesp-pipe": { countryName: "Brazil", continentName: "South America" },
   "uc-chile-technologies": { countryName: "Chile", continentName: "South America" },
   "premios-verdes-500": { continentName: "South America" },
+  "gridx-portfolio": { continentName: "South America" },
+  "unc-oferta-tecnologica": { countryName: "Argentina", continentName: "South America" },
 };

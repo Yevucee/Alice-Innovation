@@ -7,18 +7,25 @@ import {
   assertSouthAmericaTitle,
   contentFingerprint,
   dedupeDiscoveredRefs,
+  enrichSouthAmericaPortfolioDescription,
   isListingExcerptDescription,
   isPremiosSouthAmericaCountry,
+  isSouthAmericaCountryLabel,
   parseSouthAmericaCountryFromLocation,
   premiosIncludeCentralAmerica,
   stripFapespTitlePrefix,
   stripPersonalContactHtml,
 } from "./south-america-quality.js";
+import { listingPageFromJson } from "./open-data/http-json.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
 
 const FAPESP_ORIGIN = "https://bv.fapesp.br";
 const UC_ORIGIN = "https://transferenciaydesarrollo.uc.cl";
 const PREMIOS_ORIGIN = "https://500-mejores.premiosverdes.org";
+const GRIDX_ORIGIN = "https://www.gridexponential.com";
+const GRIDX_PORTFOLIO_URL = `${GRIDX_ORIGIN}/portfolio`;
+const UNC_ORIGIN = "https://ofertatecnologica.secyt.unc.edu.ar";
+const UNC_LIST_PATH = "/capacidades-tecnologicas";
 
 const FAPESP_AUXILIO_PATH_RE = /\/pt\/auxilios\/(\d+)\/([^/?#]+)\/?/gi;
 const FAPESP_AUXILIO_URL_RE = /\/pt\/auxilios\/(\d+)\/([^/?#]+)\/?/i;
@@ -342,8 +349,219 @@ export const premiosVerdes500Adapter: SourceAdapter = {
   parse: parsePremiosVerdesDetail,
 };
 
+export interface GridxPortfolioCard {
+  title: string;
+  countryName: string | null;
+  description: string;
+  website: string;
+  stableId: string;
+}
+
+export function parseGridxPortfolioCards(html: string): GridxPortfolioCard[] {
+  const chunks = html.split("transform:rotateY(180deg)");
+  const cards: GridxPortfolioCard[] = [];
+  const seenWebsites = new Set<string>();
+
+  for (const chunk of chunks.slice(1)) {
+    const countryName = chunk.match(/title="([^"]+)"/)?.[1]?.trim() ?? null;
+    const title = chunk.match(/<h3[^>]*>([^<]+)<\/h3>/)?.[1]?.replace(/\s+/g, " ").trim() ?? "";
+    const description = chunk.match(/<p class="text-sm[^"]*">([\s\S]*?)<\/p>/)?.[1]
+      ?.replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() ?? "";
+    const website = chunk.match(/href="([^"]+)"[^>]*>Visit Website/)?.[1]?.trim() ?? "";
+    if (!title || !website || !description) continue;
+    const websiteKey = website.toLowerCase();
+    if (seenWebsites.has(websiteKey)) continue;
+    seenWebsites.add(websiteKey);
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+    cards.push({
+      title,
+      countryName,
+      description,
+      website,
+      stableId: slug || websiteKey,
+    });
+  }
+  return cards;
+}
+
+async function discoverGridxPortfolio(ctx: AdapterContext): Promise<DiscoveredRef[]> {
+  const page = await ctx.fetchText(GRIDX_PORTFOLIO_URL);
+  const includeCentral = premiosIncludeCentralAmerica(ctx.source.discovery.notes);
+  const refs: DiscoveredRef[] = [];
+
+  for (const card of parseGridxPortfolioCards(page.body)) {
+    if (!card.countryName) continue;
+    const southAmerica = isSouthAmericaCountryLabel(card.countryName)
+      || (includeCentral && /mexico|costa rica/i.test(card.countryName));
+    if (!southAmerica) continue;
+    refs.push({
+      url: card.website,
+      externalId: card.stableId,
+      listingHtml: JSON.stringify(card),
+      listingExtras: { catalogue_url: GRIDX_PORTFOLIO_URL },
+    });
+  }
+
+  let deduped = dedupeDiscoveredRefs(discoverFingerprintDedupe(refs));
+  if (ctx.limit !== null) deduped = deduped.slice(0, ctx.limit);
+  assertDiscoverNonEmpty(ctx.source.id, deduped);
+  return deduped;
+}
+
+export function parseGridxPortfolioDetail(page: FetchedPage) {
+  let card: GridxPortfolioCard;
+  try {
+    card = JSON.parse(page.html) as GridxPortfolioCard;
+  } catch {
+    throw new Error("gridx-portfolio: expected listing JSON payload");
+  }
+  assertSouthAmericaTitle(card.title);
+  const description = enrichSouthAmericaPortfolioDescription(card.description, {
+    countryName: card.countryName,
+    catalogueLabel: "GRIDX venture portfolio",
+  });
+  assertSouthAmericaDescription(description, "detail");
+
+  return buildDraft({
+    title: card.title,
+    url: card.website,
+    externalId: card.stableId,
+    summary: description,
+    text: description,
+    countryName: card.countryName,
+    continentName: "South America",
+    resourceType: "ORGANISATION",
+    evidenceBasis: "PROGRAMME_SELECTED",
+    language: "en",
+    rawMetadata: {
+      gridx_country_label: card.countryName,
+      portfolio_website: card.website,
+      content_fingerprint: contentFingerprint(card.title, description),
+      listing_only: true,
+    },
+    etag: page.etag,
+    lastModified: page.lastModified,
+  });
+}
+
+const gridxPortfolioAdapter: SourceAdapter = {
+  id: "gridx-portfolio",
+  fullCatalogue: true,
+  async discover(ctx) {
+    return discoverGridxPortfolio(ctx);
+  },
+  async fetch(ref, ctx) {
+    if (ref.listingHtml) {
+      return listingPageFromJson(ref, JSON.parse(ref.listingHtml));
+    }
+    return defaultFetch(ref, ctx);
+  },
+  parse: parseGridxPortfolioDetail,
+};
+
+export function extractUncNodeRefs(html: string, origin = UNC_ORIGIN): DiscoveredRef[] {
+  const $ = load(html);
+  const refs: DiscoveredRef[] = [];
+  const seen = new Set<string>();
+  $("a[href^='/node/']").each((_, el) => {
+    const href = $(el).attr("href") ?? "";
+    const match = href.match(/^\/node\/(\d+)$/);
+    if (!match) return;
+    const nodeId = match[1];
+    if (seen.has(nodeId)) return;
+    const title = $(el).text().replace(/\s+/g, " ").trim();
+    if (!title || /^leer más$/i.test(title)) return;
+    seen.add(nodeId);
+    refs.push({
+      url: absoluteUrl(origin, `/node/${nodeId}`),
+      externalId: nodeId,
+    });
+  });
+  return refs;
+}
+
+async function discoverUncOferta(ctx: AdapterContext): Promise<DiscoveredRef[]> {
+  const refs: DiscoveredRef[] = [];
+  const seenIds = new Set<string>();
+  for (let pageIndex = 0; pageIndex < 3; pageIndex += 1) {
+    const listUrl = absoluteUrl(UNC_ORIGIN, `${UNC_LIST_PATH}?page=${pageIndex}`);
+    const page = await ctx.fetchText(listUrl);
+    for (const ref of extractUncNodeRefs(page.body)) {
+      if (seenIds.has(ref.externalId ?? ref.url)) continue;
+      seenIds.add(ref.externalId ?? ref.url);
+      refs.push(ref);
+    }
+    const $ = load(page.body);
+    const hasNext = $("a[rel='next'], .pager a[title*='siguiente']").length > 0;
+    if (!hasNext && pageIndex > 0) break;
+  }
+  let deduped = dedupeDiscoveredRefs(discoverFingerprintDedupe(refs));
+  if (ctx.limit !== null) deduped = deduped.slice(0, ctx.limit);
+  assertDiscoverNonEmpty(ctx.source.id, deduped);
+  return deduped;
+}
+
+export function parseUncOfertaDetail(page: FetchedPage) {
+  const $ = load(page.html);
+  const nodeId = page.url.match(/\/node\/(\d+)/)?.[1] ?? page.url;
+  let title = $("h1.page-header, h1").first().text().replace(/\s+/g, " ").trim();
+  if (!title) title = $("title").text().replace(/\s+\|.*$/, "").trim();
+  assertSouthAmericaTitle(title);
+
+  let description = "";
+  $(".field--name-body").each((_, el) => {
+    const field = $(el);
+    const label = field.find("> .field--label").first().text().replace(/\s+/g, " ").trim();
+    if (label && !/descripción/i.test(label)) return;
+    const itemHtml = field.find("> .field--item").first().html() ?? field.find(".field--item").first().html();
+    const text = htmlToText(itemHtml ?? field.text()).replace(/\s+/g, " ").trim();
+    if (text.length > description.length) description = text;
+  });
+  if (!description) {
+    description = htmlToText($("article .field--name-body, .node__content .field--item").last().html() ?? "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  const enriched = enrichSouthAmericaPortfolioDescription(description, {
+    countryName: "Argentina",
+    catalogueLabel: "UNC Oferta Tecnológica",
+  });
+  assertSouthAmericaDescription(enriched, "detail");
+
+  return buildDraft({
+    title,
+    url: page.url,
+    externalId: nodeId,
+    summary: enriched,
+    text: enriched,
+    countryName: "Argentina",
+    continentName: "South America",
+    resourceType: "TECHNOLOGY",
+    evidenceBasis: "PROGRAMME_SELECTED",
+    language: "es",
+    rawMetadata: {
+      unc_node_id: nodeId,
+      content_fingerprint: contentFingerprint(title, enriched),
+    },
+    etag: page.etag,
+    lastModified: page.lastModified,
+  });
+}
+
+const uncOfertaTecnologicaAdapter: SourceAdapter = {
+  id: "unc-oferta-tecnologica",
+  fullCatalogue: true,
+  discover: discoverUncOferta,
+  fetch: defaultFetch,
+  parse: parseUncOfertaDetail,
+};
+
 export const southAmericaAdapters: SourceAdapter[] = [
   fapespPipeAdapter,
   ucChileTechnologiesAdapter,
   premiosVerdes500Adapter,
+  gridxPortfolioAdapter,
+  uncOfertaTecnologicaAdapter,
 ];

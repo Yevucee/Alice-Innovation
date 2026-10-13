@@ -3,9 +3,13 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import {
   extractFapespAuxilioRefs,
+  extractUncNodeRefs,
   parseFapespPipeDetail,
+  parseGridxPortfolioCards,
+  parseGridxPortfolioDetail,
   parsePremiosVerdesDetail,
   parsePremiosVerdesListingCard,
+  parseUncOfertaDetail,
   parseUcChileDetail,
   southAmericaAdapters,
 } from "../../apps/ingestor/src/adapters/south-america-adapters.ts";
@@ -118,7 +122,45 @@ test("zero-items discover failure", () => {
   );
 });
 
+test("GRIDX portfolio list extracts South America cards", () => {
+  const html = readFileSync(new URL("../fixtures/south-america/gridx-portfolio-list.html", import.meta.url), "utf8");
+  const cards = parseGridxPortfolioCards(html);
+  assert.ok(cards.length >= 20);
+  const sample = cards.find((card) => card.title.split(/\s+/).length >= 2 && card.countryName === "Argentina");
+  assert.ok(sample);
+  const draft = parseGridxPortfolioDetail({
+    url: sample!.website,
+    finalUrl: sample!.website,
+    status: 200,
+    html: JSON.stringify(sample),
+    etag: null,
+    lastModified: null,
+    listingOnly: true,
+  });
+  assert.equal(draft.resourceType, "ORGANISATION");
+  assert.ok(meetsSouthAmericaDescriptionGate(draft.extractedText));
+});
+
+test("UNC oferta list and detail parse", () => {
+  const listHtml = readFileSync(new URL("../fixtures/south-america/unc-oferta-list.html", import.meta.url), "utf8");
+  const refs = extractUncNodeRefs(listHtml);
+  assert.ok(refs.length >= 10);
+  const draft = parseUncOfertaDetail(page(
+    "unc-oferta-detail.html",
+    "https://ofertatecnologica.secyt.unc.edu.ar/node/94",
+  ));
+  assert.match(draft.title, /Barreras aislantes/i);
+  assert.equal(draft.externalId, "94");
+  assert.ok(meetsSouthAmericaDescriptionGate(draft.extractedText));
+});
+
 test("south america adapters registered", () => {
   const ids = southAmericaAdapters.map((adapter) => adapter.id);
-  assert.deepEqual(ids.sort(), ["fapesp-pipe", "premios-verdes-500", "uc-chile-technologies"].sort());
+  assert.deepEqual(ids.sort(), [
+    "fapesp-pipe",
+    "gridx-portfolio",
+    "premios-verdes-500",
+    "uc-chile-technologies",
+    "unc-oferta-tecnologica",
+  ].sort());
 });

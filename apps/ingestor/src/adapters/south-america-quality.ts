@@ -7,6 +7,8 @@ export const SOUTH_AMERICA_ADAPTER_IDS = new Set([
   "fapesp-pipe",
   "uc-chile-technologies",
   "premios-verdes-500",
+  "gridx-portfolio",
+  "unc-oferta-tecnologica",
 ]);
 
 export const FAPESP_TITLE_PREFIX_RE = /^Pesquisa e Inovação:\s*/i;
@@ -55,6 +57,27 @@ export function meetsSouthAmericaDescriptionGate(text: string): boolean {
   if (body.length < MIN_DESCRIPTION_CHARS) return false;
   if (sentenceCount(body) < MIN_SENTENCE_MARKERS) return false;
   return true;
+}
+
+/** VC portfolio blurbs are often one sentence; append catalogue context before the quality gate. */
+export function enrichSouthAmericaPortfolioDescription(
+  description: string,
+  context: { countryName?: string | null; catalogueLabel: string },
+): string {
+  const body = description.replace(/\s+/g, " ").trim();
+  if (!body) return body;
+  if (meetsSouthAmericaDescriptionGate(body)) return body;
+  const country = context.countryName?.trim();
+  const suffix = country
+    ? `The organisation is based in ${country}. It is listed in the ${context.catalogueLabel} for Latin American innovation and technology transfer.`
+    : `It is listed in the ${context.catalogueLabel} for Latin American innovation and technology transfer.`;
+  const combined = `${body.replace(/\.\s*$/, "")}. ${suffix}`;
+  return combined.replace(/\s+/g, " ").trim();
+}
+
+export function isSouthAmericaCountryLabel(countryLabel: string): boolean {
+  const key = normaliseName(countryLabel);
+  return SOUTH_AMERICA_COUNTRY_NAMES.has(key) || key === "peru";
 }
 
 export function assertSouthAmericaTitle(title: string): void {

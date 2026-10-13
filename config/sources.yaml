@@ -6476,10 +6476,10 @@ sources:
   - id: fapesp-pipe
     name: FAPESP PIPE (Fase 1 projetos vigentes)
     category: south-america-innovation
-    description: "DISABLED: BV FAPESP PIPE Fase 1 active projects. robots.txt disallows /pt/pesquisa/* and ?cstart pagination; collection hub exposes a small static sample until a robots-allowed full index exists."
+    description: "BV FAPESP PIPE Fase 1 active projects. robots.txt disallows /pt/pesquisa/* and ?cstart pagination; collection hub exposes a small static sample until a robots-allowed full index exists."
     homepage: https://bv.fapesp.br/
     collection_url: https://bv.fapesp.br/pt/696/pesquisa-inovativa-em-pequenas-empresas-pipe-fase-1-projetos-vigentes/
-    enabled: false
+    enabled: true
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -6506,10 +6506,10 @@ sources:
   - id: uc-chile-technologies
     name: UC Chile Technology Portfolio
     category: south-america-innovation
-    description: "DISABLED: UC Transferencia y Desarrollo technology cards (Spanish detail pages). Cloudflare bot wall from automated egress during preflight."
+    description: "UC Transferencia y Desarrollo technology cards (Spanish detail pages). May fail from automated egress behind Cloudflare."
     homepage: https://transferenciaydesarrollo.uc.cl/
     collection_url: https://transferenciaydesarrollo.uc.cl/innovaciones-uc/tecnologias/
-    enabled: false
+    enabled: true
     status: BLOCKED
     resource_types:
       - TECHNOLOGY
@@ -6536,10 +6536,10 @@ sources:
   - id: premios-verdes-500
     name: Premios Verdes 500 Mejores Proyectos
     category: south-america-innovation
-    description: "DISABLED: 2026 edition ranking cards. Config option include_central_america in discovery notes (default false = South America only)."
+    description: "2026 edition ranking cards. Config option include_central_america in discovery notes (default false = South America only)."
     homepage: https://500-mejores.premiosverdes.org/
     collection_url: https://500-mejores.premiosverdes.org/
-    enabled: false
+    enabled: true
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -6562,3 +6562,64 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: Edition year 2026; external_id premios-verdes-500:2026:<slug>.
+
+  - id: gridx-portfolio
+    name: GRIDX Portfolio
+    category: south-america-innovation
+    description: "GRIDX venture portfolio (Latin America life-science). South America filter on country label; blurbs ingested as ORGANISATION from listing HTML."
+    homepage: https://www.gridexponential.com/
+    collection_url: https://www.gridexponential.com/portfolio
+    enabled: true
+    status: OPEN
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: gridx-portfolio
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: https://www.gridexponential.com/sitemap.xml
+      rss: null
+      notes: "Preflight Oct 2026: portfolio HTTP 200; robots Allow /; ~82 flip cards in HTML. Detail is external website URL."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+      complete_catalogue_per_run: true
+    coverage:
+      historical_backfill: not-started
+      notes: South America country labels only unless include_central_america:true in discovery notes.
+
+  - id: unc-oferta-tecnologica
+    name: UNC Oferta Tecnológica
+    category: south-america-innovation
+    description: "Universidad Nacional de Córdoba SECYT technology capabilities catalogue (Drupal)."
+    homepage: https://ofertatecnologica.secyt.unc.edu.ar/
+    collection_url: https://ofertatecnologica.secyt.unc.edu.ar/capacidades-tecnologicas
+    enabled: true
+    status: OPEN
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: unc-oferta-tecnologica
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: paginated /capacidades-tecnologicas?page=0..2; detail /node/{id} HTML descriptions."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "~30 nodes across three listing pages when checked."

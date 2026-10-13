@@ -33,6 +33,8 @@ export const SOUTH_AMERICA_SOURCE_IDS = new Set<string>([
   "fapesp-pipe",
   "uc-chile-technologies",
   "premios-verdes-500",
+  "gridx-portfolio",
+  "unc-oferta-tecnologica",
 ]);
 
 const GRANT_CATEGORIES = new Set([
