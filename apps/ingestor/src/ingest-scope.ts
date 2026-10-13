@@ -30,7 +30,13 @@ const EUROPE_SOURCE_ID_PREFIXES = [
 
 /** Explicit South America catalogue slugs (expand as sources are enabled). */
 export const SOUTH_AMERICA_SOURCE_IDS = new Set<string>([
-  // No enabled South America catalogues in sources.yaml yet (Oct 2026).
+  "fapesp-pipe",
+  "uc-chile-technologies",
+  "premios-verdes-500",
+  "gridx-portfolio",
+  "unc-oferta-tecnologica",
+  "cuech-red-proyectos",
+  "usp-vitrine-portfolio",
 ]);
 
 const GRANT_CATEGORIES = new Set([
@@ -70,6 +76,7 @@ function isEuropeSource(source: SourceRecord): boolean {
 export function primaryIngestScopeForSource(source: SourceRecord): IngestScope | "unmapped" {
   if (source.category === "asia-innovation") return "asia";
   if (source.category === "africa-innovation") return "africa";
+  if (source.category === "south-america-innovation") return "south-america";
   if (SOUTH_AMERICA_SOURCE_IDS.has(source.id)) return "south-america";
   if (isEuropeSource(source)) return "europe";
   if (GRANT_CATEGORIES.has(source.category)) return "grants";

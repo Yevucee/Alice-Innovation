@@ -3,6 +3,7 @@ import type { SourceRecord } from "@alice/source-registry";
 import {
   AFRICA_SOURCE_GEO_DEFAULTS,
   ASIA_SOURCE_GEO_DEFAULTS,
+  SOUTH_AMERICA_SOURCE_GEO_DEFAULTS,
   continentForCountryCode,
   countryCodeFor,
 } from "@alice/taxonomy";
@@ -42,6 +43,22 @@ export function applyGeographyDefaults(draft: NormalisedDraft, source: SourceRec
 
   if (source.category === "asia-innovation") {
     return { ...draft, continentName: "Asia" };
+  }
+
+  const southAmericaDefaults = SOUTH_AMERICA_SOURCE_GEO_DEFAULTS[source.id];
+  if (southAmericaDefaults) {
+    const countryName = southAmericaDefaults.countryName ?? draft.countryName ?? null;
+    const countryCode = countryName ? countryCodeFor(countryName) : draft.countryCode ?? null;
+    return {
+      ...draft,
+      countryName,
+      countryCode,
+      continentName: southAmericaDefaults.continentName,
+    };
+  }
+
+  if (source.category === "south-america-innovation") {
+    return { ...draft, continentName: "South America" };
   }
 
   return draft;

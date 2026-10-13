@@ -6472,3 +6472,216 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: Phase 2 open-data source. Run adapter:sample-dry-run before first production ingest.
+
+  - id: fapesp-pipe
+    name: FAPESP PIPE (Fase 1 projetos vigentes)
+    category: south-america-innovation
+    description: "BV FAPESP PIPE Fase 1 active projects. robots.txt disallows /pt/pesquisa/* and ?cstart pagination; collection hub exposes a small static sample until a robots-allowed full index exists."
+    homepage: https://bv.fapesp.br/
+    collection_url: https://bv.fapesp.br/pt/696/pesquisa-inovativa-em-pequenas-empresas-pipe-fase-1-projetos-vigentes/
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: fapesp-pipe
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: collection HTTP 200; robots.txt HTTP 200 (disallows /pt/pesquisa/* and /*?cstart*). Detail /pt/auxilios/<id>/ allowed. Terms/privacy https://www.fapesp.br/politicas/privacidadeatividadefim . Plain HTML on hub lists recent PIPE Fase 1 auxilios; full buscador behind captcha."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Enable only after sample review; expect partial discover until robots-allowed enumeration is confirmed.
+
+  - id: uc-chile-technologies
+    name: UC Chile Technology Portfolio
+    category: south-america-innovation
+    description: "UC Transferencia y Desarrollo technology cards (Spanish detail pages). May fail from automated egress behind Cloudflare."
+    homepage: https://transferenciaydesarrollo.uc.cl/
+    collection_url: https://transferenciaydesarrollo.uc.cl/innovaciones-uc/tecnologias/
+    enabled: true
+    status: BLOCKED
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: uc-chile-technologies
+    access:
+      class: PUBLIC
+      status: BOT_WALL
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: listing HTTP 403 (Cloudflare managed challenge); robots.txt HTTP 200 (empty allow-all). Spanish listing + ~6 pages pagination; ignore English duplicates."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Enable after egress can fetch listing without JS challenge.
+
+  - id: premios-verdes-500
+    name: Premios Verdes 500 Mejores Proyectos
+    category: south-america-innovation
+    description: "2026 edition ranking cards. Config option include_central_america in discovery notes (default false = South America only)."
+    homepage: https://500-mejores.premiosverdes.org/
+    collection_url: https://500-mejores.premiosverdes.org/
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - PROJECT
+      - SOLUTION
+    update_class: MANUAL
+    adapter: premios-verdes-500
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: list HTTP 200; robots.txt HTTP 200 (empty). include_central_america:false filters to South America. Detail /es/proyecto/<slug> — verify description without login. Strip personal emails/phones on detail."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: Edition year 2026; external_id premios-verdes-500:2026:<slug>.
+
+  - id: gridx-portfolio
+    name: GRIDX Portfolio
+    category: south-america-innovation
+    description: "GRIDX venture portfolio (Latin America life-science). South America filter on country label; blurbs ingested as ORGANISATION from listing HTML."
+    homepage: https://www.gridexponential.com/
+    collection_url: https://www.gridexponential.com/portfolio
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: gridx-portfolio
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: https://www.gridexponential.com/sitemap.xml
+      rss: null
+      notes: "Preflight Oct 2026: portfolio HTTP 200; robots Allow /; ~82 flip cards in HTML. Detail is external website URL."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+      complete_catalogue_per_run: true
+    coverage:
+      historical_backfill: not-started
+      notes: South America country labels only unless include_central_america:true in discovery notes.
+
+  - id: unc-oferta-tecnologica
+    name: UNC Oferta Tecnológica
+    category: south-america-innovation
+    description: "Universidad Nacional de Córdoba SECYT technology capabilities catalogue (Drupal)."
+    homepage: https://ofertatecnologica.secyt.unc.edu.ar/
+    collection_url: https://ofertatecnologica.secyt.unc.edu.ar/capacidades-tecnologicas
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: unc-oferta-tecnologica
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: paginated /capacidades-tecnologicas?page=0..2; detail /node/{id} HTML descriptions."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "~30 nodes across three listing pages when checked."
+
+  - id: cuech-red-proyectos
+    name: Red Innovación CUECH (proyectos)
+    category: south-america-innovation
+    description: "Chilean state universities technology sheet modals on /proyectos/ (HTML, listing-only)."
+    homepage: https://redinnovacion.uestatales.cl/
+    collection_url: https://redinnovacion.uestatales.cl/proyectos/
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: cuech-red-proyectos
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: ~9 modal projects in server HTML; descriptions in .modal-descripcion."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+      complete_catalogue_per_run: true
+    coverage:
+      historical_backfill: not-started
+      notes: Under 20 items; legacy /proyectos/ page only.
+
+  - id: usp-vitrine-portfolio
+    name: USP Vitrine Tecnológica
+    category: south-america-innovation
+    description: "USP Ribeirão Preto technology portfolio; detail via public Nuxt _payload.json (plain HTTP)."
+    homepage: https://vitrine.rp.usp.br/
+    collection_url: https://vitrine.rp.usp.br/portfolio/
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: usp-vitrine-portfolio
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight Oct 2026: ~32 slugs on /portfolio/ and area pages; /portfolio/{slug}/_payload.json returns titulo+conteudo."
+    limits:
+      requests_per_minute: 10
+      concurrency: 1
+      complete_catalogue_per_run: true
+    coverage:
+      historical_backfill: not-started
+      notes: Nuxt shell on HTML pages; ingest uses _payload.json only.

@@ -41,6 +41,7 @@
     "ingest:production-ops-queue:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-ops-queue.sh",
     "ingest:production-step8:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-step8-remaining.sh",
     "ingest:single-flight:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-single-flight-queue.sh",
+    "ingest:south-america:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-south-america.sh",
     "ingest:africa:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-africa-queue.sh",
     "ingest:africa-full:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-africa-full-only.sh",
     "ingest:africa-tail:remote": "bash scripts/run-with-production-env.sh bash scripts/ingest-production-africa-tail.sh",
