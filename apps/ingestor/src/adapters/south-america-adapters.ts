@@ -18,6 +18,7 @@ import {
   stripPersonalContactHtml,
 } from "./south-america-quality.js";
 import { listingPageFromJson } from "./open-data/http-json.js";
+import { fetchTextIpv4 } from "../http.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
 
 const FAPESP_ORIGIN = "https://bv.fapesp.br";
@@ -487,12 +488,16 @@ export function extractUncNodeRefs(html: string, origin = UNC_ORIGIN): Discovere
   return refs;
 }
 
+async function uncIpv4FetchText(ctx: AdapterContext, url: string) {
+  return fetchTextIpv4(url, { userAgent: ctx.userAgent, timeoutMs: ctx.timeoutMs });
+}
+
 async function discoverUncOferta(ctx: AdapterContext): Promise<DiscoveredRef[]> {
   const refs: DiscoveredRef[] = [];
   const seenIds = new Set<string>();
   for (let pageIndex = 0; pageIndex < 3; pageIndex += 1) {
     const listUrl = absoluteUrl(UNC_ORIGIN, `${UNC_LIST_PATH}?page=${pageIndex}`);
-    const page = await ctx.fetchText(listUrl);
+    const page = await uncIpv4FetchText(ctx, listUrl);
     for (const ref of extractUncNodeRefs(page.body)) {
       if (seenIds.has(ref.externalId ?? ref.url)) continue;
       seenIds.add(ref.externalId ?? ref.url);
@@ -559,7 +564,18 @@ const uncOfertaTecnologicaAdapter: SourceAdapter = {
   id: "unc-oferta-tecnologica",
   fullCatalogue: true,
   discover: discoverUncOferta,
-  fetch: defaultFetch,
+  async fetch(ref, ctx) {
+    const result = await uncIpv4FetchText(ctx, ref.url);
+    return {
+      url: ref.url,
+      finalUrl: result.finalUrl,
+      status: result.status,
+      html: result.body,
+      etag: result.etag,
+      lastModified: result.lastModified,
+      listingOnly: false,
+    };
+  },
   parse: parseUncOfertaDetail,
 };
 

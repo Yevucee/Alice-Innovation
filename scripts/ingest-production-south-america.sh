@@ -13,8 +13,6 @@ SOUTH_AMERICA_SOURCES=(
   unc-oferta-tecnologica
   usp-vitrine-portfolio
   cuech-red-proyectos
-  uc-chile-technologies
-  premios-verdes-500
 )
 
 ingest_one() {
