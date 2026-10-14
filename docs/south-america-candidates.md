@@ -120,6 +120,16 @@
 
 ---
 
+## Production holds (14 Oct 2026)
+
+| Source | Verdict | Evidence |
+|--------|---------|----------|
+| **UC Chile** (`transferenciaydesarrollo.uc.cl`) | **Disabled** | Listing returns **HTTP 403** (Cloudflare) with ingest user-agent from cloud egress; no bypass. |
+| **Premios Verdes 500** (`500-mejores.premiosverdes.org`) | **Disabled** | **200** HTML ~213 KB but **0** `.pv-project-card` / `/es/proyecto/` links; cards render in browser via JS (LeadConnector preview bundle). Ingestor correctly reports `south_america_zero_discover`. |
+| **UNC Oferta** (`ofertatecnologica.secyt.unc.edu.ar`) | **Enabled** (fix) | Host publishes **AAAA** records; IPv6 connect fails on Railway-style egress (`fetch failed`, no HTTP status). Ingest uses **IPv4-only** fetch for this adapter. |
+
+---
+
 ## Registry
 
 See `docs/south-america-candidates-rejected.md` for hold/reject slugs to avoid rediscovery.

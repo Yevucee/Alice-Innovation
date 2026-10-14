@@ -127,6 +127,16 @@ test("zero-items discover failure", () => {
   );
 });
 
+test("Premios Verdes live shell has no SSR project cards", () => {
+  const html = readFileSync(
+    new URL("../fixtures/south-america/premios-verdes-live-shell.html", import.meta.url),
+    "utf8",
+  );
+  const cards = parsePremiosVerdesListingCard(html);
+  assert.equal(cards.length, 0);
+  assert.ok(html.includes("leadconnectorhq.com"), "expected JS shell, not SSR catalogue");
+});
+
 test("GRIDX portfolio list extracts South America cards", () => {
   const html = readFileSync(new URL("../fixtures/south-america/gridx-portfolio-list.html", import.meta.url), "utf8");
   const cards = parseGridxPortfolioCards(html);

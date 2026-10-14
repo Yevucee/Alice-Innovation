@@ -6506,10 +6506,10 @@ sources:
   - id: uc-chile-technologies
     name: UC Chile Technology Portfolio
     category: south-america-innovation
-    description: "UC Transferencia y Desarrollo technology cards (Spanish detail pages). May fail from automated egress behind Cloudflare."
+    description: "UC Transferencia y Desarrollo technology cards (Spanish detail pages). Disabled: blocked by Cloudflare HTTP 403 from cloud egress (14 Oct 2026)."
     homepage: https://transferenciaydesarrollo.uc.cl/
     collection_url: https://transferenciaydesarrollo.uc.cl/innovaciones-uc/tecnologias/
-    enabled: true
+    enabled: false
     status: BLOCKED
     resource_types:
       - TECHNOLOGY
@@ -6531,15 +6531,15 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: Enable after egress can fetch listing without JS challenge.
+      notes: "Disabled 14 Oct 2026 — blocked by Cloudflare, HTTP 403; do not bypass."
 
   - id: premios-verdes-500
     name: Premios Verdes 500 Mejores Proyectos
     category: south-america-innovation
-    description: "2026 edition ranking cards. Config option include_central_america in discovery notes (default false = South America only)."
+    description: "2026 edition ranking cards. Disabled: project cards are client-rendered (LeadConnector/JS); server HTML has zero list items for ingest user-agent (14 Oct 2026)."
     homepage: https://500-mejores.premiosverdes.org/
     collection_url: https://500-mejores.premiosverdes.org/
-    enabled: true
+    enabled: false
     status: PARTIAL
     resource_types:
       - PROJECT
@@ -6561,7 +6561,7 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: Edition year 2026; external_id premios-verdes-500:2026:<slug>.
+      notes: "Disabled 14 Oct 2026 — south_america_zero_discover; no SSR catalogue in HTML."
 
   - id: gridx-portfolio
     name: GRIDX Portfolio
@@ -6622,7 +6622,7 @@ sources:
       concurrency: 1
     coverage:
       historical_backfill: not-started
-      notes: "~30 nodes across three listing pages when checked."
+      notes: "~30 nodes across three listing pages. Railway Oct 2026: use IPv4-only fetch (AAAA unreachable → fetch failed)."
 
   - id: cuech-red-proyectos
     name: Red Innovación CUECH (proyectos)

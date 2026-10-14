@@ -25,7 +25,8 @@ Do not re-probe these without a documented change (site redesign, new public API
 | Candidate | Verdict | Reason |
 |-----------|---------|--------|
 | `ctit.ufmg.br` / UFMG Vitrine | **REJECT (blocked)** | `ctit.ufmg.br` and `www.ctit.ufmg.br` — connection/DNS failure (`HTTP 000`) from cloud egress; cannot preflight |
-| `transferenciaydesarrollo.uc.cl` (UC Chile) | **In ingest PR #96** | Not repeated here; Cloudflare **403** |
+| `transferenciaydesarrollo.uc.cl` (UC Chile) | **DISABLED** | Cloudflare **403** on listing from cloud/Railway egress; `enabled: false` 14 Oct 2026 — do not bypass |
+| `500-mejores.premiosverdes.org` (Premios Verdes 500) | **DISABLED** | HTTP **200** but **0** project cards in server HTML (LeadConnector/JS shell); browser-only catalogue; `enabled: false` 14 Oct 2026 |
 | `vitrine.sebraestartups.com.br` | **HOLD** | Next.js/RSC; **no** full catalogue in HTML; only a handful of names in streamed payload; scale ~17k if JS/API |
 | `vitrine.rp.usp.br` | **HOLD** | Nuxt SPA; ~**32** technology slugs in HTML but **detail prose not** in server HTML |
 | `redinnovacion.uestatales.cl` (new portafolio) | **HOLD** | `/portafolio-de-tecnologias-new/` has titles in HTML but **no** stable detail URLs/descriptions in initial HTML |
