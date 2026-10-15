@@ -1,17 +1,13 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import {
-  diverseApproachesForResource,
-  embeddingCatalogueCoverage,
-  findSimilar,
-  getResource,
-} from "@alice/database";
+import { getResource } from "@alice/database";
 import { AddToCollection } from "@/components/add-to-collection";
-import { ResourceCard } from "@/components/resource-card";
 import { InlineEnglishResourceDetail } from "@/components/inline-english-translation";
+import { ResourceRelatedSections } from "./resource-related-sections";
 import { inlineTranslationConfigured } from "@/lib/translate-provider";
 import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, sourceExcerptDuplicatesSummary } from "@/lib/format";
-import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared";
+import { isLegalFormText, resolveSourceItemPublicUrl, sanitizeDisplayTitle } from "@alice/shared";
 import { pool } from "@/lib/db";
 
 function classificationTags(interpretation: Record<string, unknown> | null): string[] {
@@ -27,19 +23,27 @@ function classificationTags(interpretation: Record<string, unknown> | null): str
 
 export default async function ResourcePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const resource = await getResource(pool(), id);
+  const db = pool();
+  const resource = await getResource(db, id);
   if (!resource) notFound();
 
-  const similar = await findSimilar(pool(), id, 4);
-  const embeddingCoverage = await embeddingCatalogueCoverage(pool());
-  const similarityIndexBuilding = embeddingCoverage.pct < 50;
   const queryText = `${resource.title} ${resource.source_summary}`.trim().slice(0, 400);
-  const diverse = queryText
-    ? await diverseApproachesForResource(pool(), id, queryText, 6)
-    : [];
 
   const interpretation = resource.interpretation as Record<string, unknown> | null;
-  const sources = resource.sources as Array<{ name: string; canonical_url: string; last_seen_at: string }>;
+  const sources = resource.sources as Array<{
+    slug: string;
+    name: string;
+    canonical_url: string;
+    original_url?: string;
+    page_url?: string | null;
+    last_seen_at: string;
+  }>;
+  const sourceLinks = sources
+    .map((source) => ({
+      ...source,
+      page_url: source.page_url ?? resolveSourceItemPublicUrl(source.canonical_url, source.original_url),
+    }))
+    .filter((source) => Boolean(source.page_url));
   const organisations = (resource.organisations as Array<{ id: string; name: string; website?: string }>)
     .filter((org) => !isLegalFormText(org.name));
   const people = resource.people as Array<{ id: string; name: string; role?: string }>;
@@ -61,7 +65,9 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   const evidenceBasisLabel = formatEvidenceBasis(String(resource.evidence_basis));
   const displayTitle = sanitizeDisplayTitle(formatDisplayTitle(String(resource.title)));
   const displaySummary = String(resource.source_summary);
-  const primarySourceUrl = sources[0]?.canonical_url ?? null;
+  const primarySource = sourceLinks[0] ?? sources[0] ?? null;
+  const primarySourceUrl = sourceLinks[0]?.page_url ?? null;
+  const catalogueSlug = primarySource?.slug ?? sources[0]?.slug ?? null;
   const translationOriginal = {
     title: displayTitle,
     summary: displaySummary,
@@ -110,6 +116,39 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
                 Evidence: {evidenceBasisLabel}
               </p>
             ) : null}
+            {primarySourceUrl ? (
+              <p className="mt-4">
+                <a
+                  href={primarySourceUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-1 rounded-md border border-line bg-white px-3 py-2 text-sm font-medium text-accent shadow-sm hover:border-accent/40"
+                >
+                  Open original ↗
+                </a>
+                {primarySource?.name ? (
+                  <span className="mt-2 block text-xs text-muted">
+                    Source: {primarySource.name}
+                  </span>
+                ) : null}
+              </p>
+            ) : catalogueSlug ? (
+              <p className="mt-4">
+                <Link
+                  href={`/sources/${catalogueSlug}`}
+                  className="inline-flex items-center gap-1 rounded-md border border-line bg-white px-3 py-2 text-sm font-medium text-accent shadow-sm hover:border-accent/40"
+                >
+                  Browse catalogue on Alice →
+                </Link>
+                {primarySource?.name ? (
+                  <span className="mt-2 block text-xs text-muted">
+                    Indexed from {primarySource.name} (no item URL stored for this record).
+                  </span>
+                ) : null}
+              </p>
+            ) : (
+              <p className="mt-4 text-xs text-muted">No catalogue URL on file for this record.</p>
+            )}
           </>
         }
       />
@@ -134,6 +173,35 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           <img src={String(resource.image_url)} alt="" className="w-full object-cover" />
         </div>
       ) : null}
+
+      <section className="mt-8 border-t border-line pt-6 text-sm">
+        <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Sources & provenance</h2>
+        <ul className="mt-3 space-y-3">
+          {sourceLinks.length === 0 ? (
+            <li className="text-muted">
+              {catalogueSlug ? (
+                <>
+                  No item URL stored.{" "}
+                  <Link href={`/sources/${catalogueSlug}`} className="text-accent hover:underline">
+                    View {primarySource?.name ?? "catalogue"} on Alice
+                  </Link>
+                </>
+              ) : (
+                "No linked source items."
+              )}
+            </li>
+          ) : null}
+          {sourceLinks.map((source) => (
+            <li key={source.page_url!}>
+              <p className="font-medium">{source.name}</p>
+              <p className="text-muted">Viewed {formatDate(source.last_seen_at)}</p>
+              <a href={source.page_url!} className="text-accent hover:underline" target="_blank" rel="noreferrer">
+                Open original ↗
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {locationLine.length > 0 ? (
         <section className="mt-8 text-sm">
@@ -171,52 +239,15 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
         </section>
       ) : null}
 
-      {diverse.length > 0 ? (
-        <section className="mt-12 border-t border-line pt-8">
-          <h2 className="text-sm font-medium">Different approaches to the same problem</h2>
-          <p className="mt-1 text-xs text-muted">Hybrid search with mechanism-level diversity (technology/sector buckets).</p>
-          <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2">
-            {diverse.map((item) => (
-              <ResourceCard key={item.resource_id} resource={item} />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {similar.length > 0 ? (
-        <section className="mt-12 border-t border-line pt-8">
-          <h2 className="text-sm font-medium">Related ideas</h2>
-          <p className="mt-1 text-xs text-muted">Similar indexed content by meaning.</p>
-          <div className="mt-4 grid auto-rows-fr gap-4 sm:grid-cols-2">
-            {similar.map((item) => (
-              <ResourceCard key={item.resource_id} resource={item} />
-            ))}
-          </div>
-        </section>
-      ) : similarityIndexBuilding ? (
-        <section className="mt-12 border-t border-line pt-8">
-          <h2 className="text-sm font-medium">Related ideas</h2>
-          <p className="mt-1 text-xs text-muted">
-            Building similarity index… ({embeddingCoverage.with_embedding.toLocaleString()} of{" "}
-            {embeddingCoverage.active.toLocaleString()} resources embedded so far).
-          </p>
-        </section>
-      ) : null}
-
-      <section className="mt-12 border-t border-line pt-8">
-        <h2 className="text-sm font-medium">Sources & provenance</h2>
-        <ul className="mt-4 space-y-4 text-sm">
-          {sources.map((source) => (
-            <li key={source.canonical_url}>
-              <p className="font-medium">{source.name}</p>
-              <p className="text-muted">Viewed {formatDate(source.last_seen_at)}</p>
-              <a href={source.canonical_url} className="text-accent hover:underline" target="_blank" rel="noreferrer">
-                Open original ↗
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Suspense
+        fallback={
+          <section className="mt-12 border-t border-line pt-8 text-sm text-muted">
+            Loading related ideas…
+          </section>
+        }
+      >
+        <ResourceRelatedSections db={db} resourceId={id} queryText={queryText} />
+      </Suspense>
 
       {(interpretation || tags.length > 0) ? (
         <section className="mt-10 rounded-md border border-line bg-accent-soft/40 p-4 text-sm">

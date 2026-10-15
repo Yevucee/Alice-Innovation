@@ -30,6 +30,22 @@ export function tryCanonicaliseUrl(input: string): string | null {
   }
 }
 
+/** Public page URL for a catalogue item (canonical preferred, then original). */
+export function resolveSourceItemPublicUrl(
+  canonicalUrl?: string | null,
+  originalUrl?: string | null,
+): string | null {
+  for (const raw of [canonicalUrl, originalUrl]) {
+    const trimmed = raw?.trim();
+    if (!trimmed) continue;
+    const cleaned = trimmed.replace(/^:\s*/, "").trim();
+    const canon = tryCanonicaliseUrl(cleaned);
+    if (canon) return canon;
+    if (/^https?:\/\//i.test(cleaned)) return cleaned;
+  }
+  return null;
+}
+
 export function canonicaliseUrl(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) {
