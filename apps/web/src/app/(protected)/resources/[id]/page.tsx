@@ -7,7 +7,7 @@ import { InlineEnglishResourceDetail } from "@/components/inline-english-transla
 import { ResourceRelatedSections } from "./resource-related-sections";
 import { inlineTranslationConfigured } from "@/lib/translate-provider";
 import { formatDate, formatDisplayTitle, formatEvidence, formatEvidenceBasis, formatResourceType, metaLine, sourceExcerptDuplicatesSummary } from "@/lib/format";
-import { isLegalFormText, sanitizeDisplayTitle } from "@alice/shared";
+import { isLegalFormText, resolveSourceItemPublicUrl, sanitizeDisplayTitle } from "@alice/shared";
 import { pool } from "@/lib/db";
 
 function classificationTags(interpretation: Record<string, unknown> | null): string[] {
@@ -30,8 +30,20 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   const queryText = `${resource.title} ${resource.source_summary}`.trim().slice(0, 400);
 
   const interpretation = resource.interpretation as Record<string, unknown> | null;
-  const sources = resource.sources as Array<{ name: string; canonical_url: string; last_seen_at: string }>;
-  const sourceLinks = sources.filter((source) => typeof source.canonical_url === "string" && source.canonical_url.trim());
+  const sources = resource.sources as Array<{
+    slug: string;
+    name: string;
+    canonical_url: string;
+    original_url?: string;
+    page_url?: string | null;
+    last_seen_at: string;
+  }>;
+  const sourceLinks = sources
+    .map((source) => ({
+      ...source,
+      page_url: source.page_url ?? resolveSourceItemPublicUrl(source.canonical_url, source.original_url),
+    }))
+    .filter((source) => Boolean(source.page_url));
   const organisations = (resource.organisations as Array<{ id: string; name: string; website?: string }>)
     .filter((org) => !isLegalFormText(org.name));
   const people = resource.people as Array<{ id: string; name: string; role?: string }>;
@@ -53,8 +65,9 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
   const evidenceBasisLabel = formatEvidenceBasis(String(resource.evidence_basis));
   const displayTitle = sanitizeDisplayTitle(formatDisplayTitle(String(resource.title)));
   const displaySummary = String(resource.source_summary);
-  const primarySource = sourceLinks[0] ?? null;
-  const primarySourceUrl = primarySource?.canonical_url?.trim() ?? null;
+  const primarySource = sourceLinks[0] ?? sources[0] ?? null;
+  const primarySourceUrl = sourceLinks[0]?.page_url ?? null;
+  const catalogueSlug = primarySource?.slug ?? sources[0]?.slug ?? null;
   const translationOriginal = {
     title: displayTitle,
     summary: displaySummary,
@@ -119,6 +132,20 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
                   </span>
                 ) : null}
               </p>
+            ) : catalogueSlug ? (
+              <p className="mt-4">
+                <Link
+                  href={`/sources/${catalogueSlug}`}
+                  className="inline-flex items-center gap-1 rounded-md border border-line bg-white px-3 py-2 text-sm font-medium text-accent shadow-sm hover:border-accent/40"
+                >
+                  Browse catalogue on Alice →
+                </Link>
+                {primarySource?.name ? (
+                  <span className="mt-2 block text-xs text-muted">
+                    Indexed from {primarySource.name} (no item URL stored for this record).
+                  </span>
+                ) : null}
+              </p>
             ) : (
               <p className="mt-4 text-xs text-muted">No catalogue URL on file for this record.</p>
             )}
@@ -146,6 +173,35 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
           <img src={String(resource.image_url)} alt="" className="w-full object-cover" />
         </div>
       ) : null}
+
+      <section className="mt-8 border-t border-line pt-6 text-sm">
+        <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Sources & provenance</h2>
+        <ul className="mt-3 space-y-3">
+          {sourceLinks.length === 0 ? (
+            <li className="text-muted">
+              {catalogueSlug ? (
+                <>
+                  No item URL stored.{" "}
+                  <Link href={`/sources/${catalogueSlug}`} className="text-accent hover:underline">
+                    View {primarySource?.name ?? "catalogue"} on Alice
+                  </Link>
+                </>
+              ) : (
+                "No linked source items."
+              )}
+            </li>
+          ) : null}
+          {sourceLinks.map((source) => (
+            <li key={source.page_url!}>
+              <p className="font-medium">{source.name}</p>
+              <p className="text-muted">Viewed {formatDate(source.last_seen_at)}</p>
+              <a href={source.page_url!} className="text-accent hover:underline" target="_blank" rel="noreferrer">
+                Open original ↗
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {locationLine.length > 0 ? (
         <section className="mt-8 text-sm">
@@ -192,24 +248,6 @@ export default async function ResourcePage({ params }: { params: Promise<{ id: s
       >
         <ResourceRelatedSections db={db} resourceId={id} queryText={queryText} />
       </Suspense>
-
-      <section className="mt-12 border-t border-line pt-8">
-        <h2 className="text-sm font-medium">Sources & provenance</h2>
-        <ul className="mt-4 space-y-4 text-sm">
-          {sourceLinks.length === 0 ? (
-            <li className="text-muted">No linked source items.</li>
-          ) : null}
-          {sourceLinks.map((source) => (
-            <li key={source.canonical_url}>
-              <p className="font-medium">{source.name}</p>
-              <p className="text-muted">Viewed {formatDate(source.last_seen_at)}</p>
-              <a href={source.canonical_url} className="text-accent hover:underline" target="_blank" rel="noreferrer">
-                Open original ↗
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
 
       {(interpretation || tags.length > 0) ? (
         <section className="mt-10 rounded-md border border-line bg-accent-soft/40 p-4 text-sm">

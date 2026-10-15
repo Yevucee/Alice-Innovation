@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { canonicaliseUrl, tryCanonicaliseUrl } from "../../packages/shared/src/url.ts";
+import { canonicaliseUrl, resolveSourceItemPublicUrl, tryCanonicaliseUrl } from "../../packages/shared/src/url.ts";
 
 test("canonicaliseUrl drops tracking, fragments, and trailing slashes", () => {
   const url = canonicaliseUrl("HTTPS://Example.com:443/Solutions/?utm_source=news&b=2&a=1#section");
@@ -23,4 +23,13 @@ test("tryCanonicaliseUrl returns null for malformed website-style values", () =>
 
 test("tryCanonicaliseUrl canonicalises valid URLs", () => {
   assert.equal(tryCanonicaliseUrl("https://Example.com/path/"), "https://example.com/path");
+});
+
+test("resolveSourceItemPublicUrl prefers canonical then original", () => {
+  assert.equal(
+    resolveSourceItemPublicUrl("https://example.com/a", "https://other.com/b"),
+    "https://example.com/a",
+  );
+  assert.equal(resolveSourceItemPublicUrl("", ": https://example.com/fix"), "https://example.com/fix");
+  assert.equal(resolveSourceItemPublicUrl(null, null), null);
 });
