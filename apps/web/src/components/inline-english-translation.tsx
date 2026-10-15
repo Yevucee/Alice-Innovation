@@ -117,7 +117,7 @@ export function InlineEnglishCardSummary({
     <>
       <p className="line-clamp-3 min-h-[4.125rem] shrink-0 text-sm leading-relaxed text-muted">{displaySummary}</p>
       {show ? (
-        <>
+        <div className="pointer-events-auto relative z-[2]">
           <TranslateControls
             compact
             loading={loading}
@@ -127,17 +127,18 @@ export function InlineEnglishCardSummary({
             error={error}
           />
           {sourcePageUrl?.trim() ? (
-            <a
-              href={googleTranslatePageUrl(sourcePageUrl.trim())}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="text-[10px] text-muted hover:underline"
-              onClick={stopNav}
+            <button
+              type="button"
+              className="text-left text-[10px] text-muted hover:underline"
+              onClick={(e) => {
+                stopNav(e);
+                window.open(googleTranslatePageUrl(sourcePageUrl.trim()), "_blank", "noopener,noreferrer");
+              }}
             >
               Or open source page in Google Translate ↗
-            </a>
+            </button>
           ) : null}
-        </>
+        </div>
       ) : null}
     </>
   );

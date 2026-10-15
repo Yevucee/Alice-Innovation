@@ -34,12 +34,20 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
   const orgLabel = resource.primary_organisation && !isLegalFormText(resource.primary_organisation)
     ? resource.primary_organisation
     : resource.source_names[0] ?? null;
+  const detailHref = resource.resource_id ? `/resources/${resource.resource_id}` : null;
 
   return (
-    <Link
-      href={`/resources/${resource.resource_id}`}
-      className="group flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-line bg-white shadow-card transition hover:border-ink/15"
+    <article
+      className="group relative flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-line bg-white shadow-card transition hover:border-ink/15"
     >
+      {detailHref ? (
+        <Link
+          href={detailHref}
+          className="absolute inset-0 z-[1] rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          aria-label={`View details: ${title}`}
+        />
+      ) : null}
+      <div className="pointer-events-none relative z-0 flex min-h-0 flex-1 flex-col">
       <div className="relative aspect-[16/10] shrink-0 bg-accent-soft">
         {resource.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -94,6 +102,7 @@ export function ResourceCard({ resource }: { resource: CompactResource }) {
           {tags.length > 0 ? tags.join(" · ") : "\u00a0"}
         </p>
       </div>
-    </Link>
+      </div>
+    </article>
   );
 }
