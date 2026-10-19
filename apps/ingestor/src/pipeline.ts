@@ -42,6 +42,7 @@ import {
   recordSourceItemFailure,
   recordSourceItemSuccess,
 } from "./source-failure-circuit.js";
+import { formatFetchError } from "./fetch-error.js";
 
 let ingestPipelineStage = "init";
 
@@ -63,7 +64,7 @@ function failureReason(error: unknown): string {
     : error instanceof AccessBlockedError
       ? error.status
       : null;
-  const message = error instanceof Error ? error.message : String(error);
+  const message = formatFetchError(error);
   return status != null ? `${status}: ${message}` : message;
 }
 
@@ -557,7 +558,7 @@ export async function runIngestion(
           }
         } catch (error) {
           failedSources.push(source.id);
-          const message = error instanceof Error ? error.message : String(error);
+          const message = failureReason(error);
           await finishRun(
             runId,
             "FAILED",
@@ -578,7 +579,7 @@ export async function runIngestion(
         failedSources.push(source.id);
         log("error", "source_failed", {
           source_id: source.id,
-          message: error instanceof Error ? error.message : String(error),
+          message: failureReason(error),
         });
       } finally {
         if (dedicatedCap) {
@@ -724,7 +725,7 @@ async function finishRun(
 
 async function recordError(sourceSlug: string, runId: string, ref: DiscoveredRef | null, error: unknown): Promise<void> {
   const status = error instanceof HttpStatusError ? error.status : error instanceof AccessBlockedError ? error.status : null;
-  const message = error instanceof Error ? error.message : String(error);
+  const message = formatFetchError(error);
   await getPool().query(
     `INSERT INTO ingestion_errors (source_id, ingestion_run_id, url, stage, http_status, error_type, message)
      SELECT id, $2, $3, 'fetch', $4, $5, $6 FROM sources WHERE slug = $1`,

@@ -17,7 +17,7 @@
 | 3 | Red Innovación CUECH | `https://redinnovacion.uestatales.cl/portafolio-de-tecnologias-new/` | **200** | **200** allow (`/wp-admin/` disallowed) | **Partial** (titles) | ~**10–15** visible titles | No stable detail URLs in HTML | **FAIL** — thin/ missing detail prose | 2024–2026 site | Low |
 | 3b | CUECH (legacy) | `https://redinnovacion.uestatales.cl/proyectos/` | **200** | **200** | **Yes** (titles) | **9** | Single-page sections | **FAIL** — descriptions not ≥2 sentences | n/d | Low |
 | 4 | UdeA portafolio | `https://www.udea.edu.co/wps/portal/udea/web/inicio/extension/portafoliotecnologico` | **200** | **200** (long Disallow list; portfolio path **not** disallowed) | **Partial** | **4** `articulos` links in HTML (site claims 80+) | `/portafoliotecnologico/articulos/{slug}` | **FAIL** — &lt;20 items; detail body not in HTML | 2026 event pages elsewhere | Low |
-| 5 | USP Vitrine | `https://vitrine.rp.usp.br/portfolio/` | **200** | **404** at `/robots.txt` | **Partial** (slug links only) | **~32** slugs (home + area filters) | `/portfolio/{slug}` | **FAIL** — Nuxt; detail description **not** in server HTML | n/d | Low |
+| 5 | USP Vitrine | `https://vitrine.rp.usp.br/portfolio/` | **200** | **404** at `/robots.txt` | **Partial** (slug links only) | **~8** slugs in server HTML today (~32 was client/RSC data) | `/portfolio/{slug}` + `/_payload.json` | **Enabled** — discover from SSR; detail via Nuxt payload JSON | n/d | Low |
 | 6 | GRIDX portfolio | `https://www.gridexponential.com/portfolio` | **200** | **200** `Allow: /` | **Yes** | **~84** (`Visit Website` blocks) | External company sites (no on-site detail) | **PASS** list; detail is off-site | n/d | Medium (global VC portfolio) |
 | 7 | HUBTEC portfolio | `https://www.hubtec.cl/portafolio-hubtec/` + histórico | **200** | **200** (Yoast; sitemap linked) | **Partial** (names) | **~18** fichas (histórico) | **PDF** `FICHA_*.pdf` | **FAIL** — descriptions in PDFs, not HTML | 2025 PDF paths | Low |
 | 8 | Next Argentina (Cancillería) | (no catalogue URL found) | **404** / **403** on probes | n/a | **No** | **0** | n/a | **BLOCKED** / **FAIL** | n/a | n/a |
@@ -53,8 +53,9 @@
 
 ### 5. USP Vitrine (`vitrine.rp.usp.br`)
 
-- **~32** technology slugs across `/portfolio/` and `/portfolio/area/{area}`.
-- Detail URLs e.g. `/portfolio/luva_detectora_de_pesticidas` return Nuxt payload with slug but **no** `Resumo`/description string in `__NUXT_DATA__` snapshot — treat as **SPA** for descriptions.
+- **~8** technology slugs in **server HTML** on `/portfolio/` (Oct 2026 production). The earlier **~32** figure came from **client-rendered** Nuxt/RSC data, not from the HTML the ingestor sees on discover.
+- Discover walks `/portfolio/` plus any `/portfolio/area/…` links present in that HTML; area pages add slugs only when those links appear in SSR.
+- Detail ingest uses `/portfolio/{slug}/_payload.json`; descriptions are parsed from the Nuxt payload (not from listing HTML).
 
 ### 6. GRIDX (`gridexponential.com`)
 
@@ -110,7 +111,7 @@
 1. **GRIDX** (`gridexponential.com/portfolio`) — only candidate with **≥20** items and prose in HTML; accept off-site “detail”.
 2. **UNC Oferta tecnológica** — Drupal HTML works; **30** nodes; implement `/node/{id}` parser.
 3. **Red CUECH** — revisit if detail pages become server-rendered on `portafolio-de-tecnologias-new/`.
-4. **USP Vitrine** — only if Nuxt exposes a public JSON API for portfolio bodies (not found).
+4. **USP Vitrine** — enabled with payload JSON; expand discover only if SSR or area pages expose more slugs (or a stable public catalogue API appears).
 5. **Fiocruz** — only with freshness metadata + working post list (REST or HTML).
 6. **UdeA** — only with IBM portal bypass or alternate static export.
 7. **HUBTEC** — only if HTML summaries replace PDF fichas.

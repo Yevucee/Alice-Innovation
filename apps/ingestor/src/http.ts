@@ -1,5 +1,6 @@
 import { Agent, fetch as undiciFetch } from "undici";
 import { backoffDelayMs, isTimeoutError, log, shouldRetryHttpStatus } from "@alice/shared";
+import { rethrowFetchError } from "./fetch-error.js";
 
 /** Prefer IPv4 when host publishes broken/unreachable AAAA (UNC Drupal on Railway egress). */
 const ipv4PreferredAgent = new Agent({
@@ -83,7 +84,7 @@ export async function fetchText(
       clearTimeout(timer);
     }
   }
-  throw lastError instanceof Error ? lastError : new Error(`Failed to fetch ${url}`);
+  rethrowFetchError(lastError, url);
 }
 
 export async function fetchTextIpv4(
@@ -140,5 +141,5 @@ export async function fetchTextIpv4(
       clearTimeout(timer);
     }
   }
-  throw lastError instanceof Error ? lastError : new Error(`Failed to fetch ${url}`);
+  rethrowFetchError(lastError, url);
 }
