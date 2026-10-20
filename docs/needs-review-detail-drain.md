@@ -25,7 +25,7 @@ NEEDS_REVIEW_DETAIL_DRAIN_DELAY_MS=500
 When the job completes a full pass, logs `needs_review_detail_drain_summary` and stores `dry_run_summary` on the post-deploy job **result** (Admin → Post-deploy jobs).
 
 ```
-NEEDS_REVIEW detail drain | algorithm_version=1 | run_mode=dry_run
+NEEDS_REVIEW detail drain | algorithm_version=2 | run_mode=dry_run
 totals: repaired=… cleared=… source_limited=… still_flagged=… scanned=… fetch_failed=…
 by_source: {"mit-solve":{"repaired":…,"cleared":…,"source_limited":…,"still_flagged":…}, …}
 title_samples (up to 20 per source in aggregate):
@@ -39,7 +39,13 @@ title_samples (up to 20 per source in aggregate):
 | **cleared** | Would set `AUTO_INGESTED` (quality gate passes) |
 | **source_limited** | Still thin after refetch; would set `SOURCE_LIMITED` with reason codes kept |
 | **still_flagged** | Remains `NEEDS_REVIEW` (fixable issues or fetch did not help) |
-| **fetch_failed** | Detail fetch skipped or failed (host cap, robots, HTTP error) |
+| **fetch_failed** | Detail fetch skipped or failed — row stays **NEEDS_REVIEW**, no DB write, not counted in `still_flagged` |
+
+Listing-only sources (`injini-african-edtech-map`) skip HTTP detail fetch and may still be classified to **SOURCE_LIMITED**.
+
+## Pass size
+
+Each post-deploy **step** processes **12** rows (`NEEDS_REVIEW_DETAIL_DRAIN_BATCH_SIZE`). A full pass over ~2,967 backlog rows needs **ceil(2967 ÷ 12) = 248** steps (job batches until `complete`).
 
 Embeddings: on apply, re-embed runs with `throwOnConsecutiveFailures: false`. A **402** (or missing API key) leaves IDs in `pending_reembed_ids` for a later pass instead of failing the job.
 

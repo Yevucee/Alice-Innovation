@@ -2,6 +2,7 @@ import {
   applyDetailDrainOutcome,
   classifyDetailDrainOutcome,
   detailDrainModeWrites,
+  detailDrainRequiresSuccessfulFetch,
   loadNeedsReviewDetailDrainBatch,
   NEEDS_REVIEW_DETAIL_DRAIN_SAMPLE_LIMIT,
   proposeDetailDrainFields,
@@ -10,7 +11,7 @@ import {
   type NeedsReviewDetailDrainSample,
 } from "@alice/database";
 import type { Queryable } from "@alice/database";
-import { evaluateDraftQuality, log, normaliseAllCapsTitle } from "@alice/shared";
+import { evaluateDraftQuality, log, normaliseAllCapsTitle, type NormalisedDraft } from "@alice/shared";
 import { loadSources } from "@alice/source-registry";
 import { prepareIngestDraft } from "./prepare-draft.js";
 import { fetchQualityDetailDraft } from "./quality-detail-fetch.js";
@@ -20,6 +21,64 @@ const DETAIL_FETCH_DELAY_MS = Number(process.env.NEEDS_REVIEW_DETAIL_DRAIN_DELAY
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export type DetailDrainRowPlan =
+  | { kind: "fetch_failed" }
+  | {
+      kind: "classify";
+      draft: NormalisedDraft;
+      fixed: ReturnType<typeof proposeDetailDrainFields>;
+      outcome: ReturnType<typeof classifyDetailDrainOutcome>;
+      qualityNeedsReview: boolean;
+    };
+
+/** Pure planning step for tests: when fetch is required but failed, do not classify or write. */
+export function planDetailDrainRow(
+  sourceSlug: string | null,
+  fetchSucceeded: boolean,
+  row: { title: string; source_summary: string; extracted_index_text: string },
+  enriched: NormalisedDraft,
+): DetailDrainRowPlan | null {
+  if (detailDrainRequiresSuccessfulFetch(sourceSlug) && !fetchSucceeded) {
+    return { kind: "fetch_failed" };
+  }
+  const bulkRow = {
+    id: "",
+    title: row.title,
+    source_summary: row.source_summary,
+    extracted_index_text: row.extracted_index_text,
+    organisation_name: null,
+    person_name: null,
+    raw_metadata: {},
+    source_slug: sourceSlug,
+    source_item_title: null,
+    source_external_id: null,
+    canonical_url: null,
+  };
+  const fixed = proposeDetailDrainFields(bulkRow, {
+    title: enriched.title,
+    sourceSummary: enriched.sourceSummary,
+    extractedText: enriched.extractedText,
+  });
+  const outcome = classifyDetailDrainOutcome(bulkRow, fixed);
+  const quality = evaluateDraftQuality({
+    ...enriched,
+    title: fixed.title,
+    sourceSummary: fixed.source_summary,
+    extractedText: fixed.extracted_index_text,
+  });
+  return {
+    kind: "classify",
+    draft: enriched,
+    fixed,
+    outcome,
+    qualityNeedsReview: quality.needsReview,
+  };
+}
+
+function emptySourceCounts(): DetailDrainSourceCounts {
+  return { repaired: 0, cleared: 0, source_limited: 0, still_flagged: 0, fetch_failed: 0 };
 }
 
 export async function runNeedsReviewDetailDrainBatch(
@@ -52,7 +111,7 @@ export async function runNeedsReviewDetailDrainBatch(
   const bump = (slug: string, field: keyof DetailDrainSourceCounts) => {
     const key = slug || "unknown";
     if (!by_source[key]) {
-      by_source[key] = { repaired: 0, cleared: 0, source_limited: 0, still_flagged: 0 };
+      by_source[key] = emptySourceCounts();
     }
     by_source[key][field] += 1;
   };
@@ -113,24 +172,35 @@ export async function runNeedsReviewDetailDrainBatch(
       source,
     );
 
-    const enriched =
-      (await fetchQualityDetailDraft(source, baseDraft, {
-        tracker: input.tracker,
-        userAgent,
-        timeoutMs,
-      })) ?? null;
+    const requiresFetch = detailDrainRequiresSuccessfulFetch(row.source_slug);
+    let draftForClassify: NormalisedDraft;
 
-    if (!enriched) fetch_failed += 1;
+    if (requiresFetch) {
+      const fetched =
+        (await fetchQualityDetailDraft(source, baseDraft, {
+          tracker: input.tracker,
+          userAgent,
+          timeoutMs,
+        })) ?? null;
+      if (!fetched) {
+        fetch_failed += 1;
+        bump(slug, "fetch_failed");
+        if (DETAIL_FETCH_DELAY_MS > 0) await sleep(DETAIL_FETCH_DELAY_MS);
+        continue;
+      }
+      draftForClassify = fetched;
+    } else {
+      draftForClassify = baseDraft;
+    }
 
-    const draft = enriched ?? baseDraft;
     const fixed = proposeDetailDrainFields(row, {
-      title: draft.title,
-      sourceSummary: draft.sourceSummary,
-      extractedText: draft.extractedText,
+      title: draftForClassify.title,
+      sourceSummary: draftForClassify.sourceSummary,
+      extractedText: draftForClassify.extractedText,
     });
     const outcome = classifyDetailDrainOutcome(row, fixed);
     const quality = evaluateDraftQuality({
-      ...draft,
+      ...draftForClassify,
       title: fixed.title,
       sourceSummary: fixed.source_summary,
       extractedText: fixed.extracted_index_text,

@@ -10,7 +10,7 @@ import {
 export const NEEDS_REVIEW_DETAIL_DRAIN_JOB_KEY = "needs_review_detail_drain_202510";
 
 /** Bump when detail-drain classification or target sources change; triggers job re-queue on deploy. */
-export const DETAIL_DRAIN_ALGORITHM_VERSION = 1;
+export const DETAIL_DRAIN_ALGORITHM_VERSION = 2;
 
 export const NEEDS_REVIEW_DETAIL_DRAIN_BATCH_SIZE = 12;
 
@@ -26,6 +26,16 @@ export const NEEDS_REVIEW_DETAIL_DRAIN_TARGET_SOURCES = [
   "hundred",
   "j-startup",
 ] as const;
+
+/** Sources with no per-item detail URL — classify from listing data only (may become SOURCE_LIMITED). */
+export const NEEDS_REVIEW_DETAIL_DRAIN_LISTING_ONLY_SOURCES: readonly string[] = [
+  "injini-african-edtech-map",
+];
+
+export function detailDrainRequiresSuccessfulFetch(sourceSlug: string | null): boolean {
+  if (!sourceSlug) return true;
+  return !NEEDS_REVIEW_DETAIL_DRAIN_LISTING_ONLY_SOURCES.includes(sourceSlug);
+}
 
 export type DetailDrainSourceSlug = (typeof NEEDS_REVIEW_DETAIL_DRAIN_TARGET_SOURCES)[number];
 
@@ -48,6 +58,7 @@ export type DetailDrainSourceCounts = {
   cleared: number;
   source_limited: number;
   still_flagged: number;
+  fetch_failed: number;
 };
 
 export interface NeedsReviewDetailDrainSample {

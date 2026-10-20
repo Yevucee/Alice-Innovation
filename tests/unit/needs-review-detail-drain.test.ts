@@ -65,7 +65,7 @@ test("formats dry-run summary with by_source and samples", () => {
     mode: "dry_run",
     totals: { repaired: 2, cleared: 1, source_limited: 3, still_flagged: 4, scanned: 10, fetch_failed: 0 },
     by_source: {
-      "mit-solve": { repaired: 2, cleared: 1, source_limited: 0, still_flagged: 1 },
+      "mit-solve": { repaired: 2, cleared: 1, source_limited: 0, still_flagged: 1, fetch_failed: 0 },
     },
     samples: [
       {
