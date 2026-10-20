@@ -64,6 +64,25 @@ export function mergeIngestDraftPreservingQuality(
     return { draft: existingDraft, treatAsUnchanged: true };
   }
 
+  if (existing.review_status === "SOURCE_LIMITED") {
+    const incomingHash = [
+      incoming.title.trim(),
+      incoming.sourceSummary.trim(),
+      incoming.extractedText.trim(),
+    ].join("\n");
+    const existingHash = [
+      existing.canonical_title.trim(),
+      existing.source_summary.trim(),
+      existing.extracted_index_text.trim(),
+    ].join("\n");
+    if (incomingHash === existingHash) {
+      return { draft: existingDraft, treatAsUnchanged: true };
+    }
+    if (incomingQuality.needsReview && bodyLength(incoming) <= bodyLength(existingDraft)) {
+      return { draft: existingDraft, treatAsUnchanged: true };
+    }
+  }
+
   let merged: NormalisedDraft = { ...incoming };
 
   if (bodyLength(incoming) < bodyLength(existingDraft)) {

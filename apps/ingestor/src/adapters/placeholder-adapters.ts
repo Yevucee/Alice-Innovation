@@ -95,6 +95,7 @@ export const remainingCatalogueAdapters: SourceAdapter[] = [
     },
     resourceType: "PROJECT",
     evidenceBasis: "EDITORIALLY_CURATED",
+    titleSuffixStrip: /\s*\|\s*Atlas Of The Future\s*$/i,
   }),
   createHtmlCatalogueAdapter({
     id: "ideo-design-kit",

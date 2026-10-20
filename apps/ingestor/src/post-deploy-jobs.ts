@@ -32,7 +32,15 @@ import {
   requeueNeedsReviewBulkFixJobIfModeChanged,
   type NeedsReviewBulkFixBatchResult,
   type NeedsReviewBulkFixSample,
+  formatNeedsReviewDetailDrainSummary,
+  currentNeedsReviewDetailDrainMode,
+  prepareNeedsReviewDetailDrainProgress,
+  requeueNeedsReviewDetailDrainJobIfModeChanged,
+  NEEDS_REVIEW_DETAIL_DRAIN_SAMPLE_LIMIT,
+  type DetailDrainSourceCounts,
+  type NeedsReviewDetailDrainSample,
 } from "@alice/database";
+import { runNeedsReviewDetailDrainBatch } from "./needs-review-detail-drain-job.js";
 import { loadSources } from "@alice/source-registry";
 import { embedTextsDetailed, embeddingSettings, embeddingVersion, log } from "@alice/shared";
 import {
@@ -834,6 +842,106 @@ async function runQualityDetailBackfillStep(
   };
 }
 
+async function runNeedsReviewDetailDrainStep(
+  db: Queryable,
+  progress: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const mode = currentNeedsReviewDetailDrainMode();
+  const apply = mode === "apply";
+  const prepared = prepareNeedsReviewDetailDrainProgress(progress, mode);
+  progress = prepared.progress;
+  if (prepared.modeReset) {
+    log("info", "needs_review_detail_drain_mode_reset", {
+      previous_mode: prepared.previousMode,
+      current_mode: mode,
+    });
+  }
+  const lastId = typeof progress.last_id === "string" ? progress.last_id : null;
+  const totals: Record<string, number> = {
+    repaired: 0,
+    cleared: 0,
+    source_limited: 0,
+    still_flagged: 0,
+    scanned: 0,
+    fetch_failed: 0,
+    ...((progress.totals as Record<string, number> | undefined) ?? {}),
+  };
+  const by_source: Record<string, DetailDrainSourceCounts> = {
+    ...((progress.by_source as Record<string, DetailDrainSourceCounts> | undefined) ?? {}),
+  };
+  const samples: NeedsReviewDetailDrainSample[] = [
+    ...((progress.title_samples as NeedsReviewDetailDrainSample[] | undefined) ?? []),
+  ];
+
+  const batch = await runNeedsReviewDetailDrainBatch(db, lastId, {
+    tracker: getRunFailureTracker(),
+    maxSamples: NEEDS_REVIEW_DETAIL_DRAIN_SAMPLE_LIMIT,
+    existingSampleCount: samples.length,
+    existingBySource: by_source,
+  });
+
+  totals.scanned = (totals.scanned ?? 0) + batch.scanned;
+  totals.repaired = (totals.repaired ?? 0) + batch.repaired;
+  totals.cleared = (totals.cleared ?? 0) + batch.cleared;
+  totals.source_limited = (totals.source_limited ?? 0) + batch.source_limited;
+  totals.still_flagged = (totals.still_flagged ?? 0) + batch.still_flagged;
+  totals.fetch_failed = (totals.fetch_failed ?? 0) + batch.fetch_failed;
+  samples.push(...batch.samples);
+
+  const pending = [
+    ...new Set([
+      ...((progress.pending_reembed_ids as string[]) ?? []),
+      ...(apply ? batch.reembed_resource_ids : []),
+    ]),
+  ];
+  if (apply && batch.reembed_resource_ids.length > 0) {
+    const embedded = await reembedReconcileBatch(db, batch.reembed_resource_ids);
+    bumpTotal(totals, "reembedded", embedded);
+  }
+  const complete = batch.complete;
+  let dry_run_summary: string | undefined = progress.dry_run_summary as string | undefined;
+  if (complete) {
+    dry_run_summary = formatNeedsReviewDetailDrainSummary({
+      mode,
+      totals,
+      by_source,
+      samples: samples.slice(0, NEEDS_REVIEW_DETAIL_DRAIN_SAMPLE_LIMIT),
+      mode_reset_from: typeof progress.mode_reset_from === "string" ? progress.mode_reset_from : null,
+      algorithm_version: typeof progress.algorithm_version === "number" ? progress.algorithm_version : undefined,
+      algorithm_version_reset_from:
+        typeof progress.algorithm_version_reset_from === "number"
+          ? progress.algorithm_version_reset_from
+          : null,
+    });
+    log("info", "needs_review_detail_drain_summary", {
+      mode,
+      apply_env: process.env.NEEDS_REVIEW_DETAIL_DRAIN_APPLY ?? null,
+      totals,
+      by_source,
+      title_samples: samples.slice(0, NEEDS_REVIEW_DETAIL_DRAIN_SAMPLE_LIMIT),
+      dry_run_summary,
+    });
+  }
+  if (complete && apply && pending.length > 0) {
+    const reembed = await reembedResourceIds(db, pending);
+    bumpTotal(totals, "reembedded", (totals.reembedded ?? 0) + reembed.embedded);
+    if (!reembed.skipped) pending.length = 0;
+  }
+  return {
+    last_id: batch.next_last_id,
+    totals,
+    by_source,
+    title_samples: samples.slice(0, NEEDS_REVIEW_DETAIL_DRAIN_SAMPLE_LIMIT),
+    mode,
+    algorithm_version: progress.algorithm_version ?? undefined,
+    algorithm_version_reset_from: progress.algorithm_version_reset_from ?? null,
+    mode_reset_from: progress.mode_reset_from ?? null,
+    dry_run_summary,
+    pending_reembed_ids: pending,
+    complete: complete && pending.length === 0,
+  };
+}
+
 async function runNeedsReviewBulkFixStep(
   db: Queryable,
   progress: Record<string, unknown>,
@@ -1149,6 +1257,21 @@ async function executePostDeployJobStep(
         };
         break;
       }
+      case "needs_review_detail_drain_202510": {
+        nextProgress = await runNeedsReviewDetailDrainStep(db, progress);
+        complete = Boolean(nextProgress.complete);
+        result = {
+          totals: nextProgress.totals,
+          by_source: nextProgress.by_source,
+          title_samples: nextProgress.title_samples,
+          mode: nextProgress.mode,
+          mode_reset_from: nextProgress.mode_reset_from,
+          algorithm_version: nextProgress.algorithm_version,
+          algorithm_version_reset_from: nextProgress.algorithm_version_reset_from,
+          dry_run_summary: nextProgress.dry_run_summary,
+        };
+        break;
+      }
       case "asia_catalogue_quality_202510": {
         nextProgress = await runAsiaCatalogueQualityStep(db, progress);
         complete = Boolean(nextProgress.complete);
@@ -1219,6 +1342,11 @@ export async function runPostDeployJobsStep(
   const bulkFixRequeue = await requeueNeedsReviewBulkFixJobIfModeChanged(db);
   if (bulkFixRequeue.requeued) {
     log("info", "needs_review_bulk_fix_job_requeued", bulkFixRequeue);
+  }
+
+  const detailDrainRequeue = await requeueNeedsReviewDetailDrainJobIfModeChanged(db);
+  if (detailDrainRequeue.requeued) {
+    log("info", "needs_review_detail_drain_job_requeued", detailDrainRequeue);
   }
 
   const pendingSnapshot = await listPostDeployJobs(db);

@@ -4,9 +4,25 @@ import { extractMitSolveOrganisationFromHtml } from "../mit-solve-org.js";
 import { defaultFetch, type FetchedPage, type SourceAdapter } from "./types.js";
 import type { NormalisedDraft } from "@alice/shared";
 
+/** Strip trailing site branding from og:title before comparing to h1. */
+export function stripMitSolveOgTitleSuffix(raw: string): string {
+  return raw.replace(/\s*[|\u2013\u2014-]\s*MIT\s+Solve\s*$/i, "").trim();
+}
+
+export function pickMitSolveTitle(h1: string, ogTitleRaw: string): string {
+  const ogTitle = stripMitSolveOgTitleSuffix(ogTitleRaw.replace(/\s+/g, " ").trim());
+  const heading = h1.replace(/\s+/g, " ").trim();
+  if (!heading && !ogTitle) return "";
+  if (!heading) return ogTitle;
+  if (!ogTitle) return heading;
+  return heading.length >= ogTitle.length ? heading : ogTitle;
+}
+
 export function parseMitSolve(page: FetchedPage): NormalisedDraft {
   const $ = load(page.html);
-  const title = $("h1").first().text().replace(/\s+/g, " ").trim();
+  const h1 = $("h1").first().text().replace(/\s+/g, " ").trim();
+  const ogTitleRaw = $("meta[property='og:title']").attr("content")?.replace(/\s+/g, " ").trim() ?? "";
+  const title = pickMitSolveTitle(h1, ogTitleRaw);
   if (!title) throw new Error(`MIT Solve page has no title: ${page.url}`);
   const summary = $(".mt-8").first().text().replace(/\s+/g, " ").trim();
   const answers = new Map<string, string>();
