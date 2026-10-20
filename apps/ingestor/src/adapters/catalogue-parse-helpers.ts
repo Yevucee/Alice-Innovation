@@ -13,6 +13,7 @@ export function isBoilerplateCatalogueTitle(title: string): boolean {
   if (CATALOGUE_BOILERPLATE_TITLE.test(trimmed)) return true;
   if (/^https?:\/\//i.test(trimmed)) return true;
   if (/^(the|our)\s+(team|story|mission|vision)$/i.test(trimmed)) return true;
+  if (/^atlas of the future$/i.test(trimmed)) return true;
   return false;
 }
 

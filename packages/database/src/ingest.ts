@@ -15,7 +15,7 @@ export interface UpsertResult {
 }
 
 export interface UpsertDraftOptions {
-  reviewStatus?: "AUTO_INGESTED" | "NEEDS_REVIEW";
+  reviewStatus?: "AUTO_INGESTED" | "NEEDS_REVIEW" | "SOURCE_LIMITED";
   skipOrgPersonLinks?: boolean;
   qualityReasons?: string[];
   listingContentHash?: string;
@@ -97,10 +97,10 @@ export async function upsertDraft(
   runId: string,
   options: UpsertDraftOptions = {},
 ): Promise<UpsertResult> {
-  const reviewStatus = options.reviewStatus ?? "AUTO_INGESTED";
+  let reviewStatus = options.reviewStatus ?? "AUTO_INGESTED";
   const skipOrgPersonLinks = options.skipOrgPersonLinks === true;
   const listingContentHash = options.listingContentHash ?? null;
-  const reviewReasonCodes = reviewStatus === "NEEDS_REVIEW" ? (options.qualityReasons ?? []) : [];
+  let reviewReasonCodes = reviewStatus === "NEEDS_REVIEW" ? (options.qualityReasons ?? []) : [];
   const metadata = {
     ...draft.rawMetadata,
     ...(options.qualityReasons?.length ? { quality_reasons: options.qualityReasons } : {}),
@@ -144,6 +144,22 @@ export async function upsertDraft(
         const preserved = mergeIngestDraftPreservingQuality(row, draftWithMeta);
         draftWithMeta = { ...preserved.draft, rawMetadata: draftWithMeta.rawMetadata };
         preserveAsUnchanged = preserved.treatAsUnchanged;
+        if (row.review_status === "SOURCE_LIMITED") {
+          const incomingHash = contentHash([
+            draftWithMeta.title,
+            draftWithMeta.sourceSummary,
+            draftWithMeta.extractedText,
+          ]);
+          const existingHash = contentHash([
+            row.canonical_title,
+            row.source_summary,
+            row.extracted_index_text,
+          ]);
+          if (preserveAsUnchanged || incomingHash === existingHash) {
+            reviewStatus = "SOURCE_LIMITED";
+            reviewReasonCodes = row.review_reason_codes ?? [];
+          }
+        }
       }
     }
 
@@ -238,11 +254,13 @@ export async function upsertDraft(
            primary_country_code = COALESCE($8, primary_country_code),
            primary_country_name = COALESCE($9, primary_country_name),
            review_status = CASE
+             WHEN $10 = 'SOURCE_LIMITED' THEN 'SOURCE_LIMITED'
              WHEN $10 = 'NEEDS_REVIEW' THEN 'NEEDS_REVIEW'
              WHEN $10 = 'AUTO_INGESTED' AND cardinality($11::text[]) = 0 THEN 'AUTO_INGESTED'
              ELSE review_status
            END,
            review_reason_codes = CASE
+             WHEN $10 = 'SOURCE_LIMITED' THEN $11
              WHEN $10 = 'NEEDS_REVIEW' AND cardinality($11::text[]) > 0 THEN $11
              ELSE review_reason_codes
            END,

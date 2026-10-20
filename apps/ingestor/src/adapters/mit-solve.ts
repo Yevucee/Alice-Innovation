@@ -6,7 +6,9 @@ import type { NormalisedDraft } from "@alice/shared";
 
 export function parseMitSolve(page: FetchedPage): NormalisedDraft {
   const $ = load(page.html);
-  const title = $("h1").first().text().replace(/\s+/g, " ").trim();
+  const h1 = $("h1").first().text().replace(/\s+/g, " ").trim();
+  const ogTitle = $("meta[property='og:title']").attr("content")?.replace(/\s+/g, " ").trim() ?? "";
+  const title = (h1.length >= ogTitle.length ? h1 : ogTitle) || h1 || ogTitle;
   if (!title) throw new Error(`MIT Solve page has no title: ${page.url}`);
   const summary = $(".mt-8").first().text().replace(/\s+/g, " ").trim();
   const answers = new Map<string, string>();

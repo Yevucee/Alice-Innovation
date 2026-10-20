@@ -38,6 +38,7 @@ test("resolveCatalogueTitle prefers h1 over og:title site brand", () => {
 test("isBoilerplateCatalogueTitle rejects nav labels", () => {
   assert.equal(isBoilerplateCatalogueTitle("Home"), true);
   assert.equal(isBoilerplateCatalogueTitle("AgriBot Solutions"), false);
+  assert.equal(isBoilerplateCatalogueTitle("Atlas Of The Future"), true);
 });
 
 test("norrsken-100 parse uses fs-list-field name not page headings", () => {
