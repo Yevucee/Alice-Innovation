@@ -380,6 +380,18 @@ const htmlAfricaCatalogues: SourceAdapter[] = [
     resourceType: "SOLUTION",
     evidenceBasis: "PROGRAMME_SELECTED",
   }),
+  createHtmlCatalogueAdapter({
+    id: "innovation-africa-solutions",
+    siteOrigin: "https://innovation.africa",
+    pathPattern: /^\/(news|blogs)\/[^/]+\/?$/i,
+    sitemap: {
+      url: "https://innovation.africa/post-sitemap.xml",
+      locPathPattern: /^\/(news|blogs)\/[^/]+\/?$/i,
+    },
+    resourceType: "CASE_STUDY",
+    evidenceBasis: "EDITORIALLY_CURATED",
+    titleSuffixStrip: /\s*\|\s*African Innovation Solutions.*$/i,
+  }),
 ];
 
 const taatEcatalogHtmlConfig = {
@@ -424,7 +436,7 @@ const taatEcatalogAdapter: SourceAdapter = {
     const techTitle = $("h1.fw-medium").first().text().replace(/\s+/g, " ").trim();
     if (techTitle && !isBoilerplateCatalogueTitle(techTitle)) {
       const draft = parseHtmlCataloguePage(page, taatEcatalogHtmlConfig);
-      return { ...draft, title: techTitle, summary: draft.summary || techTitle };
+      return { ...draft, title: techTitle, sourceSummary: draft.sourceSummary || techTitle };
     }
     return parseHtmlCataloguePage(page, taatEcatalogHtmlConfig);
   },
