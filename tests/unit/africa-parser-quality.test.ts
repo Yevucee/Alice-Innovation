@@ -11,6 +11,7 @@ import {
 import {
   parseNorrsken100Item,
   parseNorrskenAccordionItem,
+  parseAfricanStartupPortalCard,
   africaAdapters,
 } from "../../apps/ingestor/src/adapters/africa-adapters.ts";
 import { createCohortPageAdapter, africaSecondPassAdapters } from "../../apps/ingestor/src/adapters/africa-second-pass-adapters.ts";
@@ -136,4 +137,24 @@ test("norrsken accordion still parses structured fields", () => {
     listingOnly: true,
   });
   assert.equal(draft.title, "EcoFarm");
+});
+
+test("taat-ecatalog detail page parses technology title", () => {
+  const taat = africaAdapters.find((a) => a.id === "taat-ecatalog");
+  assert.ok(taat);
+  const draft = taat!.parse(page(
+    "taat-ecatalog-detail.html",
+    "https://taat.africa/gov/technologies/agentbi-digital-field-agent-management-platform",
+  ));
+  assert.match(draft.title, /AgentBI/i);
+});
+
+test("african-startup-portal listing card parses name and uid", () => {
+  const draft = parseAfricanStartupPortalCard(page(
+    "african-startup-portal-card.html",
+    "https://africanstartupportal.com/entity/view/18",
+    true,
+  ));
+  assert.equal(draft.title, "Nji Prosper");
+  assert.equal(draft.rawMetadata?.asp_uid, "ASP-CMR-ST-577572");
 });
