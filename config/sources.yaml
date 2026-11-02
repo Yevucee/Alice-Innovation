@@ -2841,6 +2841,218 @@ sources:
     coverage:
       historical_backfill: not-started
       notes: "DISABLED (Oct 2026): legacy cohort h2/li scraper produced junk; re-enable when a structured catalogue or article parser lands. Run quality audit after re-ingest of fixed sources."
+  - id: taat-ecatalog
+    name: TAAT Africa e-Catalogs
+    category: africa-innovation
+    description: "Validated agri-tech technologies from AfDB TAAT (government, private sector, and development partner views)."
+    homepage: https://taat.africa/
+    collection_url: https://taat.africa/gov/technologies
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - TECHNOLOGY
+      - SOLUTION
+      - PROJECT
+    update_class: MONTHLY
+    adapter: taat-ecatalog
+    access:
+      class: PUBLIC
+      status: OPEN
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: homepage and /gov|com|org/technologies HTTP 200; robots.txt allows all. Detail slugs under /{gov,com,org}/technologies/{slug}. Same technology may appear in multiple cohort listings; deduped by URL."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PARTIAL: ~100+ validated technologies per cohort listing with paginated Load more. Run limit ingest via africa scope."
+  - id: african-startup-portal
+    name: African Startup Portal directory
+    category: africa-innovation
+    description: "Pan-African startup and support-organization directory (verified profiles on listing cards)."
+    homepage: https://africanstartupportal.com/
+    collection_url: https://africanstartupportal.com/directory
+    enabled: true
+    status: PARTIAL
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: WEEKLY
+    adapter: african-startup-portal
+    access:
+      class: PUBLIC
+      status: LISTING_ONLY
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Preflight: /directory HTTP 200 with server-rendered entity cards; /entity/view/{id} returns login wall so ingest is listing-only from cards. robots.txt allows all."
+    limits:
+      requests_per_minute: 12
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PARTIAL: small public directory today; expand as ASP publishes more open profiles."
+  - id: aiccra-innovation-catalog
+    name: AICCRA Innovation Catalog
+    category: africa-innovation
+    description: "PAUSED: CGIAR climate-smart innovation catalog (client-rendered browse UI)."
+    homepage: https://innovations.aiccra.cgiar.org/
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: aiccra-innovation-catalog
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Google search candidate. Homepage HTTP 200 but innovation records are not exposed as stable server HTML paths; no robots.txt at subdomain when checked Nov 2026."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until a public API or sitemap for innovation detail URLs is verified."
+  - id: kenya-innovation-bridge
+    name: Kenya Innovation Bridge
+    category: africa-innovation
+    description: "PAUSED: Kenyan national innovation marketplace (Vue SPA)."
+    homepage: https://bridge.innovationagency.go.ke/
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - SOLUTION
+      - ORGANISATION
+      - TECHNOLOGY
+      - PROJECT
+    update_class: MONTHLY
+    adapter: kenya-innovation-bridge
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: true
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Google search candidate. Homepage HTTP 200 but catalogue is client-rendered; robots.txt allows all. Do not bypass login/API without permission."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until server-rendered listing URLs or an official open data feed is documented."
+  - id: uneca-africa-ai-innovations
+    name: Africa Intelligence Innovations (UNECA)
+    category: africa-innovation
+    description: "PAUSED: UNECA African AI startups database."
+    homepage: https://ai.uneca.org/
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: MONTHLY
+    adapter: uneca-africa-ai-innovations
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Google search candidate. TLS chain failed verification from ingestion environment Nov 2026; revisit robots/terms after connect succeeds."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until HTTPS preflight and catalogue URL patterns are verified."
+  - id: african-innovation-exchange
+    name: African Innovation Exchange (AIX)
+    category: africa-innovation
+    description: "PAUSED: continental innovation commercialization platform (Vite SPA)."
+    homepage: https://africaninnovationexchange.com/
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - SOLUTION
+      - TECHNOLOGY
+    update_class: MONTHLY
+    adapter: african-innovation-exchange
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Google search candidate. Marketing homepage HTTP 200; innovator directory routes are client-rendered without public detail URLs in HTML."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED until verified public innovator profile URLs or partner API access."
+  - id: startuplist-africa
+    name: StartupList Africa
+    category: africa-innovation
+    description: "PAUSED: commercial African startup intelligence database (API terms)."
+    homepage: https://www.startuplist.africa/
+    collection_url: null
+    enabled: false
+    status: PAUSED
+    resource_types:
+      - ORGANISATION
+      - TECHNOLOGY
+      - SOLUTION
+    update_class: WEEKLY
+    adapter: startuplist-africa
+    access:
+      class: PUBLIC
+      status: PARTIAL
+      robots_checked: false
+      terms_checked: false
+    discovery:
+      preferred_method: html
+      sitemap: null
+      rss: null
+      notes: "Google search candidate. Public site advertises REST API; ingestion requires explicit permission and terms review before enablement."
+    limits:
+      requests_per_minute: 8
+      concurrency: 1
+    coverage:
+      historical_backfill: not-started
+      notes: "PAUSED pending PERMISSION_REVIEW. Registered so the source is not silently rediscovered."
   # --- Asia acquisition queue (auto-registered) ---
   - id: birac-technology-portal
     name: BIRAC Technology Portal
@@ -5682,7 +5894,7 @@ sources:
       preferred_method: sitemap
       sitemap: https://www.imda.gov.sg/sitemap.xml
       rss: null
-      notes: ""
+      notes: "Asia step 2: IMDA blog sitemap path; disabled after sample — editorial content not a startup catalogue."
     limits:
       requests_per_minute: 8
       concurrency: 1
@@ -5713,7 +5925,7 @@ sources:
       preferred_method: sitemap
       sitemap: https://startupstadium.tw/sitemap.xml
       rss: null
-      notes: ""
+      notes: "Asia step 2: TSS founder story sitemap; verify blog-zh paths before raising ingest limits."
     limits:
       requests_per_minute: 8
       concurrency: 1

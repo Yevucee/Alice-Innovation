@@ -8,7 +8,7 @@ import {
   resolveCatalogueTitle,
 } from "./catalogue-parse-helpers.js";
 import { listingCardImageUrl } from "./listing-images.js";
-import { createHtmlCatalogueAdapter, parseHtmlCataloguePage } from "./html-catalogue.js";
+import { createHtmlCatalogueAdapter, parseHtmlCatalogueListing, parseHtmlCataloguePage } from "./html-catalogue.js";
 import { defaultFetch, type AdapterContext, type DiscoveredRef, type FetchedPage, type SourceAdapter } from "./types.js";
 
 const AFRICA_REGION_RE = /\b(?:sub-?saharan\s+africa|africa|african)\b/i;
@@ -382,6 +382,115 @@ const htmlAfricaCatalogues: SourceAdapter[] = [
   }),
 ];
 
+const taatEcatalogHtmlConfig = {
+  id: "taat-ecatalog",
+  siteOrigin: "https://taat.africa",
+  pathPattern: /^\/(gov|com|org)\/technologies\/[^/]+\/?$/i,
+  resourceType: "TECHNOLOGY" as const,
+  evidenceBasis: "PROGRAMME_SELECTED",
+};
+
+async function discoverTaatEcatalog(ctx: AdapterContext): Promise<DiscoveredRef[]> {
+  const refs = new Map<string, string>();
+  for (const cohort of ["gov", "com", "org"] as const) {
+    for (let pageNum = 1; pageNum <= 40; pageNum += 1) {
+      const listingUrl = pageNum === 1
+        ? `https://taat.africa/${cohort}/technologies`
+        : `https://taat.africa/${cohort}/technologies?page=${pageNum}`;
+      let body: string;
+      try {
+        const res = await ctx.fetchText(listingUrl);
+        body = res.body;
+      } catch {
+        break;
+      }
+      const found = parseHtmlCatalogueListing(body, listingUrl, taatEcatalogHtmlConfig);
+      if (found.length === 0) break;
+      for (const ref of found) refs.set(ref.url, ref.externalId);
+      if (ctx.limit !== null && refs.size >= ctx.limit) break;
+    }
+    if (ctx.limit !== null && refs.size >= ctx.limit) break;
+  }
+  return [...refs.entries()].map(([url, externalId]) => ({ url, externalId }));
+}
+
+const taatEcatalogAdapter: SourceAdapter = {
+  id: "taat-ecatalog",
+  fullCatalogue: true,
+  discover: discoverTaatEcatalog,
+  fetch: defaultFetch,
+  parse: (page) => {
+    const $ = load(page.html);
+    const techTitle = $("h1.fw-medium").first().text().replace(/\s+/g, " ").trim();
+    if (techTitle && !isBoilerplateCatalogueTitle(techTitle)) {
+      const draft = parseHtmlCataloguePage(page, taatEcatalogHtmlConfig);
+      return { ...draft, title: techTitle, summary: draft.summary || techTitle };
+    }
+    return parseHtmlCataloguePage(page, taatEcatalogHtmlConfig);
+  },
+};
+
+export function parseAfricanStartupPortalCard(page: FetchedPage): NormalisedDraft {
+  const $ = load(page.html);
+  const title = $(".entity-name").first().text().replace(/\s+/g, " ").trim();
+  const summary = $(".entity-desc").first().text().replace(/\s+/g, " ").trim();
+  if (!title) throw new Error(`african-startup-portal card has no title: ${page.url}`);
+  const uid = $(".entity-uid").first().text().trim();
+  const externalId = uid ? slugify(uid) : slugify(title);
+  const country = $(".entity-meta-item").first().text().replace(/\s+/g, " ").trim();
+  return buildDraft({
+    title,
+    url: page.url,
+    externalId,
+    summary: summary || title,
+    text: summary,
+    resourceType: "ORGANISATION",
+    evidenceBasis: "PROGRAMME_SELECTED",
+    evidenceStage: "UNKNOWN",
+    rawMetadata: {
+      listing_only: true,
+      asp_uid: uid || null,
+      country: country || null,
+    },
+    etag: page.etag,
+    lastModified: page.lastModified,
+  });
+}
+
+async function discoverAfricanStartupPortal(ctx: AdapterContext): Promise<DiscoveredRef[]> {
+  const collection = ctx.source.collection_url;
+  if (!collection) return [];
+  const refs: DiscoveredRef[] = [];
+  for (let pageNum = 1; pageNum <= 80; pageNum += 1) {
+    const listingUrl = pageNum === 1 ? collection : `${collection}?page=${pageNum}`;
+    let body: string;
+    try {
+      const res = await ctx.fetchText(listingUrl);
+      body = res.body;
+    } catch {
+      break;
+    }
+    const $ = load(body);
+    let count = 0;
+    $("a.entity-card").each((_, element) => {
+      const href = $(element).attr("href") ?? "";
+      if (!href.includes("/entity/view/")) return;
+      const absolute = new URL(href, collection).toString().replace(/\/$/, "");
+      const uid = $(element).find(".entity-uid").first().text().trim();
+      const externalId = uid ? slugify(uid) : slugify(absolute);
+      refs.push({
+        url: absolute,
+        externalId,
+        listingHtml: $.html(element),
+      });
+      count += 1;
+    });
+    if (count === 0) break;
+    if (ctx.limit !== null && refs.length >= ctx.limit) break;
+  }
+  return refs;
+}
+
 const gitexSupernovaAdapter: SourceAdapter = {
   id: "gitex-africa-supernova",
   fullCatalogue: true,
@@ -578,4 +687,11 @@ export const africaAdapters: SourceAdapter[] = [
   injiniAdapter,
   startupbootcampAfritechAdapter,
   africaTechFestivalAdapter,
+  taatEcatalogAdapter,
+  createListingCardAdapter({
+    id: "african-startup-portal",
+    fullCatalogue: true,
+    discover: discoverAfricanStartupPortal,
+    parse: parseAfricanStartupPortalCard,
+  }),
 ];
